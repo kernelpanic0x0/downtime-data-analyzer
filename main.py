@@ -7,6 +7,7 @@ import tkinter
 import tkinter.filedialog
 from tkinter import *
 from tkinter import ttk
+import tkinter as tk
 from tkinter import filedialog as fd
 import pandas as pd
 import pytz
@@ -78,22 +79,34 @@ class App(Frame):
         root.rowconfigure(0, weight=1)
 
         label_frame = ttk.LabelFrame(mainframe, text='Filters')
-        label_frame.grid(column=0, row=0, padx=0, pady=5)
+        label_frame.grid(column=0, row=0, padx=0, pady=10)
+
+        # Calendar
+        self.string_var = tk.StringVar()
 
         # Create Calendar Input drop down
-        cal_date_strt = DateEntry(label_frame, selectmode='day')    # Start date
-        cal_date_strt.grid(column=1, row=2, sticky=W)
+        cal_date_strt = DateEntry(label_frame, selectmode='day', textvariable=self.string_var)    # Start date
+        self.string_var.trace('w', self.get_start_date)
+
+        cal_date_strt.grid(column=1, row=2, padx=10,  sticky=W)
         cal_date_end = DateEntry(label_frame, selectmode='day')     # End date
-        cal_date_end.grid(column=1, row=2, sticky=W)
+        cal_date_end.grid(column=1, row=3, padx=10,  sticky=W)
         # Create Calendar Label
-        ttk.Label(label_frame, text="Start Date:").grid(column=0, row=2, sticky=W)
-        ttk.Label(label_frame, text="End Date").grid(column=0, row=3, sticky=W)
-        ttk.Button(label_frame, text="Calculate", command=calculate).grid(column=3, row=4, sticky=W)
+        start_date_lbl = ttk.Label(label_frame, text="Start Date:")
+        start_date_lbl.grid(column=0, row=2, pady=5)
+        end_date_lbl =ttk.Label(label_frame, text="End Date")
+        end_date_lbl.grid(column=0, row=3, pady=5)
+        output_label = ttk.Label(label_frame, text="End Date")
+        output_label.grid(column=0, row=4, pady=5)
+
+        ttk.Button(mainframe, text="Calculate", command=calculate).grid(column=3, row=4, sticky=W)
 
         w = OptionMenu(mainframe, variable, *DROPDOWN_ITEMS)
         w.grid(column=4, row=3, sticky=W)
 
-
+    def get_start_date(self, *args):
+        print(self.string_var.get())
+        #output_label.config(text=self.string_var.get())
         # text = tkinter.Text(root, height=24)
         # text.grid(column=0, row=0, sticky='nsew')
         # text.insert('1.0', open_text_file())
