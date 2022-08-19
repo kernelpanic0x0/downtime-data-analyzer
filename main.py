@@ -12,6 +12,7 @@ import pandas as pd
 import pytz
 from datetime import datetime
 import matplotlib.pyplot as plt
+from tkcalendar import Calendar, DateEntry
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
@@ -75,7 +76,19 @@ class App(Frame):
         mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
-        ttk.Button(mainframe, text="Calculate", command=calculate).grid(column=3, row=3, sticky=W)
+
+        label_frame = ttk.LabelFrame(mainframe, text='Filters')
+        label_frame.grid(column=0, row=0, padx=0, pady=5)
+
+        # Create Calendar Input drop down
+        cal_date_strt = DateEntry(label_frame, selectmode='day')    # Start date
+        cal_date_strt.grid(column=1, row=2, sticky=W)
+        cal_date_end = DateEntry(label_frame, selectmode='day')     # End date
+        cal_date_end.grid(column=1, row=2, sticky=W)
+        # Create Calendar Label
+        ttk.Label(label_frame, text="Start Date:").grid(column=0, row=2, sticky=W)
+        ttk.Label(label_frame, text="End Date").grid(column=0, row=3, sticky=W)
+        ttk.Button(label_frame, text="Calculate", command=calculate).grid(column=3, row=4, sticky=W)
 
         w = OptionMenu(mainframe, variable, *DROPDOWN_ITEMS)
         w.grid(column=4, row=3, sticky=W)
