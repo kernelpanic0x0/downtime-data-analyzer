@@ -44,6 +44,7 @@ class App(Frame):
             except ValueError:
                 pass
 
+
         # Drop Down variable
         variable = StringVar(root)
         # Drop down menu items
@@ -79,31 +80,59 @@ class App(Frame):
         root.rowconfigure(0, weight=1)
 
         label_frame = ttk.LabelFrame(mainframe, text='Filters')
-        label_frame.grid(column=0, row=0, padx=0, pady=10)
+        label_frame.grid(column=0, row=0, sticky=W, pady=10)
+
+        # Create a combobox for Equipment Type
+        self.selected_equipment = tk.StringVar()
+        equipment_comb = ttk.Combobox(label_frame, textvariable=self.selected_equipment)
+        equipment_comb.grid(column=3, row=2, padx=10, sticky=W)
+        #self.selected_equipment.trace('w', self.get_selected_equipmnt())
+        equipment_comb['values'] = ('PTA01', 'PTA02')
+        equipment_comb['state'] = 'readonly'
+        equipment_comb.current(0)
+        equipment_comb.bind('<<ComboboxSelected>>', self.get_selected_equipmnt)
+
+        # Create a combobox for Downtime type
+        self.selected_downtime = tk.StringVar()
+        downtime_comb = ttk.Combobox(label_frame, textvariable=self.selected_downtime)
+        downtime_comb.grid(column=3, row=3, padx=10, sticky=W)
+        # self.selected_equipment.trace('w', self.get_selected_equipmnt())
+        downtime_comb['values'] = ('Duration & Count', 'Tool Group')
+        downtime_comb['state'] = 'readonly'
+        downtime_comb.current(0)
+        downtime_comb.bind('<<ComboboxSelected>>', self.get_selected_downtime)
 
         # Calendar
         self.string_var = tk.StringVar()
-
         # Create Calendar Input drop down
         cal_date_strt = DateEntry(label_frame, selectmode='day', textvariable=self.string_var)    # Start date
         self.string_var.trace('w', self.get_start_date)
-
         cal_date_strt.grid(column=1, row=2, padx=10,  sticky=W)
         cal_date_end = DateEntry(label_frame, selectmode='day')     # End date
         cal_date_end.grid(column=1, row=3, padx=10,  sticky=W)
         # Create Calendar Label
         start_date_lbl = ttk.Label(label_frame, text="Start Date:")
-        start_date_lbl.grid(column=0, row=2, pady=5)
+        start_date_lbl.grid(column=0, row=2, pady=5, sticky=W)
         end_date_lbl =ttk.Label(label_frame, text="End Date")
-        end_date_lbl.grid(column=0, row=3, pady=5)
-        output_label = ttk.Label(label_frame, text="End Date")
-        output_label.grid(column=0, row=4, pady=5)
+        end_date_lbl.grid(column=0, row=3, pady=5, sticky=W)
+        # Create Equipment Label
+        equipment_lbl = ttk.Label(label_frame, text="Equipment:")
+        equipment_lbl.grid(column=2, row=2, pady=5, sticky=W)
+        # Create Dwontime Type Label
+        downtime_lbl = ttk.Label(label_frame, text="Downtime by:")
+        downtime_lbl.grid(column=2, row=3, pady=5, sticky=W)
+
 
         ttk.Button(mainframe, text="Calculate", command=calculate).grid(column=3, row=4, sticky=W)
 
         w = OptionMenu(mainframe, variable, *DROPDOWN_ITEMS)
         w.grid(column=4, row=3, sticky=W)
 
+
+    def get_selected_downtime(self, *args):
+        print(self.selected_downtime.get())
+    def get_selected_equipmnt(self, *args):
+        print(self.selected_equipment.get())
     def get_start_date(self, *args):
         print(self.string_var.get())
         #output_label.config(text=self.string_var.get())
@@ -202,7 +231,7 @@ if __name__ == '__main__':
     root.resizable(False, False)
 
     # Width and Height for root = Tk()
-    root_width = 500
+    root_width = 800
     root_height = 500
 
     # Get screen width and height
