@@ -16,6 +16,7 @@ import pytz
 from datetime import datetime
 import matplotlib.pyplot as plt
 from tkcalendar import Calendar, DateEntry
+import pathlib
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
@@ -379,8 +380,12 @@ def about_msg():
 if __name__ == '__main__':
     root = Tk()
     root.title("Downtime Data Analyzer")
-    my_icon = PhotoImage(file="images/analyzer_icon.png")
-    root.iconphoto(True, my_icon)
+    #img_file_name = "analyzer_icon.png"
+    #curr_dirr = pathlib.Path(img_file_name).parent.resolve()
+    #img_path = curr_dirr.joinpath(img_file_name)
+    #print(img_path)
+    #my_icon = tk.PhotoImage(file=img_path)
+    #root.iconphoto(True, my_icon)
     root.resizable(False, False)
 
     # Width and Height for root = Tk()
