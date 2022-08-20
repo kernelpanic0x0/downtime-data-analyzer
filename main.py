@@ -21,6 +21,7 @@ from tkcalendar import Calendar, DateEntry
 # Imported by Pyinstaller at runtime - splash screen
 try:
     import pyi_splash
+
     pyi_splash.update_text('UI Loaded...')
     pyi_splash.close()
 except:
@@ -35,7 +36,7 @@ class App(Frame):
 
     def init_ui(self):
 
-        #Selected choice
+        # Selected choice
         def calculate():
             try:
                 choice = variable.get()
@@ -43,7 +44,6 @@ class App(Frame):
                 open_text_file(choice)
             except ValueError:
                 pass
-
 
         # Drop Down variable
         variable = StringVar(root)
@@ -73,7 +73,6 @@ class App(Frame):
         my_menu.add_cascade(label="Help", menu=help_menu)
         help_menu.add_command(label="About", command=about_msg)
 
-
         mainframe = ttk.Frame(root, padding="3 3 12 12")
         mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
         root.columnconfigure(0, weight=1)
@@ -86,7 +85,7 @@ class App(Frame):
         self.selected_equipment = tk.StringVar()
         equipment_comb = ttk.Combobox(label_frame, textvariable=self.selected_equipment)
         equipment_comb.grid(column=3, row=2, padx=10, sticky=W)
-        #self.selected_equipment.trace('w', self.get_selected_equipmnt())
+        # self.selected_equipment.trace('w', self.get_selected_equipmnt())
         equipment_comb['values'] = ('PTA01', 'PTA02')
         equipment_comb['state'] = 'readonly'
         equipment_comb.current(0)
@@ -105,15 +104,15 @@ class App(Frame):
         # Calendar
         self.string_var = tk.StringVar()
         # Create Calendar Input drop down
-        cal_date_strt = DateEntry(label_frame, selectmode='day', textvariable=self.string_var)    # Start date
+        cal_date_strt = DateEntry(label_frame, selectmode='day', textvariable=self.string_var)  # Start date
         self.string_var.trace('w', self.get_start_date)
-        cal_date_strt.grid(column=1, row=2, padx=10,  sticky=W)
-        cal_date_end = DateEntry(label_frame, selectmode='day')     # End date
-        cal_date_end.grid(column=1, row=3, padx=10,  sticky=W)
+        cal_date_strt.grid(column=1, row=2, padx=10, sticky=W)
+        cal_date_end = DateEntry(label_frame, selectmode='day')  # End date
+        cal_date_end.grid(column=1, row=3, padx=10, sticky=W)
         # Create Calendar Label
         start_date_lbl = ttk.Label(label_frame, text="Start Date:")
         start_date_lbl.grid(column=0, row=2, pady=5, sticky=W)
-        end_date_lbl =ttk.Label(label_frame, text="End Date")
+        end_date_lbl = ttk.Label(label_frame, text="End Date")
         end_date_lbl.grid(column=0, row=3, pady=5, sticky=W)
         # Create Equipment Label
         equipment_lbl = ttk.Label(label_frame, text="Equipment:")
@@ -122,20 +121,72 @@ class App(Frame):
         downtime_lbl = ttk.Label(label_frame, text="Downtime by:")
         downtime_lbl.grid(column=2, row=3, pady=5, sticky=W)
 
+        ttk.Button(mainframe, text="Calculate", command=calculate).grid(column=0, row=1, sticky=W)
 
-        ttk.Button(mainframe, text="Calculate", command=calculate).grid(column=3, row=4, sticky=W)
+        # Configure tree viewer style
+        style = ttk.Style()
+        style.theme_use('clam')
+        style.configure("mystyle.Treeview.Heading", font=('Calibri', 11, 'bold'), background='grey', foreground='black')  # Modify the font of the headings
+        style.configure("mystyle.Treeview", highlightthickness=0, bd=0, font=('Calibri', 11))  # Modify the font of the body
+
+
+        # Create frame for the treeview widget
+        frame_tree = ttk.Frame(mainframe)
+        frame_tree.grid(column=0, row=2, sticky=W)
+        # Create treeview widget
+        columns = ('size', 'modified', 'owner', 'date')
+        tree = ttk.Treeview(frame_tree,show='headings', height=10,style="mystyle.Treeview")
+        tree['columns'] = ('size', 'modified', 'owner', 'date')
+        tree.grid(column=0, row=2, sticky=W)
+        tree.column('#0', width=0, stretch=NO)
+        tree.column('size', anchor=W, width=190)
+        tree.column('modified', anchor=W, width=190)
+        tree.column('owner', anchor=W, width=190)
+        tree.column('date', anchor=W, width=190)
+
+        tree.heading('#0', text='', anchor=CENTER)
+        for elem in columns:
+            tree.heading(elem, text=elem, anchor=CENTER)
+
+        scrl_bar = tk.Scrollbar(frame_tree, orient=VERTICAL, command=tree.yview)
+        scrl_bar.grid(column=1, row=2, sticky=NS)
+
+        tree.config(yscrollcommand=scrl_bar.set)
+
+        # scrl_bar.config(command=tree.yview)
+
+        treeview_val = (
+        '12kbs', 'October 13', 'Val', '12kb', 'October 10', 'Val', '12kb', 'October 12', 'Val', '12kb', 'October 11',
+        'Val', 'test1', 'test2', 'hellow rold')
+
+        elem_count = 0
+        for elem1 in treeview_val:
+            if elem_count % 2 == 0: # even row
+                tree.insert(parent='', index=elem_count, iid=elem_count,
+                            values=treeview_val[elem_count:(elem_count+4)],tags=('odd_row',))
+            else:
+                tree.insert(parent='', index=elem_count, iid=elem_count,
+                            values=treeview_val[elem_count:(elem_count + 4)], tags=('even_row',))
+            elem_count += 1
+        tree.tag_configure('odd_row', background='#F0F0FF')
+        tree.tag_configure('even_row', background='#C1C1CD')
+        # tree.column('size', anchor=CENTER, width=80)
+        # tree.column('modified', anchor=CENTER, width=80)
+        # tree.column('owner', anchor=CENTER, width=80)
+        # tree.configure(scrollregion=tree.bbox(''))
 
         w = OptionMenu(mainframe, variable, *DROPDOWN_ITEMS)
-        w.grid(column=4, row=3, sticky=W)
-
+        w.grid(column=1, row=1, sticky=W)
 
     def get_selected_downtime(self, *args):
         print(self.selected_downtime.get())
+
     def get_selected_equipmnt(self, *args):
         print(self.selected_equipment.get())
+
     def get_start_date(self, *args):
         print(self.string_var.get())
-        #output_label.config(text=self.string_var.get())
+        # output_label.config(text=self.string_var.get())
         # text = tkinter.Text(root, height=24)
         # text.grid(column=0, row=0, sticky='nsew')
         # text.insert('1.0', open_text_file())
@@ -187,7 +238,7 @@ def open_text_file(my_choice):
             mem_date = curr_date
             mem_status = curr_status
             count_dt += 1
-            #print(mem_date)
+            # print(mem_date)
 
 
         elif (curr_status == 'Available') and (mem_status == 'Not Available'):
@@ -201,7 +252,7 @@ def open_text_file(my_choice):
             downtime_cnt.append(count_dt)
     print(count_dt)
     print("PLots")
-    df_3 = pd.DataFrame({'Count': downtime_cnt, 'downtime_minutes': downtime_durr })
+    df_3 = pd.DataFrame({'Count': downtime_cnt, 'downtime_minutes': downtime_durr})
     ax = df_3.plot.bar(x='Count', y='downtime_minutes', rot=0, title=my_choice)
     ax.plot()
     plt.show()
@@ -218,7 +269,7 @@ def get_duration(duration):
 # About message window
 def about_msg():
     top = Toplevel(root)
-    top.geometry('%dx%d+%d+%d' % (root_width/2, root_height/2, x+50, y+50))
+    top.geometry('%dx%d+%d+%d' % (root_width / 2, root_height / 2, x + 50, y + 50))
     top.mainloop()
 
 
@@ -239,8 +290,8 @@ if __name__ == '__main__':
     win_height = root.winfo_screenheight()
 
     # Calculate x and y coordinates for the Tk root window
-    x = (win_width/2) - (root_width/2)
-    y = (win_height/2) - (root_height/2)
+    x = (win_width / 2) - (root_width / 2)
+    y = (win_height / 2) - (root_height / 2)
 
     # Set dimensions and position of the screen
     root.geometry('%dx%d+%d+%d' % (root_width, root_height, x, y))
