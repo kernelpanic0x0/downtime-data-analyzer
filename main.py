@@ -34,7 +34,9 @@ class App(Frame):
         self.master = master
         self.init_ui()
         self.labels()
-        #self.main_tree_view()
+        self.calendars()
+        self.comboboxes()
+        self.tree_view_table()
 
     def init_ui(self):
 
@@ -75,44 +77,44 @@ class App(Frame):
         my_menu.add_cascade(label="Help", menu=help_menu)
         help_menu.add_command(label="About", command=about_msg)
 
-        mainframe = ttk.Frame(root, padding="3 3 12 12")
-        mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+        self.mainframe = ttk.Frame(root, padding="3 3 12 12")
+        self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
 
-        self.label_frame = ttk.LabelFrame(mainframe, text='Filters')
+        self.label_frame = ttk.LabelFrame(self.mainframe, text='Filters')
         self.label_frame.grid(column=0, row=0, sticky=W, pady=10)
 
         # Create a combobox for Equipment Type
         self.selected_equipment = tk.StringVar()
-        equipment_comb = ttk.Combobox(self.label_frame, textvariable=self.selected_equipment)
-        equipment_comb.grid(column=3, row=2, padx=10, sticky=W)
+        #equipment_comb = ttk.Combobox(self.label_frame, textvariable=self.selected_equipment)
+        #equipment_comb.grid(column=3, row=2, padx=10, sticky=W)
         # self.selected_equipment.trace('w', self.get_selected_equipmnt())
-        equipment_comb['values'] = ('PTA01', 'PTA02')
-        equipment_comb['state'] = 'readonly'
-        equipment_comb.current(0)
-        equipment_comb.bind('<<ComboboxSelected>>', self.get_selected_equipmnt)
+        #equipment_comb['values'] = ('PTA01', 'PTA02')
+        #equipment_comb['state'] = 'readonly'
+        #equipment_comb.current(0)
+        #equipment_comb.bind('<<ComboboxSelected>>', self.get_selected_equipmnt)
 
         # Create a combobox for Downtime type
         self.selected_downtime = tk.StringVar()
-        downtime_comb = ttk.Combobox(self.label_frame, textvariable=self.selected_downtime)
-        downtime_comb.grid(column=3, row=3, padx=10, sticky=W)
+        #downtime_comb = ttk.Combobox(self.label_frame, textvariable=self.selected_downtime)
+        #downtime_comb.grid(column=3, row=3, padx=10, sticky=W)
         # self.selected_equipment.trace('w', self.get_selected_equipmnt())
-        downtime_comb['values'] = ('Duration & Count', 'Tool Group')
-        downtime_comb['state'] = 'readonly'
-        downtime_comb.current(0)
-        downtime_comb.bind('<<ComboboxSelected>>', self.get_selected_downtime)
+        #downtime_comb['values'] = ('Duration & Count', 'Tool Group')
+        #downtime_comb['state'] = 'readonly'
+        #downtime_comb.current(0)
+        #downtime_comb.bind('<<ComboboxSelected>>', self.get_selected_downtime)
 
         # Calendar
         self.string_var_strt = tk.StringVar()
         self.string_var_end = tk.StringVar()
         # Create Calendar Input drop down - Start Date
-        DateEntry(self.label_frame, selectmode='day', textvariable=self.string_var_strt).grid(column=1, row=2, padx=10, sticky=W)
-        self.string_var_strt.trace('w', self.get_start_date)
+        #DateEntry(self.label_frame, selectmode='day', textvariable=self.string_var_strt).grid(column=1, row=2, padx=10, sticky=W)
+        #self.string_var_strt.trace('w', self.get_start_date)
 
         # Create Calendar Input drop down - End Date
-        DateEntry(self.label_frame, selectmode='day', textvariable=self.string_var_end).grid(column=1, row=3, padx=10, sticky=W)
-        self.string_var_end.trace('w', self.get_end_date)
+        #DateEntry(self.label_frame, selectmode='day', textvariable=self.string_var_end).grid(column=1, row=3, padx=10, sticky=W)
+        #self.string_var_end.trace('w', self.get_end_date)
 
         # Create Calendar Label
         #ttk.Label(self.label_frame, text="Start Date:").grid(column=0, row=2, pady=5, sticky=W)
@@ -123,7 +125,7 @@ class App(Frame):
         #ttk.Label(self.label_frame, text="Downtime by:").grid(column=2, row=3, pady=5, sticky=W)
 
 
-        ttk.Button(mainframe, text="Calculate", command=calculate).grid(column=0, row=1, sticky=W)
+        ttk.Button(self.mainframe, text="Calculate", command=calculate).grid(column=0, row=1, sticky=W)
 
         # Configure tree viewer style
         style = ttk.Style()
@@ -133,53 +135,86 @@ class App(Frame):
 
 
         # Create frame for the treeview widget
-        frame_tree = ttk.Frame(mainframe)
-        frame_tree.grid(column=0, row=2, sticky=W)
+        #frame_tree = ttk.Frame(mainframe)
+        #frame_tree.grid(column=0, row=2, sticky=W)
         # Create treeview widget
-        columns = ('size', 'modified', 'owner', 'date')
-        tree = ttk.Treeview(frame_tree,show='headings', height=10,style="mystyle.Treeview")
-        tree['columns'] = ('size', 'modified', 'owner', 'date')
-        tree.grid(column=0, row=2, sticky=W)
-        tree.column('#0', width=0, stretch=NO)
-        tree.column('size', anchor=W, width=190)
-        tree.column('modified', anchor=W, width=190)
-        tree.column('owner', anchor=W, width=190)
-        tree.column('date', anchor=W, width=190)
+        #columns = ('size', 'modified', 'owner', 'date')
+        #tree = ttk.Treeview(frame_tree,show='headings', height=10,style="mystyle.Treeview")
+        #tree['columns'] = ('size', 'modified', 'owner', 'date')
+        #tree.grid(column=0, row=2, sticky=W)
+        #tree.column('#0', width=0, stretch=NO)
+        #tree.column('size', anchor=W, width=190)
+        #tree.column('modified', anchor=W, width=190)
+        #tree.column('owner', anchor=W, width=190)
+        #tree.column('date', anchor=W, width=190)
 
-        tree.heading('#0', text='', anchor=CENTER)
-        for elem in columns:
-            tree.heading(elem, text=elem, anchor=CENTER)
+        #tree.heading('#0', text='', anchor=CENTER)
+        #for elem in columns:
+         #   tree.heading(elem, text=elem, anchor=CENTER)
 
-        scrl_bar = tk.Scrollbar(frame_tree, orient=VERTICAL, command=tree.yview)
-        scrl_bar.grid(column=1, row=2, sticky=NS)
+       # scrl_bar = tk.Scrollbar(frame_tree, orient=VERTICAL, command=tree.yview)
+        #scrl_bar.grid(column=1, row=2, sticky=NS)
 
-        tree.config(yscrollcommand=scrl_bar.set)
+        #tree.config(yscrollcommand=scrl_bar.set)
 
         # scrl_bar.config(command=tree.yview)
 
-        treeview_val = (
-        '12kbs', 'October 13', 'Val', '12kb', 'October 10', 'Val', '12kb', 'October 12', 'Val', '12kb', 'October 11',
-        'Val', 'test1', 'test2', 'hellow rold')
+        #treeview_val = (
+        #'12kbs', 'October 13', 'Val', '12kb', 'October 10', 'Val', '12kb', 'October 12', 'Val', '12kb', 'October 11',
+        #'Val', 'test1', 'test2', 'hellow rold')
 
-        elem_count = 0
-        for elem1 in treeview_val:
-            if elem_count % 2 == 0: # even row
-                tree.insert(parent='', index=elem_count, iid=elem_count,
-                            values=treeview_val[elem_count:(elem_count+4)],tags=('odd_row',))
-            else:
-                tree.insert(parent='', index=elem_count, iid=elem_count,
-                            values=treeview_val[elem_count:(elem_count + 4)], tags=('even_row',))
-            elem_count += 1
-        tree.tag_configure('odd_row', background='#F0F0FF')
-        tree.tag_configure('even_row', background='#C1C1CD')
+        #elem_count = 0
+        #for elem1 in treeview_val:
+         #   if elem_count % 2 == 0: # even row
+         #       tree.insert(parent='', index=elem_count, iid=elem_count,
+          #                  values=treeview_val[elem_count:(elem_count+4)],tags=('odd_row',))
+          #  else:
+          #      tree.insert(parent='', index=elem_count, iid=elem_count,
+              #              values=treeview_val[elem_count:(elem_count + 4)], tags=('even_row',))
+            #elem_count += 1
+        #tree.tag_configure('odd_row', background='#F0F0FF')
+        #tree.tag_configure('even_row', background='#C1C1CD')
         # tree.column('size', anchor=CENTER, width=80)
         # tree.column('modified', anchor=CENTER, width=80)
         # tree.column('owner', anchor=CENTER, width=80)
         # tree.configure(scrollregion=tree.bbox(''))
 
-        w = OptionMenu(mainframe, variable, *DROPDOWN_ITEMS)
+        w = OptionMenu(self.mainframe, variable, *DROPDOWN_ITEMS)
         w.grid(column=1, row=1, sticky=W)
 
+    def comboboxes(self):
+        # Create a combobox for Equipment Type
+        #self.selected_equipment = tk.StringVar()
+        equipment_comb = ttk.Combobox(self.label_frame, textvariable=self.selected_equipment)
+        equipment_comb.grid(column=3, row=2, padx=10, sticky=W)
+        # self.selected_equipment.trace('w', self.get_selected_equipmnt())
+        equipment_comb['values'] = ('PTA01', 'PTA02')
+        equipment_comb['state'] = 'readonly'
+        equipment_comb.current(0)
+        equipment_comb.bind('<<ComboboxSelected>>', self.get_selected_equipmnt)
+
+        # Create a combobox for Downtime type
+        #self.selected_downtime = tk.StringVar()
+        downtime_comb = ttk.Combobox(self.label_frame, textvariable=self.selected_downtime)
+        downtime_comb.grid(column=3, row=3, padx=10, sticky=W)
+        # self.selected_equipment.trace('w', self.get_selected_equipmnt())
+        downtime_comb['values'] = ('Duration & Count', 'Tool Group')
+        downtime_comb['state'] = 'readonly'
+        downtime_comb.current(0)
+        downtime_comb.bind('<<ComboboxSelected>>', self.get_selected_downtime)
+    def calendars(self):
+        # Calendar
+        #self.string_var_strt = tk.StringVar()
+        #self.string_var_end = tk.StringVar()
+        # Create Calendar Input drop down - Start Date
+        DateEntry(self.label_frame, selectmode='day', textvariable=self.string_var_strt).grid(column=1, row=2, padx=10,
+                                                                                              sticky=W)
+        self.string_var_strt.trace('w', self.get_start_date)
+
+        # Create Calendar Input drop down - End Date
+        DateEntry(self.label_frame, selectmode='day', textvariable=self.string_var_end).grid(column=1, row=3, padx=10,
+                                                                                             sticky=W)
+        self.string_var_end.trace('w', self.get_end_date)
     def labels(self):
         # Create Calendar Label
         ttk.Label(self.label_frame, text="Start Date:").grid(column=0, row=2, pady=5, sticky=W)
@@ -189,7 +224,7 @@ class App(Frame):
         ttk.Label(self.label_frame, text="Equipment:").grid(column=2, row=2, pady=5, sticky=W)
         ttk.Label(self.label_frame, text="Downtime by:").grid(column=2, row=3, pady=5, sticky=W)
 
-    def main_tree_view(self):
+    def tree_view_table(self):
         # Configure tree viewer style
         style = ttk.Style()
         style.theme_use('clam')
@@ -199,7 +234,7 @@ class App(Frame):
                         font=('Calibri', 11))  # Modify the font of the body
 
         # Create frame for the treeview widget
-        frame_tree = ttk.Frame(mainframe)
+        frame_tree = ttk.Frame(self.mainframe)
         frame_tree.grid(column=0, row=2, sticky=W)
         # Create treeview widget
         columns = ('size', 'modified', 'owner', 'date')
