@@ -1,8 +1,10 @@
-# This is a sample Python script.
+# ################################
 #
+# Downtime data plotting script
+# August 20, 2022
+# Version 0.0.2
 #
-#
-# August 15
+##################################
 import tkinter
 import tkinter.filedialog
 from tkinter import *
