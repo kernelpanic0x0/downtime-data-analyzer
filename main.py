@@ -191,17 +191,18 @@ class App(Frame):
         self.tree.tag_configure('even_row', background='#C1C1CD')
     def tree_insert(self, *args):
 
+        print(self.tree.get_children())
         for item in self.tree.get_children():
             self.tree.delete(item)
 
-            elem_count = 0
-            for index in range(0, len(self.df)):
-                if elem_count % 2 == 0:  # even row
-                    self.tree.insert(parent='', index=index, iid=index,
-                                values=self.df.loc[index, :].values.tolist(), tags=('odd_row',))
-                else:
-                    self.tree.insert(parent='', index=index, iid=index,
-                                values=self.df.loc[index, :].values.tolist(), tags=('even_row',))
+        elem_count = 0
+        for index in range(0, len(self.df_temp)):
+            if elem_count % 2 == 0:  # even row
+                self.tree.insert(parent='', index=index, iid=index,
+                                values=self.df_temp.loc[index, :].values.tolist(), tags=('odd_row',))
+            else:
+                self.tree.insert(parent='', index=index, iid=index,
+                                values=self.df_temp.loc[index, :].values.tolist(), tags=('even_row',))
                 elem_count += 1
 
         self.tree.tag_configure('odd_row', background='#F0F0FF')
@@ -212,7 +213,11 @@ class App(Frame):
 
     def get_selected_equipmnt(self, *args):
         print(self.selected_equipment.get())
-        print(self.df)
+        self.df_temp = self.df.loc[self.df['cr483_name'] == self.selected_equipment.get()]
+        self.df_temp.index = pd.RangeIndex(len(self.df_temp.index))
+        print("sorted by name")
+        print(self.df_temp)
+        self.tree_insert()
 
     def get_start_date(self, *args):
         print(self.string_var_strt.get())
@@ -241,7 +246,10 @@ class App(Frame):
         self.df.sort_values(by='createdon', ascending=True, inplace=True)  # Sort by Date
         #self.df['index_col'] = self.df.index
         self.df.index = pd.RangeIndex(len(self.df.index))
+
+        self.df_temp = self.df
         print(self.df)
+        print(self.df_temp)
         print('calling tree')
         self.tree_insert()
 
