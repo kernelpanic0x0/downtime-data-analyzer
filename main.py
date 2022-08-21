@@ -42,7 +42,8 @@ class App(Frame):
         self.tree_view_table()
         self.file_menues()
         self.buttons()
-        self.df = pd.DataFrame()
+
+
 
     def init_ui(self):
 
@@ -79,7 +80,10 @@ class App(Frame):
         #w.grid(column=1, row=1, sticky=W)
 
     def buttons(self):
-        ttk.Button(self.label_frame, text="Calculate & Plot", command=self.calculate).grid(column=5, rowspan=2, row=2, padx=20)
+        ttk.Button(self.label_frame, text="Calculate",
+                   command=self.calculate).grid(column=5, rowspan=2, row=2, padx=20)
+        ttk.Button(self.label_frame, text="Plot",
+                   command=self.calculate).grid(column=6, rowspan=2, row=2, padx=20)
 
     def comboboxes(self):
         # Create a combobox for Equipment Type
@@ -175,54 +179,36 @@ class App(Frame):
 
         scrl_bar = tk.Scrollbar(frame_tree, orient=VERTICAL, command=self.tree.yview)
         scrl_bar.grid(column=1, row=2, sticky=NS)
-
         self.tree.config(yscrollcommand=scrl_bar.set)
 
-        # scrl_bar.config(command=tree.yview)
+        # Default values for the Tree View
+        treeview_default = (
+            '(empty)...', '(empty)...', '(empty)...', '(empty)...', '(empty)...', '(empty)...')
+        self.tree.insert(parent='', index=0, iid=0,
+                            values=treeview_default, tags=('even_row',))
 
-        self.data = []
-        print(self.data)
-
-        treeview_val = (
-            '12kbs', 'October 13', 'Val', '12kb', 'October 10', 'Val', '12kb', 'October 12', 'Val', '12kb',
-            'October 11',
-            'Val', 'test1', 'test2', 'hellow rold')
-
-
-        elem_count = 0
-        for elem1 in treeview_val:
-            if elem_count % 2 == 0:  # even row
-                self.tree.insert(parent='', index=elem_count, iid=elem_count,
-                            values=treeview_val[elem_count:(elem_count + 4)], tags=('odd_row',))
-            else:
-                self.tree.insert(parent='', index=elem_count, iid=elem_count,
-                            values=treeview_val[elem_count:(elem_count + 4)], tags=('even_row',))
-            elem_count += 1
         self.tree.tag_configure('odd_row', background='#F0F0FF')
         self.tree.tag_configure('even_row', background='#C1C1CD')
     def tree_insert(self, *args):
-        treeview_val = (
-            '12kbs', 'October 13', 'Val', '12kb', 'October 10', 'Val', '12kb', 'October 12', 'Val', '12kb',
-            'October 11',
-            'Val', 'test1', 'test2', 'hellow rold')
 
-        elem_count = 0
-        for elem1 in treeview_val:
-            if elem_count % 2 == 0:  # even row
-                self.tree.insert(parent='', index=elem_count, iid=elem_count,
-                            values=treeview_val[elem_count:(elem_count + 4)], tags=('odd_row',))
-            else:
-                self.tree.insert(parent='', index=elem_count, iid=elem_count,
-                            values=treeview_val[elem_count:(elem_count + 4)], tags=('even_row',))
-            elem_count += 1
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+            elem_count = 0
+            for index in range(0, len(self.df)):
+                if elem_count % 2 == 0:  # even row
+                    self.tree.insert(parent='', index=index, iid=index,
+                                values=self.df.loc[index, :].values.tolist(), tags=('odd_row',))
+                else:
+                    self.tree.insert(parent='', index=index, iid=index,
+                                values=self.df.loc[index, :].values.tolist(), tags=('even_row',))
+                elem_count += 1
+
         self.tree.tag_configure('odd_row', background='#F0F0FF')
         self.tree.tag_configure('even_row', background='#C1C1CD')
     def get_selected_downtime(self, *args):
         print(self.selected_downtime.get())
-
-        print(self.df.loc[1, :].values.tolist())
-
-
+        self.tree_insert()
 
     def get_selected_equipmnt(self, *args):
         print(self.selected_equipment.get())
@@ -233,10 +219,7 @@ class App(Frame):
 
     def get_end_date(self, *args):
         print(self.string_var_end.get())
-        # output_label.config(text=self.string_var.get())
-        # text = tkinter.Text(root, height=24)
-        # text.grid(column=0, row=0, sticky='nsew')
-        # text.insert('1.0', open_text_file())
+
     def load_datafile(self, *args):
         file_types = [('Excel files', '*.csv'), ('All files', '*')]  # File type
         # Show the open file dialog
@@ -246,7 +229,21 @@ class App(Frame):
         self.df = pd.read_csv(file_name,
                          usecols=['cr483_name', 'cr483_cranestatus', 'createdon', 'cr483_toolgroup'])  # Columns to read from .csv
 
-        self.data.append(self.df)
+        # Reassign order of columns:
+        self.df = self.df.reindex(columns=['cr483_name', 'cr483_cranestatus',  'cr483_toolgroup', 'createdon'])
+        print(self.df)
+        # CreateOn column conversion from Zulu to PST time
+        self.df['createdon'] = pd.to_datetime(self.df['createdon'])
+        pacific_t = pytz.timezone('US/Pacific')
+        self.df['createdon'].dt.tz_convert(pacific_t)
+        self.df['createdon'].dt.strftime('%Y-%m-%d %H:%M:%S')  # Drop timezone from trailing end
+        #self.df.index.rename('conv_date', inplace=True)
+        self.df.sort_values(by='createdon', ascending=True, inplace=True)  # Sort by Date
+        #self.df['index_col'] = self.df.index
+        self.df.index = pd.RangeIndex(len(self.df.index))
+        print(self.df)
+        print('calling tree')
+        self.tree_insert()
 
     def calculate(self):
         print("empty")
