@@ -11,6 +11,8 @@ from tkinter import *
 from tkinter import ttk
 import tkinter as tk
 from tkinter import filedialog as fd
+
+import numpy as np
 import pandas as pd
 import pytz
 from datetime import datetime
@@ -42,6 +44,8 @@ class App(Frame):
         self.tree_view_table()
         self.file_menues()
         self.buttons()
+
+
 
 
 
@@ -81,9 +85,9 @@ class App(Frame):
 
     def buttons(self):
         ttk.Button(self.label_frame, text="Calculate",
-                   command=self.calculate).grid(column=5, rowspan=2, row=2, padx=20)
+                   command=self.exec_btn_command).grid(column=5, rowspan=2, row=2, padx=20)
         ttk.Button(self.label_frame, text="Plot",
-                   command=self.calculate).grid(column=6, rowspan=2, row=2, padx=20)
+                   command=self.plot_graphs()).grid(column=6, rowspan=2, row=2, padx=20)
 
     def comboboxes(self):
         # Create a combobox for Equipment Type
@@ -96,7 +100,7 @@ class App(Frame):
                                     'TMA11', 'TMA12', 'TMA13', 'TMA14')
         equipment_comb['state'] = 'readonly'
         equipment_comb.current(0)
-        equipment_comb.bind('<<ComboboxSelected>>', self.get_selected_equipmnt)
+        equipment_comb.bind('<<ComboboxSelected>>', self.drop_down_activate)
 
         # Create a combobox for Downtime type
         #self.selected_downtime = tk.StringVar()
@@ -203,27 +207,153 @@ class App(Frame):
             else:
                 self.tree.insert(parent='', index=index, iid=index,
                                 values=self.df_temp.loc[index, :].values.tolist(), tags=('even_row',))
-                elem_count += 1
+            elem_count += 1
 
         self.tree.tag_configure('odd_row', background='#F0F0FF')
         self.tree.tag_configure('even_row', background='#C1C1CD')
+
+    def plot_graphs(self, *args):
+        print("Plots")
+        index = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
+             'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
+             'TMA11', 'TMA12', 'TMA13', 'TMA14']
+
+        #df_3 = pd.DataFrame({'Count': downtime_cnt, 'downtime_minutes': downtime_durr})
+        #ax = self.df_accum_time.plot.bar(x='Equipment', y='downtime_minutes', rot=0, title='Downtime')
+        #ax.plot()
+        #plt.show()
     def get_selected_downtime(self, *args):
         print(self.selected_downtime.get())
         self.tree_insert()
 
-    def get_selected_equipmnt(self, *args):
-        print(self.selected_equipment.get())
+    def drop_down_activate(self, *args):
         self.df_temp = self.df.loc[self.df['cr483_name'] == self.selected_equipment.get()]
         self.df_temp.index = pd.RangeIndex(len(self.df_temp.index))
         print("sorted by name")
         print(self.df_temp)
         self.tree_insert()
+    def get_selected_equipmnt(self, *args):
+        print(self.selected_equipment.get())
+        self.my_selected_equipment = self.selected_equipment.get()
+
 
     def get_start_date(self, *args):
         print(self.string_var_strt.get())
 
     def get_end_date(self, *args):
         print(self.string_var_end.get())
+
+    # Execute this function on Button Click Calculate
+    def exec_btn_command(self, *args):
+
+
+        equip_name_arr = []
+        equip_time_arr = []
+        if self.selected_equipment.get() == 'All PTA & TMA':
+            print("all equipment selected")
+            equipment_list = ( 'PTA01', 'PTA02', 'PTA03', 'PTA04',
+             'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
+             'TMA11', 'TMA12', 'TMA13', 'TMA14')
+            arrindex = 0
+
+            for num, element in enumerate(equipment_list, start=0):
+
+                self.df_temp = self.df.loc[self.df['cr483_name'] == equipment_list[num]]
+                self.df_temp.index = pd.RangeIndex(len(self.df_temp.index))
+
+                print(self.df_temp)
+                print("==========================")
+                self.calculate_downtime_durr()
+
+
+                equip_name_arr.append(equipment_list[num])
+                equip_time_arr.append(self.downtime_durr_sum)
+                #self.df_accum_time.loc[self.df_accum_time.index[num], 'Crane Name'] = equipment_list[num]
+                #self.df_accum_time.loc[self.df_accum_time.index[num], 'Downtime Duration'] = self.downtime_durr_sum
+                #self.df_accum_time['crane_name'] = equipment_list[num]
+                #self.df_accum_time['downtime_durration'] = self.downtime_durr_sum
+                print(num, element)
+                arrindex += 1
+            print("accumulated downtime")
+
+
+            print("updated dataframe")
+            self.tree_insert()
+            self.df_accum_time = pd.DataFrame({'Equipment Name':equip_name_arr, 'Downtime': equip_time_arr})
+            self.df_temp = self.df_accum_time
+            self.tree_insert()
+            print(self.df_accum_time)
+            index = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
+                     'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
+                     'TMA11', 'TMA12', 'TMA13', 'TMA14']
+
+            # df_3 = pd.DataFrame({'Count': downtime_cnt, 'downtime_minutes': downtime_durr})
+            ax = self.df_accum_time.plot.bar(x='Equipment Name', y='Downtime', rot=0, title='Downtime')
+            ax.plot()
+            ax.bar_label(ax.containers[0])
+            plt.show()
+        else:
+            print("not all selevted")
+            self.calculate_downtime_durr()
+            pass
+    def calculate_downtime_durr(self, *args):
+
+        s1 = '2022-05-26 10:37:08'
+        s2 = '2022-05-27 11:48:22'
+        date_frmt = '%Y-%m-%d %H:%M:%S'
+        #time_1 = datetime.strptime(s1, date_frmt)
+        #time_2 = datetime.strptime(s2, date_frmt)
+        time_1 = datetime.strptime(s1, date_frmt)
+        time_2 = datetime.strptime(s2, date_frmt)
+
+        #self.df_temp['createdon'] = self.df_temp['createdon'].astype(str)
+
+        mem_date = '2022-05-26 10:37:08'
+        mem_status = 'Available'
+        count_dt = 0
+        self.downtime_durr_sum = 0
+        downtime_durr = []
+        downtime_cnt = []
+        print("data frame in calculate module")
+        print(self.df_temp)
+
+        for index in range(len(self.df_temp)):
+            # Determine when status changed from Not Available to Available
+            # Record time difference
+            if (index + 2) <= len(self.df_temp):
+                curr_status = self.df_temp['cr483_cranestatus'].iloc[index]
+                next_status = self.df_temp['cr483_cranestatus'].iloc[index + 1]
+                curr_date = self.df_temp['createdon'].iloc[index]
+
+
+            if (curr_status == 'Not Available'):
+
+                mem_date = curr_date
+                mem_status = curr_status
+                count_dt += 1
+                # print(mem_date)
+
+
+            elif (curr_status == 'Available') and (mem_status == 'Not Available'):
+                date_diff = datetime.strptime(curr_date, date_frmt) - datetime.strptime(mem_date, date_frmt)
+                mem_status = 'Available'
+
+                print("Downtime duration:")
+                print(curr_date + ' - ' + mem_date)
+                print(get_duration(date_diff.total_seconds()))
+                downtime_durr.append(get_duration(date_diff.total_seconds()))
+                downtime_cnt.append(count_dt)
+                # Downtime Sum
+                self.downtime_durr_sum += get_duration(date_diff.total_seconds())
+                print("xxxxxxxxxxxxxxxx")
+                print(self.downtime_durr_sum)
+                self.df_temp.loc[self.df_temp.index[index], 'Downtime Duration'] = get_duration(date_diff.total_seconds())
+        print(count_dt)
+        #self.df_temp['Downtime Durration'] = downtime_durr
+        print(self.df_temp.to_string())
+        print('downtime calced')
+        print(self.df_temp)
+        self.tree_insert()
 
     def load_datafile(self, *args):
         file_types = [('Excel files', '*.csv'), ('All files', '*')]  # File type
@@ -241,7 +371,10 @@ class App(Frame):
         self.df['createdon'] = pd.to_datetime(self.df['createdon'])
         pacific_t = pytz.timezone('US/Pacific')
         self.df['createdon'].dt.tz_convert(pacific_t)
-        self.df['createdon'].dt.strftime('%Y-%m-%d %H:%M:%S')  # Drop timezone from trailing end
+        #self.df['createdon'].dt.strftime('%Y-%m-%d %H:%M:%S')  # Drop timezone from trailing end
+        self.df['createdon'] = self.df['createdon'].dt.strftime('%Y-%m-%d %H:%M:%S')
+
+
         #self.df.index.rename('conv_date', inplace=True)
         self.df.sort_values(by='createdon', ascending=True, inplace=True)  # Sort by Date
         #self.df['index_col'] = self.df.index
@@ -327,7 +460,8 @@ def open_text_file(my_choice):
 
 def get_duration(duration):
     minutes = (duration / 60)
-    return minutes
+    hours = minutes / 60
+    return hours
 
 
 # About message window
