@@ -296,44 +296,64 @@ class App(Frame):
             print("not all selevted")
             self.calculate_downtime_durr()
             pass
+    def calculate_downtime_ver2(self):
+        pass
+
     def calculate_downtime_durr(self, *args):
+        """
+        This function calculates downtime duration & count
+        """
 
-        s1 = '2022-05-26 10:37:08'
-        s2 = '2022-05-27 11:48:22'
-        date_frmt = '%Y-%m-%d %H:%M:%S'
-        #time_1 = datetime.strptime(s1, date_frmt)
-        #time_2 = datetime.strptime(s2, date_frmt)
-        time_1 = datetime.strptime(s1, date_frmt)
-        time_2 = datetime.strptime(s2, date_frmt)
+        # Date format for time difference calculation
+        date_frmt = '%Y-%m-%d %H:%M:%S'  # '2022-05-26 10:37:08'
+        # Default date reference
+        mem_date = datetime.strptime(self.df_temp['createdon'].iloc[0], date_frmt)
+        mem_status = self.df_temp['cr483_cranestatus'].iloc[0]
 
-        #self.df_temp['createdon'] = self.df_temp['createdon'].astype(str)
-
-        mem_date = '2022-05-26 10:37:08'
-        mem_status = 'Available'
+        # Variable definitions
         count_dt = 0
         self.downtime_durr_sum = 0
         downtime_durr = []
         downtime_cnt = []
-        print("data frame in calculate module")
-        print(self.df_temp)
+        full_downtime_cnt = 0
+        partial_downtime_cnt = 0
+        sum_full_downtime_durr = 0
+        sum_partial_downtime_durr = 0
 
+        # Iterate over each element of the dataframe sorted by equipment name
+        # Determine when status changed from Not Available to Available
+        # Record time difference
         for index in range(len(self.df_temp)):
-            # Determine when status changed from Not Available to Available
-            # Record time difference
-            if (index + 2) <= len(self.df_temp):
-                curr_status = self.df_temp['cr483_cranestatus'].iloc[index]
-                next_status = self.df_temp['cr483_cranestatus'].iloc[index + 1]
-                curr_date = self.df_temp['createdon'].iloc[index]
 
+            curr_status = self.df_temp['cr483_cranestatus'].iloc[index]                         # Get current status
+            curr_date = datetime.strptime(self.df_temp['createdon'].iloc[index], date_frmt)     # Get current date
 
-            if (curr_status == 'Not Available'):
-
+            if ((curr_status == 'Available' and mem_status == 'Not Available')
+                    or (curr_status == 'Partially Available' and mem_status == 'Not Available')):
+                # Record time difference - this is Time of being Fully out of service
+                durr_full_downtime =curr_date - mem_date
+                sum_full_downtime_durr += get_duration(
+                    durr_full_downtime.total_seconds())         # Sum of Full Downtime
+                # Add values to List
                 mem_date = curr_date
                 mem_status = curr_status
-                count_dt += 1
-                # print(mem_date)
+                full_downtime_cnt += 1                          # Full downtime counter
+                pass
+            elif ((curr_status == 'Not Available') and (mem_status == 'Partially Available')
+                    or (curr_status == 'Available') and (mem_status == 'Partially Available')):
+                # Record time difference - this is Time of being Partially out of service
+                durr_partial_downtime = curr_date - mem_date
+                sum_partial_downtime_durr += get_duration(
+                    durr_partial_downtime.total_seconds())      # Sum of Partial Downtime
+                # Add values to List
+                mem_date = curr_date
+                mem_status = curr_status
+                partial_downtime_cnt += 1                       # Partial Downtime counter
+                pass
 
 
+
+            # OLD
             elif (curr_status == 'Available') and (mem_status == 'Not Available'):
                 date_diff = datetime.strptime(curr_date, date_frmt) - datetime.strptime(mem_date, date_frmt)
                 mem_status = 'Available'
@@ -343,13 +363,11 @@ class App(Frame):
                 print(get_duration(date_diff.total_seconds()))
                 downtime_durr.append(get_duration(date_diff.total_seconds()))
                 downtime_cnt.append(count_dt)
-                # Downtime Sum
+                # Total downtime in hours
                 self.downtime_durr_sum += get_duration(date_diff.total_seconds())
-                print("xxxxxxxxxxxxxxxx")
                 print(self.downtime_durr_sum)
                 self.df_temp.loc[self.df_temp.index[index], 'Downtime Duration'] = get_duration(date_diff.total_seconds())
         print(count_dt)
-        #self.df_temp['Downtime Durration'] = downtime_durr
         print(self.df_temp.to_string())
         print('downtime calced')
         print(self.df_temp)
