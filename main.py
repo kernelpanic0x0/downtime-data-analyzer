@@ -395,6 +395,16 @@ class App(Frame):
         self.df_buff = self.df_buff.sort_index(ascending=True)
         self.df_temp = self.df_buff
         self.tree_insert()
+        index_1 = self.df_buff.iloc[0:14, 0].values.tolist()
+        down_1 = self.df_buff.iloc[0:14, 4].values.tolist()
+
+        down_2 = self.df_buff.iloc[14:len(self.df_buff), 4].values.tolist()
+        df_plot = pd.DataFrame({"Not Available": down_1, "Partially Avaialble": down_2}, index=index_1)
+        ax = df_plot.plot.bar(rot=0)
+        ax.plot()
+        plt.show()
+        print(down_1)
+        print(down_2)
         print(self.df_temp.to_string())
         print('downtime calced')
         print(self.df_temp)
