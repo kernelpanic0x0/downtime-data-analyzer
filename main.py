@@ -323,8 +323,19 @@ class App(Frame):
             self.df_temp.index = pd.RangeIndex(len(self.df_temp.index))
 
             # Get first value from first row of dataframe
-            mem_date = datetime.strptime(self.df_temp['createdon'].iloc[0], date_frmt)
-            mem_status = self.df_temp['cr483_cranestatus'].iloc[0]
+            # Reject first row if it has garbage name
+            for i in range(0, len(self.df_temp)):
+
+                mem_date = datetime.strptime(self.df_temp['createdon'].iloc[i], date_frmt)
+                mem_status = self.df_temp['cr483_cranestatus'].iloc[i]
+                first_row = i
+                if mem_status == "Not Available":
+                    break
+                elif mem_status == "Partially Available":
+                    break
+                elif mem_status == "Available":
+                    break
+
 
             # Set downtime counters
             full_downtime_cnt = 0
@@ -336,7 +347,7 @@ class App(Frame):
             print("mem date")
             print(mem_date)
 
-            for k in range(1, len(self.df_temp)):
+            for k in range(first_row, len(self.df_temp)):
 
                 curr_status = self.df_temp['cr483_cranestatus'].iloc[k]                         # Get current status
                 curr_date = datetime.strptime(self.df_temp['createdon'].iloc[k], date_frmt)     # Get current date
@@ -402,6 +413,7 @@ class App(Frame):
         df_plot = pd.DataFrame({"Not Available": down_1, "Partially Avaialble": down_2}, index=index_1)
         ax = df_plot.plot.bar(rot=0)
         ax.plot()
+        ax.bar_label(ax.containers[0])
         plt.show()
         print(down_1)
         print(down_2)
