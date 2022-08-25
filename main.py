@@ -87,7 +87,7 @@ class App(Frame):
         ttk.Button(self.label_frame, text="Calculate",
                    command=self.exec_btn_command).grid(column=5, rowspan=2, row=2, padx=20)
         ttk.Button(self.label_frame, text="Plot",
-                   command=self.plot_graphs()).grid(column=6, rowspan=2, row=2, padx=20)
+                   command=self.calculate_downtime_durr).grid(column=6, rowspan=2, row=2, padx=20)
 
     def comboboxes(self):
         # Create a combobox for Equipment Type
@@ -306,72 +306,93 @@ class App(Frame):
 
         # Date format for time difference calculation
         date_frmt = '%Y-%m-%d %H:%M:%S'  # '2022-05-26 10:37:08'
-        # Default date reference
-        mem_date = datetime.strptime(self.df_temp['createdon'].iloc[0], date_frmt)
-        mem_status = self.df_temp['cr483_cranestatus'].iloc[0]
+
 
         # Variable definitions
         count_dt = 0
         self.downtime_durr_sum = 0
-        downtime_durr = []
-        downtime_cnt = []
+
+        # Full Downtime List
+        fully_down_time_arr = []
+        fully_down_cnt_arr = []
+
+        # Partial Downtime List
+        partially_down_time_arr = []
+        partially_down_cnt_arr = []
+
         full_downtime_cnt = 0
         partial_downtime_cnt = 0
         sum_full_downtime_durr = 0
         sum_partial_downtime_durr = 0
 
+        equipment_list = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
+                 'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
+                 'TMA11', 'TMA12', 'TMA13', 'TMA14']
+        self.df_buff = pd.DataFrame()
         # Iterate over each element of the dataframe sorted by equipment name
         # Determine when status changed from Not Available to Available
         # Record time difference
-        for index in range(len(self.df_temp)):
+        for num, element in enumerate(equipment_list, start=0):
 
-            curr_status = self.df_temp['cr483_cranestatus'].iloc[index]                         # Get current status
-            curr_date = datetime.strptime(self.df_temp['createdon'].iloc[index], date_frmt)     # Get current date
+            self.df_temp = self.df.loc[self.df['cr483_name'] == equipment_list[num]]    # Sort dataframe by equipment name
+            self.df_temp.index = pd.RangeIndex(len(self.df_temp.index))                 # Reset index of the dataframe
+            mem_date = datetime.strptime(self.df_temp['createdon'].iloc[0], date_frmt)
+            mem_status = self.df_temp['cr483_cranestatus'].iloc[0]
 
-            if ((curr_status == 'Available' and mem_status == 'Not Available')
-                    or (curr_status == 'Partially Available' and mem_status == 'Not Available')):
-                # Record time difference - this is Time of being Fully out of service
-                durr_full_downtime =curr_date - mem_date
-                sum_full_downtime_durr += get_duration(
-                    durr_full_downtime.total_seconds())         # Sum of Full Downtime
-                # Add values to List
-                mem_date = curr_date
-                mem_status = curr_status
-                full_downtime_cnt += 1                          # Full downtime counter
-                pass
-            elif ((curr_status == 'Not Available') and (mem_status == 'Partially Available')
-                    or (curr_status == 'Available') and (mem_status == 'Partially Available')):
-                # Record time difference - this is Time of being Partially out of service
-                durr_partial_downtime = curr_date - mem_date
-                sum_partial_downtime_durr += get_duration(
-                    durr_partial_downtime.total_seconds())      # Sum of Partial Downtime
-                # Add values to List
-                mem_date = curr_date
-                mem_status = curr_status
-                partial_downtime_cnt += 1                       # Partial Downtime counter
-                pass
+            for k, index in enumerate(self.df_temp.values):
+                #print(self.df_temp)
+                curr_status = self.df_temp['cr483_cranestatus'].iloc[k]                         # Get current status
+                curr_date = datetime.strptime(self.df_temp['createdon'].iloc[k], date_frmt)     # Get current date
+                print(curr_status)
+                print(curr_date)
+
+                if ((curr_status == 'Available' and mem_status == 'Not Available')
+                        or (curr_status == 'Partially Available' and mem_status == 'Not Available')):
+                    # Record time difference - this is Time of being Fully out of service
+                    print("full downtime")
+                    durr_full_downtime =curr_date - mem_date
+                    sum_full_downtime_durr += get_duration(
+                        durr_full_downtime.total_seconds())         # Sum of Full Downtime in hrs
+                    # Add values to List
+                    mem_date = curr_date
+                    mem_status = curr_status
+                    full_downtime_cnt += 1                          # Full downtime counter
+
+                elif ((curr_status == 'Not Available') and (mem_status == 'Partially Available')
+                        or (curr_status == 'Available') and (mem_status == 'Partially Available')):
+                    # Record time difference - this is Time of being Partially out of service
+                    durr_partial_downtime = curr_date - mem_date
+                    sum_partial_downtime_durr += get_duration(
+                        durr_partial_downtime.total_seconds())      # Sum of Partial Downtime in hrs
+                    # Add values to List
+                    mem_date = curr_date
+                    mem_status = curr_status
+                    partial_downtime_cnt += 1                       # Partial Downtime counter
+
+            print("Downtimes")
+            print(sum_full_downtime_durr)
+            print(sum_partial_downtime_durr)
+            print("Downtimes Count")
+            print(full_downtime_cnt)
+            print(partial_downtime_cnt)
+            self.df_buff.loc[num, 'Equipment Name'] = equipment_list[num]
+            self.df_buff.loc[num, 'Date'] = "1984"
+            self.df_buff.loc[num, 'Downtime Duration'] = sum_full_downtime_durr
+            self.df_buff.loc[num, 'Downtime Count'] = full_downtime_cnt
+
+            self.df_buff.loc[num + len(equipment_list), 'Equipment Name'] = equipment_list[num]
+            self.df_buff.loc[num + len(equipment_list), 'Date'] = "1984"
+            self.df_buff.loc[num + len(equipment_list), 'Downtime Duration'] = sum_partial_downtime_durr
+            self.df_buff.loc[num + len(equipment_list), 'Downtime Count'] = partial_downtime_cnt
 
 
-
-            # OLD
-            elif (curr_status == 'Available') and (mem_status == 'Not Available'):
-                date_diff = datetime.strptime(curr_date, date_frmt) - datetime.strptime(mem_date, date_frmt)
-                mem_status = 'Available'
-
-                print("Downtime duration:")
-                print(curr_date + ' - ' + mem_date)
-                print(get_duration(date_diff.total_seconds()))
-                downtime_durr.append(get_duration(date_diff.total_seconds()))
-                downtime_cnt.append(count_dt)
-                # Total downtime in hours
-                self.downtime_durr_sum += get_duration(date_diff.total_seconds())
-                print(self.downtime_durr_sum)
-                self.df_temp.loc[self.df_temp.index[index], 'Downtime Duration'] = get_duration(date_diff.total_seconds())
-        print(count_dt)
+        self.df_temp = self.df_buff.sort_index(ascending=True)
         print(self.df_temp.to_string())
         print('downtime calced')
         print(self.df_temp)
-        self.tree_insert()
+        print(self.df_buff)
+        print(self.df_buff.index)
+        #self.tree_insert()
 
     def load_datafile(self, *args):
         file_types = [('Excel files', '*.csv'), ('All files', '*')]  # File type
