@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 from tkcalendar import Calendar, DateEntry
 import pathlib
 import babel.numbers
+import logging
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
@@ -45,8 +46,9 @@ class App(Frame):
         self.ui_tree_view_table()
         self.ui_file_menues()
         self.ui_buttons()
-        self.df = pd.DataFrame()
         self.df_temp = pd.DataFrame()
+        self.df = pd.DataFrame()
+
 
     def init_ui(self):
 
@@ -125,19 +127,21 @@ class App(Frame):
         # Calendar
         #self.string_var_strt = tk.StringVar()
         #self.string_var_end = tk.StringVar()
-
+        today = datetime.today()
         # Create Calendar Input drop down - Start Date
-        cal_start_date = DateEntry(self.label_frame, selectmode='day', date_pattern='mm/dd/y', textvariable=self.string_var_strt)
-        cal_start_date.grid(column=1, row=2, padx=10,sticky=W)
-        cal_start_date.bind("<<DateEntrySelected>>", self.get_start_date)
+        self.cal_start_date = DateEntry(self.label_frame, selectmode='day',
+                                   date_pattern='mm/dd/y', maxdate=today, textvariable=self.string_var_strt)
+        self.cal_start_date.grid(column=1, row=2, padx=10, sticky=W)
+        self.cal_start_date.bind("<<DateEntrySelected>>", self.get_start_date)
 
         #self.string_var_strt.trace('w', self.get_start_date)
 
         # Create Calendar Input drop down - End Date
-        cal_end_date = DateEntry(self.label_frame, selectmode='day', date_pattern='mm/dd/y', textvariable=self.string_var_end)
-        cal_end_date.grid(column=1, row=3, padx=10,sticky=W)
+        self.cal_end_date = DateEntry(self.label_frame, selectmode='day',
+                                 date_pattern='mm/dd/y', maxdate=today, textvariable=self.string_var_end)
+        self.cal_end_date.grid(column=1, row=3, padx=10, sticky=W)
 
-        cal_end_date.bind("<<DateEntrySelected>>", self.get_end_date)
+        self.cal_end_date.bind("<<DateEntrySelected>>", self.get_end_date)
         #self.string_var_end.trace('w', self.get_end_date)
     def ui_labels(self):
         # Create Calendar Label
@@ -237,20 +241,61 @@ class App(Frame):
 
 
     def get_start_date(self, *args):
+        """
+            This function gets START date/time from calendar
+            It checks if start date is before end date
+            Filter data by given date/time
+        """
+        start_date = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').date()
+        end_date = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').date()
+        default_date = datetime.today()
 
-        print(self.string_var_strt.get() + "Resulty")
-        print("trace")
-        # Set data start date:
-        # Sort dataframe by equipment name && Reset index of the dataframe
-        #self.df = self.df.loc[self.df['createdon'].between('2022-06-01 00:00:00', '2022-07-01 00:00:00')]
-        #self.df.index = pd.RangeIndex(len(self.df.index))
-        #self.tree_insert()
-        #print(self.df)
+        if start_date > end_date:
+            print("Start date can't be after end date")
+            self.cal_start_date.set_date(default_date)
+        else:
+            pass
+
+        print("Sort dataframe by Start Date")
+
+
 
     def get_end_date(self, *args):
-        print(self.string_var_end.get() + "Resulty")
-        print("trace")
-        #self.convert_date()
+        """
+            This function gets END date/time from calendar
+            It checks if end date is before start date
+            Filter data by given date/time
+        """
+        start_date = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').date()
+
+        end_date = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').date()
+        default_date = datetime.today()
+
+        if end_date < start_date:
+            print("End date can't be before start date")
+            self.cal_end_date.set_date(default_date)
+        else:
+            pass
+
+        print("Sort dataframe by End Date")
+        self.filter_data_by_date(start_date, end_date)
+
+    def filter_data_by_date(self, start_date, end_date):
+        """
+            This function filter dataframe df_temp by
+            start and end date
+        """
+        print(type(start_date))
+        start_date = start_date.strftime('%Y-%m-%d %H:%M:%S')
+        end_date = end_date.strftime('%Y-%m-%d %H:%M:%S')
+        print(type(start_date))
+        try:
+            self.df_temp = self.df.loc[self.df['createdon'].between(start_date, end_date)]
+            self.df_temp.index = pd.RangeIndex(len(self.df_temp.index))
+            self.tree_insert()
+        except KeyError:
+            print("Dataframe was not loaded")
+
 
     def convert_date(self, *args):
         print("converting date")
@@ -309,8 +354,6 @@ class App(Frame):
             print("not all selevted")
             self.calculate_downtime_durr()
             pass
-    def calculate_downtime_ver2(self):
-        pass
 
     def calculate_downtime_durr(self, *args):
         """
@@ -454,6 +497,7 @@ class App(Frame):
         data_columns = ['cr483_name', 'cr483_cranestatus', 'createdon', 'cr483_toolgroup']
         data_columns_reindex = ['cr483_name', 'cr483_cranestatus', 'cr483_toolgroup', 'createdon']
 
+
         # Show the open file dialog
         file_name = fd.askopenfilename(title='Open .*CSV file', initialdir='/', filetypes=filetypes)
         print(file_name)
@@ -462,32 +506,49 @@ class App(Frame):
         try:
             self.df = pd.read_csv(file_name, usecols=data_columns)   # Columns to read from .csv
             self.df = self.df.reindex(columns=data_columns_reindex)  # Reassign order of columns:
+
+            # Check if valid column exists & sort by date
+            try:
+                # CreateOn column conversion from Zulu to PST time
+                self.df['createdon'] = pd.to_datetime(self.df['createdon'])
+                pacific_t = pytz.timezone('US/Pacific')
+                self.df['createdon'].dt.tz_convert(pacific_t)
+                self.df['createdon'] = self.df['createdon'].dt.strftime('%Y-%m-%d %H:%M:%S')
+                self.df.sort_values(by='createdon', ascending=True, inplace=True)  # Sort  Data by Date
+                # Reset index of dataframe
+                self.df.index = pd.RangeIndex(len(self.df.index))
+
+                # Create a deep copy of dataframe
+                # Modifications to new dataframe will not modify original
+
+                self.df_temp = self.df.copy(deep=True)
+                print(self.df)
+                print(self.df_temp)
+                print('Insert data into tree view table')
+                self.tree_insert()
+            except KeyError:
+                logging.exception("Wrong column names")
+                self.error_message("Wrong column names")
+
         except FileNotFoundError:
-            print("No Such File")
+            logging.exception("No File Selected")
+            self.error_message("No File Selected")
+        except ValueError:
+            logging.exception("File Columns missing")
+            self.error_message("File Columns missing")
 
-        # Check if valid column exists & sort by date
-        try:
-            # CreateOn column conversion from Zulu to PST time
-            self.df['createdon'] = pd.to_datetime(self.df['createdon'])
-            pacific_t = pytz.timezone('US/Pacific')
-            self.df['createdon'].dt.tz_convert(pacific_t)
-            self.df['createdon'] = self.df['createdon'].dt.strftime('%Y-%m-%d %H:%M:%S')
-            self.df.sort_values(by='createdon', ascending=True, inplace=True)  # Sort  Data by Date
-        except KeyError:
-            print("File has wrong column names")
+    def error_message(self, str_msg):
+        """
+            This function prints error message to Tree view Table
+        """
+        data_columns = self.tree['columns']  # Column names in tree view table
 
-        # Reset index of dataframe
-        self.df.index = pd.RangeIndex(len(self.df.index))
-
-        # Create a deep copy of dataframe
-        # Modifications to new dataframe will not modify original
-
-        self.df_temp = self.df.copy(deep=True)
-        print(self.df)
-        print(self.df_temp)
-        print('Insert data into tree view table')
-        self.tree_insert()
-
+        # For each element in tree view column names
+        # Add error message to column of df_temp
+        for i in range(0, len(data_columns)):
+            print(i)
+            self.df_temp.loc[0,  data_columns[i]] = str_msg
+        self.tree_insert()  # Write message to tree view table
 
     def calculate(self):
         print("empty")
