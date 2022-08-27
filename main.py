@@ -19,6 +19,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 from tkcalendar import Calendar, DateEntry
 import pathlib
+import babel.numbers
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
@@ -38,16 +39,14 @@ class App(Frame):
         Frame.__init__(self, master)
         self.master = master
         self.init_ui()
-        self.labels()
-        self.calendars()
-        self.comboboxes()
-        self.tree_view_table()
-        self.file_menues()
-        self.buttons()
-
-
-
-
+        self.ui_labels()
+        self.ui_calendars()
+        self.ui_comboboxes()
+        self.ui_tree_view_table()
+        self.ui_file_menues()
+        self.ui_buttons()
+        self.df = pd.DataFrame()
+        self.df_temp = pd.DataFrame()
 
     def init_ui(self):
 
@@ -69,8 +68,6 @@ class App(Frame):
         self.string_var_strt = tk.StringVar()
         self.string_var_end = tk.StringVar()
 
-
-
         # Configure tree viewer style
         style = ttk.Style()
         style.theme_use('clam')
@@ -80,16 +77,13 @@ class App(Frame):
         # Configure button style
         style.configure('TButton', background='#8B8B83', foreground='black', borderwidth=3, focusthickness=1, focuscolor='red', height=5)
 
-        #w = OptionMenu(self.mainframe, variable, *DROPDOWN_ITEMS)
-        #w.grid(column=1, row=1, sticky=W)
-
-    def buttons(self):
-        ttk.Button(self.label_frame, text="Calculate",
-                   command=self.exec_btn_command).grid(column=5, rowspan=2, row=2, padx=20)
+    def ui_buttons(self):
+        ttk.Button(self.label_frame, text="Calculate-test",
+                   command=self.convert_date).grid(column=5, rowspan=2, row=2, padx=20)
         ttk.Button(self.label_frame, text="Plot",
                    command=self.calculate_downtime_durr).grid(column=6, rowspan=2, row=2, padx=20)
 
-    def comboboxes(self):
+    def ui_comboboxes(self):
         # Create a combobox for Equipment Type
         #self.selected_equipment = tk.StringVar()
         equipment_comb = ttk.Combobox(self.label_frame, textvariable=self.selected_equipment)
@@ -111,7 +105,7 @@ class App(Frame):
         downtime_comb['state'] = 'readonly'
         downtime_comb.current(0)
         downtime_comb.bind('<<ComboboxSelected>>', self.get_selected_downtime)
-    def file_menues(self):
+    def ui_file_menues(self):
         # Create menu item
         my_menu = Menu(root)
         root.config(menu=my_menu)
@@ -127,20 +121,25 @@ class App(Frame):
         # Top bar Help menu
         my_menu.add_cascade(label="Help", menu=help_menu)
         help_menu.add_command(label="About", command=about_msg)
-    def calendars(self):
+    def ui_calendars(self):
         # Calendar
         #self.string_var_strt = tk.StringVar()
         #self.string_var_end = tk.StringVar()
+
         # Create Calendar Input drop down - Start Date
-        DateEntry(self.label_frame, selectmode='day', textvariable=self.string_var_strt).grid(column=1, row=2, padx=10,
-                                                                                              sticky=W)
-        self.string_var_strt.trace('w', self.get_start_date)
+        cal_start_date = DateEntry(self.label_frame, selectmode='day', date_pattern='mm/dd/y', textvariable=self.string_var_strt)
+        cal_start_date.grid(column=1, row=2, padx=10,sticky=W)
+        cal_start_date.bind("<<DateEntrySelected>>", self.get_start_date)
+
+        #self.string_var_strt.trace('w', self.get_start_date)
 
         # Create Calendar Input drop down - End Date
-        DateEntry(self.label_frame, selectmode='day', textvariable=self.string_var_end).grid(column=1, row=3, padx=10,
-                                                                                             sticky=W)
-        self.string_var_end.trace('w', self.get_end_date)
-    def labels(self):
+        cal_end_date = DateEntry(self.label_frame, selectmode='day', date_pattern='mm/dd/y', textvariable=self.string_var_end)
+        cal_end_date.grid(column=1, row=3, padx=10,sticky=W)
+
+        cal_end_date.bind("<<DateEntrySelected>>", self.get_end_date)
+        #self.string_var_end.trace('w', self.get_end_date)
+    def ui_labels(self):
         # Create Calendar Label
         ttk.Label(self.label_frame, text="Start Date:").grid(column=0, row=2, pady=5, sticky=W)
         ttk.Label(self.label_frame, text="End Date").grid(column=0, row=3, pady=5, sticky=W)
@@ -150,7 +149,7 @@ class App(Frame):
         ttk.Label(self.label_frame, text="Downtime by:").grid(column=2, row=3, pady=5, sticky=W)
 
 
-    def tree_view_table(self, *args):
+    def ui_tree_view_table(self, *args):
         # Configure tree viewer style
         style = ttk.Style()
         style.theme_use('clam')
@@ -238,11 +237,25 @@ class App(Frame):
 
 
     def get_start_date(self, *args):
-        print(self.string_var_strt.get())
+
+        print(self.string_var_strt.get() + "Resulty")
+        print("trace")
+        # Set data start date:
+        # Sort dataframe by equipment name && Reset index of the dataframe
+        #self.df = self.df.loc[self.df['createdon'].between('2022-06-01 00:00:00', '2022-07-01 00:00:00')]
+        #self.df.index = pd.RangeIndex(len(self.df.index))
+        #self.tree_insert()
+        #print(self.df)
 
     def get_end_date(self, *args):
-        print(self.string_var_end.get())
+        print(self.string_var_end.get() + "Resulty")
+        print("trace")
+        #self.convert_date()
 
+    def convert_date(self, *args):
+        print("converting date")
+        self.selected_end_date_obj = datetime.strptime(self.string_var_end, '%m/%d/%Y').date()
+        print(self.selected_end_date_obj)
     # Execute this function on Button Click Calculate
     def exec_btn_command(self, *args):
 
@@ -304,8 +317,10 @@ class App(Frame):
         This function calculates downtime duration & count
         """
 
+
         # Date format for time difference calculation
         date_frmt = '%Y-%m-%d %H:%M:%S'  # '2022-05-26 10:37:08'
+
 
         equipment_list = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
                  'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
@@ -414,6 +429,11 @@ class App(Frame):
         ax = df_plot.plot.bar(rot=0)
         ax.plot()
         ax.bar_label(ax.containers[0])
+        ax.bar_label(ax.containers[1])
+        ax.set_xlabel('Equipment Name')
+        ax.set_ylabel('Downtime in "hrs"')
+        ax.set_title('Downtime duration: ' + self.string_var_strt.get() + " : " + self.string_var_end.get())
+        plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Downtime")
         plt.show()
         print(down_1)
         print(down_2)
@@ -425,35 +445,49 @@ class App(Frame):
         #self.tree_insert()
 
     def load_datafile(self, *args):
-        file_types = [('Excel files', '*.csv'), ('All files', '*')]  # File type
+        """
+         This function loads .csv file
+         It converts data column from zulu to PST
+         Data is sorted in ascending order
+         """
+        filetypes = [('Excel files', '*.csv'), ('All files', '*')]  # File type
+        data_columns = ['cr483_name', 'cr483_cranestatus', 'createdon', 'cr483_toolgroup']
+        data_columns_reindex = ['cr483_name', 'cr483_cranestatus', 'cr483_toolgroup', 'createdon']
+
         # Show the open file dialog
-        file_name = fd.askopenfilename()
+        file_name = fd.askopenfilename(title='Open .*CSV file', initialdir='/', filetypes=filetypes)
         print(file_name)
-        print(self.string_var_strt.get())
-        self.df = pd.read_csv(file_name,
-                         usecols=['cr483_name', 'cr483_cranestatus', 'createdon', 'cr483_toolgroup'])  # Columns to read from .csv
 
-        # Reassign order of columns:
-        self.df = self.df.reindex(columns=['cr483_name', 'cr483_cranestatus',  'cr483_toolgroup', 'createdon'])
-        print(self.df)
-        # CreateOn column conversion from Zulu to PST time
-        self.df['createdon'] = pd.to_datetime(self.df['createdon'])
-        pacific_t = pytz.timezone('US/Pacific')
-        self.df['createdon'].dt.tz_convert(pacific_t)
-        #self.df['createdon'].dt.strftime('%Y-%m-%d %H:%M:%S')  # Drop timezone from trailing end
-        self.df['createdon'] = self.df['createdon'].dt.strftime('%Y-%m-%d %H:%M:%S')
+        # Check if file was selected
+        try:
+            self.df = pd.read_csv(file_name, usecols=data_columns)   # Columns to read from .csv
+            self.df = self.df.reindex(columns=data_columns_reindex)  # Reassign order of columns:
+        except FileNotFoundError:
+            print("No Such File")
 
+        # Check if valid column exists & sort by date
+        try:
+            # CreateOn column conversion from Zulu to PST time
+            self.df['createdon'] = pd.to_datetime(self.df['createdon'])
+            pacific_t = pytz.timezone('US/Pacific')
+            self.df['createdon'].dt.tz_convert(pacific_t)
+            self.df['createdon'] = self.df['createdon'].dt.strftime('%Y-%m-%d %H:%M:%S')
+            self.df.sort_values(by='createdon', ascending=True, inplace=True)  # Sort  Data by Date
+        except KeyError:
+            print("File has wrong column names")
 
-        #self.df.index.rename('conv_date', inplace=True)
-        self.df.sort_values(by='createdon', ascending=True, inplace=True)  # Sort by Date
-        #self.df['index_col'] = self.df.index
+        # Reset index of dataframe
         self.df.index = pd.RangeIndex(len(self.df.index))
 
-        self.df_temp = self.df
+        # Create a deep copy of dataframe
+        # Modifications to new dataframe will not modify original
+
+        self.df_temp = self.df.copy(deep=True)
         print(self.df)
         print(self.df_temp)
-        print('calling tree')
+        print('Insert data into tree view table')
         self.tree_insert()
+
 
     def calculate(self):
         print("empty")
