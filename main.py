@@ -1,8 +1,8 @@
 # ################################
 #
 # Downtime data plotting script
-# August 21, 2022
-# Version 0.0.2
+# August 27, 2022
+# Version 0.0.3
 #
 ##################################
 import tkinter
@@ -50,8 +50,12 @@ class App(Frame):
         self.df = pd.DataFrame()
         self.df_date = pd.DataFrame()
 
-
     def init_ui(self):
+        """
+
+        This function sets canvas style & theme
+
+        """
 
         self.mainframe = ttk.Frame(root, padding="3 3 12 12")
         self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -81,12 +85,22 @@ class App(Frame):
         style.configure('TButton', background='#8B8B83', foreground='black', borderwidth=3, focusthickness=1, focuscolor='red', height=5)
 
     def ui_buttons(self):
+        """
+
+        This function sets UI Button Elements
+
+        """
         ttk.Button(self.label_frame, text="Calculate-test",
                    command=self.convert_date).grid(column=5, rowspan=2, row=2, padx=20)
         ttk.Button(self.label_frame, text="Plot",
                    command=self.calculate_downtime_durr).grid(column=6, rowspan=2, row=2, padx=20)
 
     def ui_comboboxes(self):
+        """
+
+        This function sets UI ComboBox Elements
+
+        """
         # Create a combobox for Equipment Type
         #self.selected_equipment = tk.StringVar()
         equipment_comb = ttk.Combobox(self.label_frame, textvariable=self.selected_equipment)
@@ -108,7 +122,13 @@ class App(Frame):
         downtime_comb['state'] = 'readonly'
         downtime_comb.current(0)
         downtime_comb.bind('<<ComboboxSelected>>', self.get_selected_downtime)
+
     def ui_file_menues(self):
+        """
+
+                This function sets UI Top Menu - File / Open / Exit
+
+        """
         # Create menu item
         my_menu = Menu(root)
         root.config(menu=my_menu)
@@ -124,7 +144,13 @@ class App(Frame):
         # Top bar Help menu
         my_menu.add_cascade(label="Help", menu=help_menu)
         help_menu.add_command(label="About", command=about_msg)
+
     def ui_calendars(self):
+        """
+
+        This function sets UI Calendar widgets
+
+        """
         # Calendar
         #self.string_var_strt = tk.StringVar()
         #self.string_var_end = tk.StringVar()
@@ -144,7 +170,13 @@ class App(Frame):
 
         self.cal_end_date.bind("<<DateEntrySelected>>", self.get_end_date)
         #self.string_var_end.trace('w', self.get_end_date)
+
     def ui_labels(self):
+        """
+
+        This function sets UI Label Elements
+
+        """
         # Create Calendar Label
         ttk.Label(self.label_frame, text="Start Date:").grid(column=0, row=2, pady=5, sticky=W)
         ttk.Label(self.label_frame, text="End Date").grid(column=0, row=3, pady=5, sticky=W)
@@ -153,8 +185,13 @@ class App(Frame):
         ttk.Label(self.label_frame, text="Equipment:").grid(column=2, row=2, pady=5, sticky=W)
         ttk.Label(self.label_frame, text="Downtime by:").grid(column=2, row=3, pady=5, sticky=W)
 
-
     def ui_tree_view_table(self, *args):
+        """
+
+        This function builds Tree View Table
+        By default table is populated with <<empty>> text on first row
+
+        """
         # Configure tree viewer style
         style = ttk.Style()
         style.theme_use('clam')
@@ -166,38 +203,45 @@ class App(Frame):
         # Create frame for the treeview widget
         frame_tree = ttk.Frame(self.mainframe)
         frame_tree.grid(column=0, row=2, sticky=W)
-        # Create treeview widget
-        # Name / Tool Group / Status / Date / Downtime Duration / Downtime Count
-        columns = ('Equipment Name', 'Tool Group', 'Status', 'Date', 'Downtime Duration', 'Downtime Count')
+
+        # Create Tree View Table widget
+        # Define column names
+        columns = ('Equipment Name', 'Tool Group', 'Status', 'Date', 'Downtime Duration (hrs)', 'Downtime Count')
         self.tree = ttk.Treeview(frame_tree, show='headings', height=18, style="mystyle.Treeview")
-        self.tree['columns'] = ('Equipment Name', 'Tool Group', 'Status', 'Date', 'Downtime Duration', 'Downtime Count')
+        self.tree['columns'] = columns
         self.tree.grid(column=0, row=2, sticky=W)
 
-        # Tree Column
+        # Set  Tree View Table <<Column>> for each element of columns list
         self.tree.column('#0', width=0, stretch=NO)
-        col_count = 0
-        for elem in columns:
-            self.tree.column(columns[col_count], anchor=W, width=162)
-            col_count += 1
+        for elem in range(0, len(columns)):
+            self.tree.column(columns[elem], anchor=W, width=162)
 
-        # Tree Heading
+        # Set  Tree View Table <<Heading>> for each element of columns list
         self.tree.heading('#0', text='', anchor=CENTER)
         for elem in columns:
             self.tree.heading(elem, text=elem, anchor=CENTER)
 
+        # Set Tree View Table <<ScrollBar>>
         scrl_bar = tk.Scrollbar(frame_tree, orient=VERTICAL, command=self.tree.yview)
         scrl_bar.grid(column=1, row=2, sticky=NS)
         self.tree.config(yscrollcommand=scrl_bar.set)
 
-        # Default values for the Tree View
+        # Populate Tree View Table with Default values
         treeview_default = (
             '(empty)...', '(empty)...', '(empty)...', '(empty)...', '(empty)...', '(empty)...')
         self.tree.insert(parent='', index=0, iid=0,
                             values=treeview_default, tags=('even_row',))
 
+        # Set background colors for each row - by default show one row with <<empty text>>
         self.tree.tag_configure('odd_row', background='#F0F0FF')
         self.tree.tag_configure('even_row', background='#C1C1CD')
+
     def tree_insert(self, *args):
+        """
+
+        This function inserts values into Tree View Table
+
+        """
 
         print(self.tree.get_children())
         for item in self.tree.get_children():
@@ -236,10 +280,10 @@ class App(Frame):
         print("sorted by name")
         print(self.df_temp)
         self.tree_insert()
+
     def get_selected_equipmnt(self, *args):
         print(self.selected_equipment.get())
         self.my_selected_equipment = self.selected_equipment.get()
-
 
     def get_start_date(self, *args):
         """
@@ -259,8 +303,6 @@ class App(Frame):
 
         print("Sort dataframe by Start Date")
         self.filter_data_by_date(start_date, end_date)
-
-
 
     def get_end_date(self, *args):
         """
@@ -297,12 +339,11 @@ class App(Frame):
         except KeyError:
             print("Dataframe was not loaded")
 
-
     def convert_date(self, *args):
         print("converting date")
         self.selected_end_date_obj = datetime.strptime(self.string_var_end, '%m/%d/%Y').date()
         print(self.selected_end_date_obj)
-    # Execute this function on Button Click Calculate
+
     def exec_btn_command(self, *args):
 
 
@@ -422,6 +463,7 @@ class App(Frame):
                     durr_full_downtime = curr_date - mem_date
                     sum_full_downtime_durr += get_duration(
                         durr_full_downtime.total_seconds())         # Sum of Full Downtime in hrs
+
                     print("Full downtime duration = ", sum_full_downtime_durr)
                     # Set memory variable
                     mem_date = curr_date
@@ -445,7 +487,7 @@ class App(Frame):
             self.df_buff.loc[num, 'Tool Group'] = "All tools"
             self.df_buff.loc[num, 'Status'] = "Not Available"
             self.df_buff.loc[num, 'Date'] = "1984"
-            self.df_buff.loc[num, 'Downtime Duration'] = sum_full_downtime_durr
+            self.df_buff.loc[num, 'Downtime Duration'] = round(sum_full_downtime_durr, 1)
             self.df_buff.loc[num, 'Downtime Count'] = full_downtime_cnt
 
             # Write values to second half of the table [ rows 13 to 27 - depends on number of equipment]
@@ -453,7 +495,7 @@ class App(Frame):
             self.df_buff.loc[num + len(equipment_list), 'Tool Group'] = "All Tools"
             self.df_buff.loc[num + len(equipment_list), 'Status'] = "Partially Available"
             self.df_buff.loc[num + len(equipment_list), 'Date'] = "1984"
-            self.df_buff.loc[num + len(equipment_list), 'Downtime Duration'] = sum_partial_downtime_durr
+            self.df_buff.loc[num + len(equipment_list), 'Downtime Duration'] = round(sum_partial_downtime_durr, 1)
             self.df_buff.loc[num + len(equipment_list), 'Downtime Count'] = partial_downtime_cnt
 
 
@@ -620,7 +662,7 @@ def open_text_file(my_choice):
 def get_duration(duration):
     minutes = (duration / 60)
     hours = minutes / 60
-    return hours
+    return round(hours, 1)
 
 
 # About message window
