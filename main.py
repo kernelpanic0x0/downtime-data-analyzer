@@ -21,6 +21,7 @@ from tkcalendar import Calendar, DateEntry
 import pathlib
 import babel.numbers
 import logging
+from tkinter import messagebox
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
@@ -90,10 +91,10 @@ class App(Frame):
         This function sets UI Button Elements
 
         """
-        ttk.Button(self.label_frame, text="Calculate-test",
-                   command=self.convert_date).grid(column=5, rowspan=2, row=2, padx=20)
-        ttk.Button(self.label_frame, text="Plot",
-                   command=self.calculate_downtime_durr).grid(column=6, rowspan=2, row=2, padx=20)
+        ttk.Button(self.label_frame, text="Calculate Downtime",
+                   command=self.button_plot).grid(column=5, rowspan=2, row=2, padx=20)
+        ttk.Button(self.label_frame, text="Save Results in .csv",
+                   command=self.file_save).grid(column=6, rowspan=2, row=2, padx=20)
 
     def ui_comboboxes(self):
         """
@@ -218,7 +219,7 @@ class App(Frame):
         # Set  Tree View Table <<Column>> for each element of columns list
         self.tree.column('#0', width=0, stretch=NO)
         for elem in range(0, len(columns)):
-            self.tree.column(columns[elem], anchor=W, width=162)
+            self.tree.column(columns[elem], anchor=CENTER, width=162)
 
         # Set  Tree View Table <<Heading>> for each element of columns list
         self.tree.heading('#0', text='', anchor=CENTER)
@@ -279,11 +280,19 @@ class App(Frame):
         self.tree_insert()
 
     def drop_down_activate(self, *args):
-        self.df_temp = self.df.loc[self.df['cr483_name'] == self.selected_equipment.get()]
-        self.df_temp.index = pd.RangeIndex(len(self.df_temp.index))
-        print("sorted by name")
-        print(self.df_temp)
-        self.tree_insert()
+
+        if self.is_file_date_valid():
+            print("Sort dataframe by Start Date")
+            self.filter_data_by_date(datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').date(),
+                                     datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').date())
+            if self.selected_equipment.get() != "All PTA & TMA":
+                self.df_temp = self.df_temp.loc[self.df_temp['cr483_name'] == self.selected_equipment.get()]
+            self.df_temp.index = pd.RangeIndex(len(self.df_temp.index))
+            print("sorted by name")
+            print(self.df_temp)
+            self.tree_insert()
+        else:
+            pass
 
     def get_selected_equipmnt(self, *args):
         print(self.selected_equipment.get())
@@ -348,58 +357,37 @@ class App(Frame):
         self.selected_end_date_obj = datetime.strptime(self.string_var_end, '%m/%d/%Y').date()
         print(self.selected_end_date_obj)
 
-    def exec_btn_command(self, *args):
+    def button_plot(self, *args):
+        """
+        This function executes calculation of downtime
 
-
-        equip_name_arr = []
-        equip_time_arr = []
-        if self.selected_equipment.get() == 'All PTA & TMA':
-            print("all equipment selected")
-            equipment_list = ( 'PTA01', 'PTA02', 'PTA03', 'PTA04',
-             'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
-             'TMA11', 'TMA12', 'TMA13', 'TMA14')
-            arrindex = 0
-
-            for num, element in enumerate(equipment_list, start=0):
-
-                self.df_temp = self.df.loc[self.df['cr483_name'] == equipment_list[num]]
-                self.df_temp.index = pd.RangeIndex(len(self.df_temp.index))
-
-                print(self.df_temp)
-                print("==========================")
-                self.calculate_downtime_durr()
-
-
-                equip_name_arr.append(equipment_list[num])
-                equip_time_arr.append(self.downtime_durr_sum)
-                #self.df_accum_time.loc[self.df_accum_time.index[num], 'Crane Name'] = equipment_list[num]
-                #self.df_accum_time.loc[self.df_accum_time.index[num], 'Downtime Duration'] = self.downtime_durr_sum
-                #self.df_accum_time['crane_name'] = equipment_list[num]
-                #self.df_accum_time['downtime_durration'] = self.downtime_durr_sum
-                print(num, element)
-                arrindex += 1
-            print("accumulated downtime")
-
-
-            print("updated dataframe")
-            self.tree_insert()
-            self.df_accum_time = pd.DataFrame({'Equipment Name':equip_name_arr, 'Downtime': equip_time_arr})
-            self.df_temp = self.df_accum_time
-            self.tree_insert()
-            print(self.df_accum_time)
-            index = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
-                     'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
-                     'TMA11', 'TMA12', 'TMA13', 'TMA14']
-
-            # df_3 = pd.DataFrame({'Count': downtime_cnt, 'downtime_minutes': downtime_durr})
-            ax = self.df_accum_time.plot.bar(x='Equipment Name', y='Downtime', rot=0, title='Downtime')
-            ax.plot()
-            ax.bar_label(ax.containers[0])
-            plt.show()
-        else:
-            print("not all selevted")
+        """
+        if self.is_file_date_valid():
+            print("Calculate downtime")
             self.calculate_downtime_durr()
+        else:
             pass
+
+    def is_file_date_valid(self, *args):
+        """
+
+        This function checks if .csv file imported
+        Check if date time range not set
+
+        """
+        start_date = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').date()
+        end_date = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').date()
+        default_date = datetime.today()
+
+        if self.df.empty:
+            print("Start date can't be equal to end date")
+            messagebox.showwarning("Date File not selected", "You must load .csv file!")
+        elif start_date == end_date:
+            print("Start date can't be equal to end date")
+            messagebox.showwarning("Date Range not selected", "You must select start date!")
+
+        else:
+            return True
 
     def calculate_downtime_durr(self, *args):
         """
@@ -408,6 +396,8 @@ class App(Frame):
 
         # Date format for time difference calculation
         date_frmt = '%Y-%m-%d %H:%M:%S'  # '2022-05-26 10:37:08'
+        start_date_str = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').strftime('%m/%d/%y')
+        end_date_str = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').strftime('%m/%d/%y')
 
         equipment_list = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
                  'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
@@ -490,7 +480,7 @@ class App(Frame):
             self.df_buff.loc[num, 'Equipment Name'] = equipment_list[num]
             self.df_buff.loc[num, 'Tool Group'] = "All tools"
             self.df_buff.loc[num, 'Status'] = "Not Available"
-            self.df_buff.loc[num, 'Date'] = "1984"
+            self.df_buff.loc[num, 'Date'] = start_date_str + "_to_" + end_date_str
             self.df_buff.loc[num, 'Downtime Duration'] = round(sum_full_downtime_durr, 1)
             self.df_buff.loc[num, 'Downtime Count'] = full_downtime_cnt
 
@@ -498,7 +488,7 @@ class App(Frame):
             self.df_buff.loc[num + len(equipment_list), 'Equipment Name'] = equipment_list[num]
             self.df_buff.loc[num + len(equipment_list), 'Tool Group'] = "All Tools"
             self.df_buff.loc[num + len(equipment_list), 'Status'] = "Partially Available"
-            self.df_buff.loc[num + len(equipment_list), 'Date'] = "1984"
+            self.df_buff.loc[num + len(equipment_list), 'Date'] = start_date_str + "_to_" + end_date_str
             self.df_buff.loc[num + len(equipment_list), 'Downtime Duration'] = round(sum_partial_downtime_durr, 1)
             self.df_buff.loc[num + len(equipment_list), 'Downtime Count'] = partial_downtime_cnt
 
@@ -528,6 +518,22 @@ class App(Frame):
         print(self.df_buff)
         print(self.df_buff.index)
         #self.tree_insert()
+
+    def file_save(self, *args):
+        """
+
+        This function saves .csv through file save dialog
+
+        """
+
+        if self.is_file_date_valid():
+            try:
+                file_to_save = fd.asksaveasfile(mode='w', defaultextension=".csv")
+                self.df_temp.to_csv(file_to_save, line_terminator='\r', encoding='utf-8')
+                messagebox.showinfo("File Saved Successfully", "File Saved Successfully!")
+
+            except AttributeError:
+                logging.exception("User cancelled save operation")
 
     def load_datafile(self, *args):
         """
