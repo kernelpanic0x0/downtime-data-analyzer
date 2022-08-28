@@ -399,9 +399,12 @@ class App(Frame):
         start_date_str = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').strftime('%m/%d/%y')
         end_date_str = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').strftime('%m/%d/%y')
 
-        equipment_list = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
-                 'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
-                 'TMA11', 'TMA12', 'TMA13', 'TMA14']
+        if self.selected_equipment.get() == 'All PTA & TMA':
+            equipment_list = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
+                     'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
+                     'TMA11', 'TMA12', 'TMA13', 'TMA14']
+        else:
+            equipment_list = [self.selected_equipment.get()]
 
         self.df_buff = pd.DataFrame()       # Data frame for values going to tree view table
         self.df_date = self.df_temp.copy()  # Data frame stores values filtered by Date Range
@@ -418,17 +421,20 @@ class App(Frame):
 
             # Get first value from first row of dataframe
             # Reject first row if it has garbage name (early database entries have garbage)
+            first_row = 0
             for i in range(0, len(self.df_temp)):
 
                 mem_date = datetime.strptime(self.df_temp['createdon'].iloc[i], date_frmt)
                 mem_status = self.df_temp['cr483_cranestatus'].iloc[i]
-                first_row = i
+
                 if mem_status == "Not Available":
                     break
                 elif mem_status == "Partially Available":
                     break
                 elif mem_status == "Available":
                     break
+                else:
+                    first_row += 1
 
             # Set downtime counters
             full_downtime_cnt = 0
