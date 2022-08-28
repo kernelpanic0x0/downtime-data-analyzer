@@ -48,6 +48,7 @@ class App(Frame):
         self.ui_buttons()
         self.df_temp = pd.DataFrame()
         self.df = pd.DataFrame()
+        self.df_date = pd.DataFrame()
 
 
     def init_ui(self):
@@ -257,6 +258,7 @@ class App(Frame):
             pass
 
         print("Sort dataframe by Start Date")
+        self.filter_data_by_date(start_date, end_date)
 
 
 
@@ -267,7 +269,6 @@ class App(Frame):
             Filter data by given date/time
         """
         start_date = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').date()
-
         end_date = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').date()
         default_date = datetime.today()
 
@@ -360,15 +361,15 @@ class App(Frame):
         This function calculates downtime duration & count
         """
 
-
         # Date format for time difference calculation
         date_frmt = '%Y-%m-%d %H:%M:%S'  # '2022-05-26 10:37:08'
-
 
         equipment_list = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
                  'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
                  'TMA11', 'TMA12', 'TMA13', 'TMA14']
-        self.df_buff = pd.DataFrame()
+
+        self.df_buff = pd.DataFrame()       # Data frame for values going to tree view table
+        self.df_date = self.df_temp.copy()  # Data frame stores values filtered by Date Range
 
         # Iterate over each element of the dataframe sorted by equipment name
         # Determine when status changed from Not Available to Available
@@ -377,11 +378,11 @@ class App(Frame):
         for num, element in enumerate(equipment_list, start=0):
 
             # Sort dataframe by equipment name && Reset index of the dataframe
-            self.df_temp = self.df.loc[self.df['cr483_name'] == equipment_list[num]]
+            self.df_temp = self.df_date.loc[self.df_date['cr483_name'] == equipment_list[num]]
             self.df_temp.index = pd.RangeIndex(len(self.df_temp.index))
 
             # Get first value from first row of dataframe
-            # Reject first row if it has garbage name
+            # Reject first row if it has garbage name (early database entries have garbage)
             for i in range(0, len(self.df_temp)):
 
                 mem_date = datetime.strptime(self.df_temp['createdon'].iloc[i], date_frmt)
@@ -394,16 +395,11 @@ class App(Frame):
                 elif mem_status == "Available":
                     break
 
-
             # Set downtime counters
             full_downtime_cnt = 0
             partial_downtime_cnt = 0
             sum_full_downtime_durr = 0
             sum_partial_downtime_durr = 0
-            print(self.df_temp)
-            print("memory statusd" + mem_status)
-            print("mem date")
-            print(mem_date)
 
             for k in range(first_row, len(self.df_temp)):
 
@@ -415,7 +411,6 @@ class App(Frame):
                         or (curr_status == 'Partially Available' and mem_status == 'Available')):
                     mem_date = datetime.strptime(self.df_temp['createdon'].iloc[k], date_frmt)
                     mem_status = self.df_temp['cr483_cranestatus'].iloc[k]
-                    print("Change in Status")
                     print("Change in status mem date = ", mem_date)
                 else:
                     print("No change in Status")
@@ -428,7 +423,7 @@ class App(Frame):
                     sum_full_downtime_durr += get_duration(
                         durr_full_downtime.total_seconds())         # Sum of Full Downtime in hrs
                     print("Full downtime duration = ", sum_full_downtime_durr)
-                    # Add values to List
+                    # Set memory variable
                     mem_date = curr_date
                     mem_status = curr_status
                     full_downtime_cnt += 1      # Full downtime counter
@@ -440,12 +435,12 @@ class App(Frame):
                     sum_partial_downtime_durr += get_duration(
                         durr_partial_downtime.total_seconds())      # Sum of Partial Downtime in hrs
                     print("Partial downtime duration = ",  sum_partial_downtime_durr)
-                    # Add values to List
+                    # Set memory variable
                     mem_date = curr_date
                     mem_status = curr_status
                     partial_downtime_cnt += 1   # Partial Downtime counter
 
-
+            # Write value to first half of the table [ rows 0 to 13 - depends on number of equipment ]
             self.df_buff.loc[num, 'Equipment Name'] = equipment_list[num]
             self.df_buff.loc[num, 'Tool Group'] = "All tools"
             self.df_buff.loc[num, 'Status'] = "Not Available"
@@ -453,6 +448,7 @@ class App(Frame):
             self.df_buff.loc[num, 'Downtime Duration'] = sum_full_downtime_durr
             self.df_buff.loc[num, 'Downtime Count'] = full_downtime_cnt
 
+            # Write values to second half of the table [ rows 13 to 27 - depends on number of equipment]
             self.df_buff.loc[num + len(equipment_list), 'Equipment Name'] = equipment_list[num]
             self.df_buff.loc[num + len(equipment_list), 'Tool Group'] = "All Tools"
             self.df_buff.loc[num + len(equipment_list), 'Status'] = "Partially Available"
@@ -546,7 +542,6 @@ class App(Frame):
         # For each element in tree view column names
         # Add error message to column of df_temp
         for i in range(0, len(data_columns)):
-            print(i)
             self.df_temp.loc[0,  data_columns[i]] = str_msg
         self.tree_insert()  # Write message to tree view table
 
