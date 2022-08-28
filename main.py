@@ -94,10 +94,10 @@ class App(Frame):
         """
         ttk.Button(self.label_frame, text="Calculate Downtime",
                    command=self.button_plot).grid(column=5, rowspan=2, row=2, padx=20)
-        #ttk.Button(self.label_frame, text="Save Results in .csv",
-        #           command=self.file_save).grid(column=6, rowspan=2, row=2, padx=20)
-        ttk.Button(self.label_frame, text="test dict",
-                   command=self.dict_test()).grid(column=6, rowspan=2, row=2, padx=20)
+        ttk.Button(self.label_frame, text="Save Results in .csv",
+                   command=self.file_save).grid(column=6, rowspan=2, row=2, padx=20)
+        #ttk.Button(self.label_frame, text="test dict",
+        #           command=self.dict_test).grid(column=6, rowspan=2, row=2, padx=20)
 
     def ui_comboboxes(self):
         """
@@ -416,7 +416,7 @@ class App(Frame):
         mem_tool = []
         mem_downt_arr = []
         # Dictionary to store deltas for each calculation
-        downtime_delta = {"equipment_name": [], "tool_group": [], "status": [], "downtime_duration": [] }
+        self.downtime_delta = {"equipment_name": [], "tool_group": [], "status": [], "downtime_duration": [] }
 
         # Iterate over each element of the dataframe sorted by equipment name
         # Determine when status changed from Not Available to Available
@@ -437,10 +437,10 @@ class App(Frame):
                 mem_status = self.df_temp['cr483_cranestatus'].iloc[i]
 
                 if mem_status == "Not Available":
-                    downtime_delta["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[i])
+                    self.downtime_delta["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[i])
                     break
                 elif mem_status == "Partially Available":
-                    downtime_delta["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[i])
+                    self.downtime_delta["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[i])
                     break
                 elif mem_status == "Available":
                     break
@@ -466,7 +466,7 @@ class App(Frame):
                     mem_date = datetime.strptime(self.df_temp['createdon'].iloc[k], date_frmt)
                     mem_status = self.df_temp['cr483_cranestatus'].iloc[k]
                     if drop_down_selection != 'All PTA & TMA':
-                        downtime_delta["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[k])
+                        self.downtime_delta["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[k])
 
                     print("Change in status mem date = ", mem_date)
                 else:
@@ -479,8 +479,8 @@ class App(Frame):
                     durr_full_downtime = curr_date - mem_date
 
                     # Downtime duration for each iteration
-                    downtime_delta["downtime_duration"].append(get_duration(durr_full_downtime.total_seconds()))
-                    downtime_delta["status"].append(mem_status)
+                    self.downtime_delta["downtime_duration"].append(get_duration(durr_full_downtime.total_seconds()))
+                    self.downtime_delta["status"].append(mem_status)
 
                     # Sum of downtime in hrs - total
                     sum_full_downtime_durr += get_duration(
@@ -498,8 +498,8 @@ class App(Frame):
                     durr_partial_downtime = curr_date - mem_date
 
                     # Downtime duration for each iteration
-                    downtime_delta["downtime_duration"].append(get_duration(durr_partial_downtime.total_seconds()))
-                    downtime_delta["status"].append(mem_status)
+                    self.downtime_delta["downtime_duration"].append(get_duration(durr_partial_downtime.total_seconds()))
+                    self.downtime_delta["status"].append(mem_status)
 
                     # Sum of partial downtime in hrs - total
                     sum_partial_downtime_durr += get_duration(
@@ -511,7 +511,12 @@ class App(Frame):
                     partial_downtime_cnt += 1   # Partial Downtime counter
 
             #print(mem_tool)
-            print(downtime_delta)
+            if drop_down_selection != 'All PTA & TMA':
+                print(self.downtime_delta)
+                self.dict_test()
+
+            ##### !!!!!Fix write by selected equipment stuff below should net be wertirenn all the imte
+
             # Write value to first half of the table [ rows 0 to 13 - depends on number of equipment ]
             self.df_buff.loc[num, 'Equipment Name'] = equipment_list[num]
             self.df_buff.loc[num, 'Tool Group'] = "All tools"
@@ -637,10 +642,10 @@ class App(Frame):
     def calculate(self):
         print("empty")
     def dict_test(self):
-        my_dict = {'equipment_name': [], 'tool_group': ['N/A', 'N/A', 'N/A', 'Extractor', 'N/A'],
-         'status': ['Not Available', 'Not Available', 'Not Available', 'Partially Available', 'Partially Available'],
-         'downtime_duration': [156.2, 14.9, 24.1, 229.6, 241.3]}
-
+        #my_dict = {'equipment_name': [], 'tool_group': ['N/A', 'N/A', 'N/A', 'Extractor', 'N/A'],
+        # 'status': ['Not Available', 'Not Available', 'Not Available', 'Partially Available', 'Partially Available'],
+        # 'downtime_duration': [156.2, 14.9, 24.1, 229.6, 241.3]}
+        my_dict = self.downtime_delta
         # For each element in tool group key find tool breakdown frequency
         tool_frequency = {}
         for items in my_dict['tool_group']:
@@ -678,9 +683,50 @@ class App(Frame):
         print(" Tool breakdown frequency keys : ", keys_time)
 
         # Pie chart, where the slices will be ordered and plotted counter-clockwise
-        labels = keys_time
-        sizes = values_time
-        explode = (0, 0.1, 0, 0)
+        fig, axs = plt.subplots(1, 2, figsize=(7, 4), subplot_kw=dict(aspect="equal"))
+
+        explode = (0, 0.1)
+        recipe = ["375 g flour",
+                  "75 g sugar",
+                  "250 g butter",
+                  "300 g berries"]
+
+        # Values for downtime duration in hrs
+        data = values_time
+        ingredients = keys_time
+        #Values in downtime events by count
+        data_2 = values_frequency
+        ingredients_2 = keys_frequency
+        def func(pct, allvals):
+            absolute = int(np.round(pct / 100. * np.sum(allvals)))
+            return "{:.1f}%\n({:d} hrs)".format(pct, absolute)
+
+        def func2(pct, allvals):
+            absolute = int(np.round(pct / 100. * np.sum(allvals)))
+            return "{:.1f}%\n({:d} events)".format(pct, absolute)
+
+        wedges, texts, autotexts = axs[0].pie(data_2, autopct=lambda pct: func2(pct, data_2),
+                                              textprops=dict(color="w"))
+
+        wedges, texts, autotexts  = axs[1].pie(data, autopct=lambda pct: func(pct, data),
+                                          textprops=dict(color="w"))
+
+        axs[0].legend(wedges, ingredients,
+                      title="Downtime events by Tool Group - " + self.selected_equipment.get(), # repalce self later
+                      loc="lower center",
+                      bbox_to_anchor=(0.3, -0.3, 0.5, 1))  # x, y , width, height
+
+        axs[1].legend(wedges, ingredients,
+                  title="Downtime Duration by Tool Group - " + self.selected_equipment.get(), #replace self later
+                  loc="lower center",
+                  bbox_to_anchor=(0.3, -0.3, 0.5, 1))  # x, y , width, height
+
+        plt.setp(autotexts, size=8, weight="bold")
+        #ax.pie(data, shadow=True, explode=explode)
+        axs[0].set_title("Downtime Events / Duration by tool group")
+        axs[1].set_title(self.string_var_strt.get() + " : " + self.string_var_end.get())
+        plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Downtime by Tool Group")
+        plt.show()
 
 
 def get_duration(duration):
