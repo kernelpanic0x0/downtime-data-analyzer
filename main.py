@@ -7,6 +7,7 @@
 ##################################
 import tkinter
 import tkinter.filedialog
+from collections import Counter
 from tkinter import *
 from tkinter import ttk
 import tkinter as tk
@@ -93,8 +94,10 @@ class App(Frame):
         """
         ttk.Button(self.label_frame, text="Calculate Downtime",
                    command=self.button_plot).grid(column=5, rowspan=2, row=2, padx=20)
-        ttk.Button(self.label_frame, text="Save Results in .csv",
-                   command=self.file_save).grid(column=6, rowspan=2, row=2, padx=20)
+        #ttk.Button(self.label_frame, text="Save Results in .csv",
+        #           command=self.file_save).grid(column=6, rowspan=2, row=2, padx=20)
+        ttk.Button(self.label_frame, text="test dict",
+                   command=self.dict_test()).grid(column=6, rowspan=2, row=2, padx=20)
 
     def ui_comboboxes(self):
         """
@@ -398,16 +401,22 @@ class App(Frame):
         date_frmt = '%Y-%m-%d %H:%M:%S'  # '2022-05-26 10:37:08'
         start_date_str = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').strftime('%m/%d/%y')
         end_date_str = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').strftime('%m/%d/%y')
+        drop_down_selection = self.selected_equipment.get()
 
-        if self.selected_equipment.get() == 'All PTA & TMA':
+        if drop_down_selection == 'All PTA & TMA':
             equipment_list = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
                      'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
                      'TMA11', 'TMA12', 'TMA13', 'TMA14']
         else:
-            equipment_list = [self.selected_equipment.get()]
+            equipment_list = [drop_down_selection]
 
         self.df_buff = pd.DataFrame()       # Data frame for values going to tree view table
         self.df_date = self.df_temp.copy()  # Data frame stores values filtered by Date Range
+
+        mem_tool = []
+        mem_downt_arr = []
+        # Dictionary to store deltas for each calculation
+        downtime_delta = {"equipment_name": [], "tool_group": [], "status": [], "downtime_duration": [] }
 
         # Iterate over each element of the dataframe sorted by equipment name
         # Determine when status changed from Not Available to Available
@@ -428,8 +437,10 @@ class App(Frame):
                 mem_status = self.df_temp['cr483_cranestatus'].iloc[i]
 
                 if mem_status == "Not Available":
+                    downtime_delta["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[i])
                     break
                 elif mem_status == "Partially Available":
+                    downtime_delta["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[i])
                     break
                 elif mem_status == "Available":
                     break
@@ -442,16 +453,21 @@ class App(Frame):
             sum_full_downtime_durr = 0
             sum_partial_downtime_durr = 0
 
+            # For each row of dataframe sorted by equipment name
             for k in range(first_row, len(self.df_temp)):
 
                 curr_status = self.df_temp['cr483_cranestatus'].iloc[k]                         # Get current status
                 curr_date = datetime.strptime(self.df_temp['createdon'].iloc[k], date_frmt)     # Get current date
+
 
                 # Start of Downtime
                 if ((curr_status == 'Not Available' and mem_status == 'Available')
                         or (curr_status == 'Partially Available' and mem_status == 'Available')):
                     mem_date = datetime.strptime(self.df_temp['createdon'].iloc[k], date_frmt)
                     mem_status = self.df_temp['cr483_cranestatus'].iloc[k]
+                    if drop_down_selection != 'All PTA & TMA':
+                        downtime_delta["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[k])
+
                     print("Change in status mem date = ", mem_date)
                 else:
                     print("No change in Status")
@@ -461,6 +477,12 @@ class App(Frame):
                         or (curr_status == 'Partially Available' and mem_status == 'Not Available')):
                     # Record time difference - this is Time of being Fully out of service
                     durr_full_downtime = curr_date - mem_date
+
+                    # Downtime duration for each iteration
+                    downtime_delta["downtime_duration"].append(get_duration(durr_full_downtime.total_seconds()))
+                    downtime_delta["status"].append(mem_status)
+
+                    # Sum of downtime in hrs - total
                     sum_full_downtime_durr += get_duration(
                         durr_full_downtime.total_seconds())         # Sum of Full Downtime in hrs
 
@@ -474,6 +496,12 @@ class App(Frame):
                         or (curr_status == 'Available') and (mem_status == 'Partially Available')):
                     # Record time difference - this is Time of being Partially out of service
                     durr_partial_downtime = curr_date - mem_date
+
+                    # Downtime duration for each iteration
+                    downtime_delta["downtime_duration"].append(get_duration(durr_partial_downtime.total_seconds()))
+                    downtime_delta["status"].append(mem_status)
+
+                    # Sum of partial downtime in hrs - total
                     sum_partial_downtime_durr += get_duration(
                         durr_partial_downtime.total_seconds())      # Sum of Partial Downtime in hrs
                     print("Partial downtime duration = ",  sum_partial_downtime_durr)
@@ -482,6 +510,8 @@ class App(Frame):
                     mem_status = curr_status
                     partial_downtime_cnt += 1   # Partial Downtime counter
 
+            #print(mem_tool)
+            print(downtime_delta)
             # Write value to first half of the table [ rows 0 to 13 - depends on number of equipment ]
             self.df_buff.loc[num, 'Equipment Name'] = equipment_list[num]
             self.df_buff.loc[num, 'Tool Group'] = "All tools"
@@ -499,6 +529,7 @@ class App(Frame):
             self.df_buff.loc[num + len(equipment_list), 'Downtime Count'] = partial_downtime_cnt
 
 
+        print(self.df_buff.duplicated(subset='Tool Group', keep=False).sum())
         self.df_buff = self.df_buff.sort_index(ascending=True)
         self.df_temp = self.df_buff
         self.tree_insert()
@@ -558,7 +589,7 @@ class App(Frame):
 
         # Check if file was selected
         try:
-            self.df = pd.read_csv(file_name, usecols=data_columns)   # Columns to read from .csv
+            self.df = pd.read_csv(file_name, usecols=data_columns, na_filter=False)   # Columns to read from .csv
             self.df = self.df.reindex(columns=data_columns_reindex)  # Reassign order of columns:
 
             # Check if valid column exists & sort by date
@@ -605,6 +636,51 @@ class App(Frame):
 
     def calculate(self):
         print("empty")
+    def dict_test(self):
+        my_dict = {'equipment_name': [], 'tool_group': ['N/A', 'N/A', 'N/A', 'Extractor', 'N/A'],
+         'status': ['Not Available', 'Not Available', 'Not Available', 'Partially Available', 'Partially Available'],
+         'downtime_duration': [156.2, 14.9, 24.1, 229.6, 241.3]}
+
+        # For each element in tool group key find tool breakdown frequency
+        tool_frequency = {}
+        for items in my_dict['tool_group']:
+            tool_frequency[items] = my_dict['tool_group'].count(items)
+        counter = Counter(tool_frequency)
+        keys_frequency = list(counter.keys())
+        values_frequency = list(counter.values())
+
+        print(" Tool breakdown frequency list", tool_frequency)
+        print(" Tool breakdown frequency values : ", values_frequency)
+        print(" Tool breakdown frequency keys : ", keys_frequency)
+
+        # For each item in tool group key find downtime per tool group
+        tool_downtime = {}
+        for index, items in enumerate(my_dict['tool_group'], start=0):
+
+            if items in tool_downtime:
+                print("key already exists")
+                tool_downtime[items].append(my_dict['downtime_duration'][index])
+            else:
+                print("key doesnt exists")
+                tool_downtime[items] = [my_dict['downtime_duration'][index]]
+
+        # Find Sum of downtime duration per tool group
+        print("Tool downtime array pre-calc", tool_downtime.items())
+        tool_time = {dict_key: sum(val) for dict_key, val in tool_downtime.items()}
+        print("Sum of downtime per tool group calculated: ", tool_time)
+
+        counter = Counter(tool_time)
+        keys_time = list(counter.keys())
+        values_time = list(counter.values())
+
+        print(" Tool breakdown frequency list", tool_time)
+        print(" Tool breakdown frequency values : ", values_time)
+        print(" Tool breakdown frequency keys : ", keys_time)
+
+        # Pie chart, where the slices will be ordered and plotted counter-clockwise
+        labels = keys_time
+        sizes = values_time
+        explode = (0, 0.1, 0, 0)
 
 
 def get_duration(duration):
