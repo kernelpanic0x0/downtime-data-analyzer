@@ -126,7 +126,7 @@ class App(Frame):
     def ui_file_menues(self):
         """
 
-                This function sets UI Top Menu - File / Open / Exit
+        This function sets UI Top Menu - File / Open / Exit
 
         """
         # Create menu item
@@ -195,10 +195,14 @@ class App(Frame):
         # Configure tree viewer style
         style = ttk.Style()
         style.theme_use('clam')
+
+        # Modify the font of the headings
         style.configure("mystyle.Treeview.Heading", font=('Calibri', 11, 'bold'), background='grey',
-                        foreground='black')  # Modify the font of the headings
+                        foreground='black')
+
+        # Modify the font of the body
         style.configure("mystyle.Treeview", highlightthickness=0, bd=0,
-                        font=('Calibri', 11))  # Modify the font of the body
+                        font=('Calibri', 11))
 
         # Create frame for the treeview widget
         frame_tree = ttk.Frame(self.mainframe)
