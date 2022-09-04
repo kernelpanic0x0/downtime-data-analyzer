@@ -51,6 +51,7 @@ class App(Frame):
         self.df_temp = pd.DataFrame()
         self.df = pd.DataFrame()
         self.df_date = pd.DataFrame()
+        self.df_buff = pd.DataFrame()
 
     def init_ui(self):
         """
@@ -95,7 +96,7 @@ class App(Frame):
         ttk.Button(self.label_frame, text="Calculate Downtime",
                    command=self.button_plot).grid(column=5, rowspan=2, row=2, padx=20)
         ttk.Button(self.label_frame, text="Save Results in .csv",
-                   command=self.file_save).grid(column=6, rowspan=2, row=2, padx=20)
+                   command=self.plot_barchart).grid(column=6, rowspan=2, row=2, padx=20)
         #ttk.Button(self.label_frame, text="test dict",
         #           command=self.dict_test).grid(column=6, rowspan=2, row=2, padx=20)
 
@@ -156,8 +157,6 @@ class App(Frame):
 
         """
         # Calendar
-        #self.string_var_strt = tk.StringVar()
-        #self.string_var_end = tk.StringVar()
         today = datetime.today()
         # Create Calendar Input drop down - Start Date
         self.cal_start_date = DateEntry(self.label_frame, selectmode='day',
@@ -165,15 +164,12 @@ class App(Frame):
         self.cal_start_date.grid(column=1, row=2, padx=10, sticky=W)
         self.cal_start_date.bind("<<DateEntrySelected>>", self.get_start_date)
 
-        #self.string_var_strt.trace('w', self.get_start_date)
-
         # Create Calendar Input drop down - End Date
         self.cal_end_date = DateEntry(self.label_frame, selectmode='day',
                                  date_pattern='mm/dd/y', maxdate=today, textvariable=self.string_var_end)
         self.cal_end_date.grid(column=1, row=3, padx=10, sticky=W)
-
         self.cal_end_date.bind("<<DateEntrySelected>>", self.get_end_date)
-        #self.string_var_end.trace('w', self.get_end_date)
+
 
     def ui_labels(self):
         """
@@ -344,10 +340,10 @@ class App(Frame):
             This function filter dataframe df_temp by
             start and end date
         """
-        print(type(start_date))
+        print("Start & End dates:")
         start_date = start_date.strftime('%Y-%m-%d %H:%M:%S')
         end_date = end_date.strftime('%Y-%m-%d %H:%M:%S')
-        print(type(start_date))
+
         try:
             self.df_temp = self.df.loc[self.df['createdon'].between(start_date, end_date)]
             self.df_temp.index = pd.RangeIndex(len(self.df_temp.index))
@@ -459,7 +455,6 @@ class App(Frame):
                 curr_status = self.df_temp['cr483_cranestatus'].iloc[k]                         # Get current status
                 curr_date = datetime.strptime(self.df_temp['createdon'].iloc[k], date_frmt)     # Get current date
 
-
                 # Start of Downtime
                 if ((curr_status == 'Not Available' and mem_status == 'Available')
                         or (curr_status == 'Partially Available' and mem_status == 'Available')):
@@ -510,16 +505,9 @@ class App(Frame):
                     mem_status = curr_status
                     partial_downtime_cnt += 1   # Partial Downtime counter
 
-            #print(mem_tool)
-            if drop_down_selection != 'All PTA & TMA':
-                print(self.downtime_delta)
-                self.dict_test()
-
-            ##### !!!!!Fix write by selected equipment stuff below should net be wertirenn all the imte
-
             # Write value to first half of the table [ rows 0 to 13 - depends on number of equipment ]
             self.df_buff.loc[num, 'Equipment Name'] = equipment_list[num]
-            self.df_buff.loc[num, 'Tool Group'] = "All tools"
+            self.df_buff.loc[num, 'Tool Group'] = "All Tools"
             self.df_buff.loc[num, 'Status'] = "Not Available"
             self.df_buff.loc[num, 'Date'] = start_date_str + "_to_" + end_date_str
             self.df_buff.loc[num, 'Downtime Duration'] = round(sum_full_downtime_durr, 1)
@@ -533,32 +521,42 @@ class App(Frame):
             self.df_buff.loc[num + len(equipment_list), 'Downtime Duration'] = round(sum_partial_downtime_durr, 1)
             self.df_buff.loc[num + len(equipment_list), 'Downtime Count'] = partial_downtime_cnt
 
-
-        print(self.df_buff.duplicated(subset='Tool Group', keep=False).sum())
+        # Store results of downtime calculation in temporary dataframe
         self.df_buff = self.df_buff.sort_index(ascending=True)
         self.df_temp = self.df_buff
-        self.tree_insert()
-        index_1 = self.df_buff.iloc[0:14, 0].values.tolist()
-        down_1 = self.df_buff.iloc[0:14, 4].values.tolist()
 
-        down_2 = self.df_buff.iloc[14:len(self.df_buff), 4].values.tolist()
-        df_plot = pd.DataFrame({"Not Available": down_1, "Partially Avaialble": down_2}, index=index_1)
-        ax = df_plot.plot.bar(rot=0)
-        ax.plot()
-        ax.bar_label(ax.containers[0])
-        ax.bar_label(ax.containers[1])
-        ax.set_xlabel('Equipment Name')
-        ax.set_ylabel('Downtime in "hrs"')
-        ax.set_title('Downtime duration: ' + self.string_var_strt.get() + " : " + self.string_var_end.get())
-        plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Downtime")
-        plt.show()
-        print(down_1)
-        print(down_2)
-        print(self.df_temp.to_string())
-        print('downtime calced')
-        print(self.df_temp)
-        print(self.df_buff)
-        print(self.df_buff.index)
+        # If drop down selection is not for all devices plot pie chart by Tool Group
+        if drop_down_selection != 'All PTA & TMA':
+            print(self.downtime_delta)
+            self.tree_insert()
+            self.dict_test()
+        else:
+            # If drop down selection is for all devices plot bar chart
+            # print(self.df_buff.duplicated(subset='Tool Group', keep=False).sum())
+            self.tree_insert()
+            index_1 = self.df_buff.iloc[0:14, 0].values.tolist()
+            down_1 = self.df_buff.iloc[0:14, 4].values.tolist()
+
+            down_2 = self.df_buff.iloc[14:len(self.df_buff), 4].values.tolist()
+            df_plot = pd.DataFrame({"Not Available": down_1, "Partially Avaialble": down_2}, index=index_1)
+            ax = df_plot.plot.bar(rot=0)
+            ax.plot()
+            ax.bar_label(ax.containers[0])
+            ax.bar_label(ax.containers[1])
+            ax.set_xlabel('Equipment Name')
+            ax.set_ylabel('Downtime in "hrs"')
+            ax.set_title('Downtime duration: ' + self.string_var_strt.get() + " : " + self.string_var_end.get())
+            plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Downtime")
+            plt.show()
+
+
+        #print(down_1)
+        #print(down_2)
+        #print(self.df_temp.to_string())
+        #print('downtime calced')
+        #print(self.df_temp)
+        #print(self.df_buff)
+        #print(self.df_buff.index)
         #self.tree_insert()
 
     def file_save(self, *args):
@@ -641,7 +639,100 @@ class App(Frame):
 
     def calculate(self):
         print("empty")
+
+    def get_screen_coordinates(self):
+        """
+        This function determines screen coordinates
+        :return: integer values of x & y
+        """
+        # Get screen width and height
+        win_width = root.winfo_screenwidth()
+        win_height = root.winfo_screenheight()
+
+        # Calculate x and y coordinates for the Tk root window
+        x = (win_width / 2) - (root_width / 2)
+        y = (win_height / 2) - (root_height / 2)
+
+        return int(x), int(y)
+    def plot_barchart(self):
+
+        data = [[66386, 174296, 145678, 234567, 12345, 324765, 66386, 174296, 145678, 234567, 12345, 324765, 11111, 6666],
+                [28230, 581139, 110234, 654321, 789321, 133233, 66386, 174296, 145678, 234567, 12345, 324765, 3450, 7777]
+                ]
+        print(len(data))
+        #columns = ('Freeze', 'Wind')
+        columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04','PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
+                     'TMA11', 'TMA12', 'TMA13', 'TMA14')
+        #columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04',
+        #             'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
+        #             'TMA11', 'TMA12', 'TMA13', 'TMA14')
+        rows = ['Not Available', 'Partially Available']
+        #rows = ['%d year' % x for x in (100, 50, 20, 10, 5)]
+
+        # RGB tuple
+        fig, ax = plt.subplots(facecolor='beige', figsize=(9.5, 4.5))
+        ax.set_aspect(aspect='auto', anchor='C')
+        ax.set_adjustable(adjustable='datalim')
+        ax.set_facecolor('lightblue')
+
+        values = np.arange(0, 1000, 200)
+        value_increment = 1000
+
+        # Get some pastel shades for the colors
+        colors = ['Red', 'Yellow']
+        n_rows = len(data)
+
+        index = np.arange(len(columns)) + 0.3
+        bar_width = 0.4
+
+        # Initialize the vertical-offset for the stacked bar chart.
+        y_offset = np.zeros(len(columns))
+
+        # Plot bars and create text labels for the table
+        cell_text = []
+        for row in range(n_rows):
+            print("This is row", row)
+            print("This is index:", index)
+            plt.bar(index, data[row], bar_width, bottom=y_offset, color=colors[row])
+            y_offset = y_offset + data[row]
+            cell_text.append(['%1.1f' % (x / 1000.0) for x in y_offset])
+        # Reverse colors and text labels to display the last value at the top.
+        #colors = colors[::-1]
+        #cell_text.reverse()
+
+        # Add a table at the bottom of the axes
+        the_table = plt.table(cellText=cell_text,
+                              rowLabels=rows,
+                              rowColours=colors,
+                              colLabels=columns,
+                              loc='bottom')
+        the_table.scale(1, 2)
+        # Adjust layout to make room for the table:
+        plt.subplots_adjust(left=0.25, bottom=0.2)
+
+
+
+        plt.ylabel("Downtime, hrs")
+        plt.yticks(values * value_increment, ['%d' % val for val in values])
+        plt.xticks([])
+        plt.title('Downtime Duration')
+        plt.grid(axis='both')
+
+
+        screen_coord= self.get_screen_location()
+        x_shift = screen_coord[0] - 50
+        y_shift = screen_coord[1] + 250
+
+        plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Downtime byby")
+        plt.get_current_fig_manager().window.wm_geometry("+" + str(x_shift) + "+" + str(y_shift))  # Move window "+<x-pos>+<y-pos>"
+
+        plt.show()
     def dict_test(self):
+        """
+        This function is for plotting Pie Chart
+        of Downtime by Events and duration
+
+        """
         #my_dict = {'equipment_name': [], 'tool_group': ['N/A', 'N/A', 'N/A', 'Extractor', 'N/A'],
         # 'status': ['Not Available', 'Not Available', 'Not Available', 'Partially Available', 'Partially Available'],
         # 'downtime_duration': [156.2, 14.9, 24.1, 229.6, 241.3]}
