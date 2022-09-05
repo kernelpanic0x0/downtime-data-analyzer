@@ -81,11 +81,14 @@ class App(Frame):
         # Configure tree viewer style
         style = ttk.Style()
         style.theme_use('clam')
-        style.configure("mystyle.Treeview.Heading", font=('Calibri', 11, 'bold'), background='grey', foreground='black')  # Modify the font of the headings
-        style.configure("mystyle.Treeview", highlightthickness=0, bd=0, font=('Calibri', 11))  # Modify the font of the body
+        style.configure("mystyle.Treeview.Heading", font=('Calibri', 11, 'bold'), background='grey',
+                        foreground='black')  # Modify the font of the headings
+        style.configure("mystyle.Treeview", highlightthickness=0, bd=0,
+                        font=('Calibri', 11))  # Modify the font of the body
 
         # Configure button style
-        style.configure('TButton', background='#8B8B83', foreground='black', borderwidth=3, focusthickness=1, focuscolor='red', height=5)
+        style.configure('TButton', background='#8B8B83', foreground='black', borderwidth=3, focusthickness=1,
+                        focuscolor='red', height=5)
 
     def ui_buttons(self):
         """
@@ -97,7 +100,7 @@ class App(Frame):
                    command=self.button_plot).grid(column=5, rowspan=2, row=2, padx=20)
         ttk.Button(self.label_frame, text="Save Results in .csv",
                    command=self.plot_barchart).grid(column=6, rowspan=2, row=2, padx=20)
-        #ttk.Button(self.label_frame, text="test dict",
+        # ttk.Button(self.label_frame, text="test dict",
         #           command=self.dict_test).grid(column=6, rowspan=2, row=2, padx=20)
 
     def ui_comboboxes(self):
@@ -107,7 +110,7 @@ class App(Frame):
 
         """
         # Create a combobox for Equipment Type
-        #self.selected_equipment = tk.StringVar()
+        # self.selected_equipment = tk.StringVar()
         equipment_comb = ttk.Combobox(self.label_frame, textvariable=self.selected_equipment)
         equipment_comb.grid(column=3, row=2, padx=10, sticky=W)
         # self.selected_equipment.trace('w', self.get_selected_equipmnt())
@@ -119,7 +122,7 @@ class App(Frame):
         equipment_comb.bind('<<ComboboxSelected>>', self.drop_down_activate)
 
         # Create a combobox for Downtime type
-        #self.selected_downtime = tk.StringVar()
+        # self.selected_downtime = tk.StringVar()
         downtime_comb = ttk.Combobox(self.label_frame, textvariable=self.selected_downtime)
         downtime_comb.grid(column=3, row=3, padx=10, sticky=W)
         # self.selected_equipment.trace('w', self.get_selected_equipmnt())
@@ -160,16 +163,15 @@ class App(Frame):
         today = datetime.today()
         # Create Calendar Input drop down - Start Date
         self.cal_start_date = DateEntry(self.label_frame, selectmode='day',
-                                   date_pattern='mm/dd/y', maxdate=today, textvariable=self.string_var_strt)
+                                        date_pattern='mm/dd/y', maxdate=today, textvariable=self.string_var_strt)
         self.cal_start_date.grid(column=1, row=2, padx=10, sticky=W)
         self.cal_start_date.bind("<<DateEntrySelected>>", self.get_start_date)
 
         # Create Calendar Input drop down - End Date
         self.cal_end_date = DateEntry(self.label_frame, selectmode='day',
-                                 date_pattern='mm/dd/y', maxdate=today, textvariable=self.string_var_end)
+                                      date_pattern='mm/dd/y', maxdate=today, textvariable=self.string_var_end)
         self.cal_end_date.grid(column=1, row=3, padx=10, sticky=W)
         self.cal_end_date.bind("<<DateEntrySelected>>", self.get_end_date)
-
 
     def ui_labels(self):
         """
@@ -234,7 +236,7 @@ class App(Frame):
         treeview_default = (
             '(empty)...', '(empty)...', '(empty)...', '(empty)...', '(empty)...', '(empty)...')
         self.tree.insert(parent='', index=0, iid=0,
-                            values=treeview_default, tags=('even_row',))
+                         values=treeview_default, tags=('even_row',))
 
         # Set background colors for each row - by default show one row with <<empty text>>
         self.tree.tag_configure('odd_row', background='#F0F0FF')
@@ -255,10 +257,10 @@ class App(Frame):
         for index in range(0, len(self.df_temp)):
             if elem_count % 2 == 0:  # even row
                 self.tree.insert(parent='', index=index, iid=index,
-                                values=self.df_temp.loc[index, :].values.tolist(), tags=('odd_row',))
+                                 values=self.df_temp.loc[index, :].values.tolist(), tags=('odd_row',))
             else:
                 self.tree.insert(parent='', index=index, iid=index,
-                                values=self.df_temp.loc[index, :].values.tolist(), tags=('even_row',))
+                                 values=self.df_temp.loc[index, :].values.tolist(), tags=('even_row',))
             elem_count += 1
 
         self.tree.tag_configure('odd_row', background='#F0F0FF')
@@ -267,13 +269,14 @@ class App(Frame):
     def plot_graphs(self, *args):
         print("Plots")
         index = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
-             'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
-             'TMA11', 'TMA12', 'TMA13', 'TMA14']
+                 'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
+                 'TMA11', 'TMA12', 'TMA13', 'TMA14']
 
-        #df_3 = pd.DataFrame({'Count': downtime_cnt, 'downtime_minutes': downtime_durr})
-        #ax = self.df_accum_time.plot.bar(x='Equipment', y='downtime_minutes', rot=0, title='Downtime')
-        #ax.plot()
-        #plt.show()
+        # df_3 = pd.DataFrame({'Count': downtime_cnt, 'downtime_minutes': downtime_durr})
+        # ax = self.df_accum_time.plot.bar(x='Equipment', y='downtime_minutes', rot=0, title='Downtime')
+        # ax.plot()
+        # plt.show()
+
     def get_selected_downtime(self, *args):
         print(self.selected_downtime.get())
         self.tree_insert()
@@ -401,18 +404,18 @@ class App(Frame):
 
         if drop_down_selection == 'All PTA & TMA':
             equipment_list = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
-                     'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
-                     'TMA11', 'TMA12', 'TMA13', 'TMA14']
+                              'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
+                              'TMA11', 'TMA12', 'TMA13', 'TMA14']
         else:
             equipment_list = [drop_down_selection]
 
-        self.df_buff = pd.DataFrame()       # Data frame for values going to tree view table
+        self.df_buff = pd.DataFrame()  # Data frame for values going to tree view table
         self.df_date = self.df_temp.copy()  # Data frame stores values filtered by Date Range
 
         mem_tool = []
         mem_downt_arr = []
         # Dictionary to store deltas for each calculation
-        self.downtime_delta = {"equipment_name": [], "tool_group": [], "status": [], "downtime_duration": [] }
+        self.downtime_delta = {"equipment_name": [], "tool_group": [], "status": [], "downtime_duration": []}
 
         # Iterate over each element of the dataframe sorted by equipment name
         # Determine when status changed from Not Available to Available
@@ -452,8 +455,8 @@ class App(Frame):
             # For each row of dataframe sorted by equipment name
             for k in range(first_row, len(self.df_temp)):
 
-                curr_status = self.df_temp['cr483_cranestatus'].iloc[k]                         # Get current status
-                curr_date = datetime.strptime(self.df_temp['createdon'].iloc[k], date_frmt)     # Get current date
+                curr_status = self.df_temp['cr483_cranestatus'].iloc[k]  # Get current status
+                curr_date = datetime.strptime(self.df_temp['createdon'].iloc[k], date_frmt)  # Get current date
 
                 # Start of Downtime
                 if ((curr_status == 'Not Available' and mem_status == 'Available')
@@ -479,16 +482,16 @@ class App(Frame):
 
                     # Sum of downtime in hrs - total
                     sum_full_downtime_durr += get_duration(
-                        durr_full_downtime.total_seconds())         # Sum of Full Downtime in hrs
+                        durr_full_downtime.total_seconds())  # Sum of Full Downtime in hrs
 
                     print("Full downtime duration = ", sum_full_downtime_durr)
                     # Set memory variable
                     mem_date = curr_date
                     mem_status = curr_status
-                    full_downtime_cnt += 1      # Full downtime counter
+                    full_downtime_cnt += 1  # Full downtime counter
 
                 elif ((curr_status == 'Not Available') and (mem_status == 'Partially Available')
-                        or (curr_status == 'Available') and (mem_status == 'Partially Available')):
+                      or (curr_status == 'Available') and (mem_status == 'Partially Available')):
                     # Record time difference - this is Time of being Partially out of service
                     durr_partial_downtime = curr_date - mem_date
 
@@ -498,12 +501,12 @@ class App(Frame):
 
                     # Sum of partial downtime in hrs - total
                     sum_partial_downtime_durr += get_duration(
-                        durr_partial_downtime.total_seconds())      # Sum of Partial Downtime in hrs
-                    print("Partial downtime duration = ",  sum_partial_downtime_durr)
+                        durr_partial_downtime.total_seconds())  # Sum of Partial Downtime in hrs
+                    print("Partial downtime duration = ", sum_partial_downtime_durr)
                     # Set memory variable
                     mem_date = curr_date
                     mem_status = curr_status
-                    partial_downtime_cnt += 1   # Partial Downtime counter
+                    partial_downtime_cnt += 1  # Partial Downtime counter
 
             # Write value to first half of the table [ rows 0 to 13 - depends on number of equipment ]
             self.df_buff.loc[num, 'Equipment Name'] = equipment_list[num]
@@ -551,19 +554,17 @@ class App(Frame):
             plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Downtime")
             plt.show()
 
-
-        #print(down_1)
-        #print(down_2)
-        #print(self.df_temp.to_string())
-        #print('downtime calced')
-        #print(self.df_temp)
-        #print(self.df_buff)
-        #print(self.df_buff.index)
-        #self.tree_insert()
+        # print(down_1)
+        # print(down_2)
+        # print(self.df_temp.to_string())
+        # print('downtime calced')
+        # print(self.df_temp)
+        # print(self.df_buff)
+        # print(self.df_buff.index)
+        # self.tree_insert()
 
     def file_save(self, *args):
         """
-
         This function saves .csv through file save dialog
 
         """
@@ -573,7 +574,6 @@ class App(Frame):
                 file_to_save = fd.asksaveasfile(mode='w', defaultextension=".csv")
                 self.df_temp.to_csv(file_to_save, line_terminator='\r', encoding='utf-8')
                 messagebox.showinfo("File Saved Successfully", "File Saved Successfully!")
-
             except AttributeError:
                 logging.exception("User cancelled save operation")
 
@@ -587,14 +587,13 @@ class App(Frame):
         data_columns = ['cr483_name', 'cr483_cranestatus', 'createdon', 'cr483_toolgroup']
         data_columns_reindex = ['cr483_name', 'cr483_cranestatus', 'cr483_toolgroup', 'createdon']
 
-
         # Show the open file dialog
         file_name = fd.askopenfilename(title='Open .*CSV file', initialdir='/', filetypes=filetypes)
         print(file_name)
 
         # Check if file was selected
         try:
-            self.df = pd.read_csv(file_name, usecols=data_columns, na_filter=False)   # Columns to read from .csv
+            self.df = pd.read_csv(file_name, usecols=data_columns, na_filter=False)  # Columns to read from .csv
             self.df = self.df.reindex(columns=data_columns_reindex)  # Reassign order of columns:
 
             # Check if valid column exists & sort by date
@@ -636,37 +635,23 @@ class App(Frame):
         # For each element in tree view column names
         # Add error message to column of df_temp
         for i in range(0, len(data_columns)):
-            self.df_temp.loc[0,  data_columns[i]] = str_msg
+            self.df_temp.loc[0, data_columns[i]] = str_msg
         self.tree_insert()  # Write message to tree view table
 
     def calculate(self):
         print("empty")
 
-    def get_screen_coordinates(self):
-        """
-        This function determines screen coordinates
-        :return: integer values of x & y
-        """
-        # Get screen width and height
-        win_width = root.winfo_screenwidth()
-        win_height = root.winfo_screenheight()
-
-        # Calculate x and y coordinates for the Tk root window
-        x = (win_width / 2) - (root_width / 2)
-        y = (win_height / 2) - (root_height / 2)
-
-        return int(x), int(y)
     def plot_barchart(self):
 
         # Data for the bar chart - from downtime calculation
         # The buffer is split in two - 0 to 14 and 14 to 28, for two types of downtime
-        down_not_available = self.df_buff.iloc[0:int((len(self.df_buff)/2)), 4].values.tolist()
-        down_partially_available = self.df_buff.iloc[int((len(self.df_buff)/2)):len(self.df_buff), 4].values.tolist()
+        down_not_available = self.df_buff.iloc[0:int((len(self.df_buff) / 2)), 4].values.tolist()
+        down_partially_available = self.df_buff.iloc[int((len(self.df_buff) / 2)):len(self.df_buff), 4].values.tolist()
         data = [down_not_available, down_partially_available]
 
-        columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04','PTA05',
+        columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04', 'PTA05',
                    'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
-                    'TMA11', 'TMA12', 'TMA13', 'TMA14')
+                   'TMA11', 'TMA12', 'TMA13', 'TMA14')
 
         rows = ['Not Available', 'Partially Available']
 
@@ -702,11 +687,11 @@ class App(Frame):
             print("This is index:", index)
             plt.bar(index, data[row], bar_width, bottom=y_offset, color=colors[row])
             y_offset = y_offset + data[row]
-            #cell_text.append(['%1.1f' % (x / 1000.0) for x in y_offset])
+            # cell_text.append(['%1.1f' % (x / 1000.0) for x in y_offset])
             cell_text.append(['%1.1f' % (x / 1.0) for x in data[row]])
         # Reverse colors and text labels to display the last value at the top.
-        #colors = colors[::-1]
-        #cell_text.reverse()
+        # colors = colors[::-1]
+        # cell_text.reverse()
 
         # Add a table at the bottom of the axes
         the_table = plt.table(cellText=cell_text,
@@ -734,13 +719,14 @@ class App(Frame):
         plt.get_current_fig_manager().window.wm_geometry("+" + str(x_shift) + "+" + str(y_shift))
 
         plt.show()
+
     def dict_test(self):
         """
         This function is for plotting Pie Chart
         of Downtime by Events and duration
 
         """
-        #my_dict = {'equipment_name': [], 'tool_group': ['N/A', 'N/A', 'N/A', 'Extractor', 'N/A'],
+        # my_dict = {'equipment_name': [], 'tool_group': ['N/A', 'N/A', 'N/A', 'Extractor', 'N/A'],
         # 'status': ['Not Available', 'Not Available', 'Not Available', 'Partially Available', 'Partially Available'],
         # 'downtime_duration': [156.2, 14.9, 24.1, 229.6, 241.3]}
         my_dict = self.downtime_delta
@@ -792,9 +778,10 @@ class App(Frame):
         # Values for downtime duration in hrs
         data = values_time
         ingredients = keys_time
-        #Values in downtime events by count
+        # Values in downtime events by count
         data_2 = values_frequency
         ingredients_2 = keys_frequency
+
         def func(pct, allvals):
             absolute = int(np.round(pct / 100. * np.sum(allvals)))
             return "{:.1f}%\n({:d} hrs)".format(pct, absolute)
@@ -806,25 +793,40 @@ class App(Frame):
         wedges, texts, autotexts = axs[0].pie(data_2, autopct=lambda pct: func2(pct, data_2),
                                               textprops=dict(color="w"))
 
-        wedges, texts, autotexts  = axs[1].pie(data, autopct=lambda pct: func(pct, data),
-                                          textprops=dict(color="w"))
+        wedges, texts, autotexts = axs[1].pie(data, autopct=lambda pct: func(pct, data),
+                                              textprops=dict(color="w"))
 
         axs[0].legend(wedges, ingredients,
-                      title="Downtime events by Tool Group - " + self.selected_equipment.get(), # repalce self later
+                      title="Downtime events by Tool Group - " + self.selected_equipment.get(),  # repalce self later
                       loc="lower center",
                       bbox_to_anchor=(0.3, -0.3, 0.5, 1))  # x, y , width, height
 
         axs[1].legend(wedges, ingredients,
-                  title="Downtime Duration by Tool Group - " + self.selected_equipment.get(), #replace self later
-                  loc="lower center",
-                  bbox_to_anchor=(0.3, -0.3, 0.5, 1))  # x, y , width, height
+                      title="Downtime Duration by Tool Group - " + self.selected_equipment.get(),  # replace self later
+                      loc="lower center",
+                      bbox_to_anchor=(0.3, -0.3, 0.5, 1))  # x, y , width, height
 
         plt.setp(autotexts, size=8, weight="bold")
-        #ax.pie(data, shadow=True, explode=explode)
+        # ax.pie(data, shadow=True, explode=explode)
         axs[0].set_title("Downtime Events / Duration by tool group")
         axs[1].set_title(self.string_var_strt.get() + " : " + self.string_var_end.get())
         plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Downtime by Tool Group")
         plt.show()
+
+    def get_screen_coordinates(self):
+        """
+        This function determines screen coordinates
+        :return: integer values of x & y
+        """
+        # Get screen width and height
+        win_width = root.winfo_screenwidth()
+        win_height = root.winfo_screenheight()
+
+        # Calculate x and y coordinates for the Tk root window
+        x = (win_width / 2) - (root_width / 2)
+        y = (win_height / 2) - (root_height / 2)
+
+        return int(x), int(y)
 
 
 def get_duration(duration):
@@ -833,7 +835,6 @@ def get_duration(duration):
     return round(hours, 1)
 
 
-# About message window
 def about_msg():
     top = Toplevel(root)
     top.geometry('%dx%d+%d+%d' % (root_width / 2, root_height / 2, x + 50, y + 50))
@@ -844,12 +845,12 @@ def about_msg():
 if __name__ == '__main__':
     root = Tk()
     root.title("Downtime Data Analyzer")
-    #img_file_name = "analyzer_icon.png"
-    #curr_dirr = pathlib.Path(img_file_name).parent.resolve()
-    #img_path = curr_dirr.joinpath(img_file_name)
-    #print(img_path)
-    #my_icon = tk.PhotoImage(file=img_path)
-    #root.iconphoto(True, my_icon)
+    # img_file_name = "analyzer_icon.png"
+    # curr_dirr = pathlib.Path(img_file_name).parent.resolve()
+    # img_path = curr_dirr.joinpath(img_file_name)
+    # print(img_path)
+    # my_icon = tk.PhotoImage(file=img_path)
+    # root.iconphoto(True, my_icon)
     root.resizable(False, False)
 
     # Width and Height for root = Tk()
