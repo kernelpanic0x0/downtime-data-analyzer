@@ -1,8 +1,8 @@
 # ################################
 #
 # Downtime data plotting script
-# August 27, 2022
-# Version 0.0.3
+# September 4, 2022
+# Version 0.1.1
 #
 ##################################
 import tkinter
@@ -961,7 +961,7 @@ def about_msg():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     root = Tk()
-    root.title("Downtime Data Analyzer")
+    root.title("Downtime Data Analyzer v0.1.1")
     # img_file_name = "analyzer_icon.png"
     # curr_dirr = pathlib.Path(img_file_name).parent.resolve()
     # img_path = curr_dirr.joinpath(img_file_name)
