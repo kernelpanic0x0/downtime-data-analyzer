@@ -538,6 +538,8 @@ class App(Frame):
             # print(self.df_buff.duplicated(subset='Tool Group', keep=False).sum())
             self.tree_insert()
             self.plot_barchart()
+            self.plot_system_availability()
+            plt.show()
 
 
     def file_save(self, *args):
@@ -698,7 +700,7 @@ class App(Frame):
         # Move window "+<x-pos>+<y-pos>"
         plt.get_current_fig_manager().window.wm_geometry("+" + str(x_shift) + "+" + str(y_shift))
 
-        plt.show()
+        #plt.show()
 
     def plot_system_availability(self):
         """
@@ -825,14 +827,14 @@ class App(Frame):
 
         # Get screen coordinates and use them to position bar chart slightly below main canvas
         screen_coord = self.get_screen_coordinates()
-        x_shift = screen_coord[0] - 60
-        y_shift = screen_coord[1] + 250
+        x_shift = screen_coord[0] - 200
+        y_shift = screen_coord[1] + 150
 
         plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Availability - %")
         # Move window "+<x-pos>+<y-pos>"
         plt.get_current_fig_manager().window.wm_geometry("+" + str(x_shift) + "+" + str(y_shift))
 
-        plt.show()
+        #plt.show()
 
 
     def dict_test(self):
