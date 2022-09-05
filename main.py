@@ -534,8 +534,10 @@ class App(Frame):
             # If drop down selection is for all devices plot bar chart
             # print(self.df_buff.duplicated(subset='Tool Group', keep=False).sum())
             self.tree_insert()
+            self.plot_barchart()
             index_1 = self.df_buff.iloc[0:14, 0].values.tolist()
             down_1 = self.df_buff.iloc[0:14, 4].values.tolist()
+            print("Half length of ubffer", len(self.df_buff) / 2)
 
             down_2 = self.df_buff.iloc[14:len(self.df_buff), 4].values.tolist()
             df_plot = pd.DataFrame({"Not Available": down_1, "Partially Avaialble": down_2}, index=index_1)
@@ -656,27 +658,31 @@ class App(Frame):
         return int(x), int(y)
     def plot_barchart(self):
 
-        data = [[66386, 174296, 145678, 234567, 12345, 324765, 66386, 174296, 145678, 234567, 12345, 324765, 11111, 6666],
-                [28230, 581139, 110234, 654321, 789321, 133233, 66386, 174296, 145678, 234567, 12345, 324765, 3450, 7777]
-                ]
-        print(len(data))
-        #columns = ('Freeze', 'Wind')
-        columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04','PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
-                     'TMA11', 'TMA12', 'TMA13', 'TMA14')
-        #columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04',
-        #             'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
-        #             'TMA11', 'TMA12', 'TMA13', 'TMA14')
-        rows = ['Not Available', 'Partially Available']
-        #rows = ['%d year' % x for x in (100, 50, 20, 10, 5)]
+        # Data for the bar chart - from downtime calculation
+        # The buffer is split in two - 0 to 14 and 14 to 28, for two types of downtime
+        down_not_available = self.df_buff.iloc[0:int((len(self.df_buff)/2)), 4].values.tolist()
+        down_partially_available = self.df_buff.iloc[int((len(self.df_buff)/2)):len(self.df_buff), 4].values.tolist()
+        data = [down_not_available, down_partially_available]
 
-        # RGB tuple
+        columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04','PTA05',
+                   'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
+                    'TMA11', 'TMA12', 'TMA13', 'TMA14')
+
+        rows = ['Not Available', 'Partially Available']
+
+        # Set face color and anchor points
         fig, ax = plt.subplots(facecolor='beige', figsize=(9.5, 4.5))
         ax.set_aspect(aspect='auto', anchor='C')
         ax.set_adjustable(adjustable='datalim')
         ax.set_facecolor('lightblue')
 
-        values = np.arange(0, 1000, 200)
-        value_increment = 1000
+        # Set max value for the Y axis based on greatest y-offset
+        max_offset = max([elem_x + elem_y for elem_x, elem_y in zip(down_not_available, down_partially_available)])
+        tick_value = round(int(max_offset / 8), -2)
+
+        print("The maximum offset is", max_offset)
+        values = np.arange(0, int(max_offset + 100), tick_value)  # (0 , max_y, y_tick)
+        value_increment = 1
 
         # Get some pastel shades for the colors
         colors = ['Red', 'Yellow']
@@ -687,6 +693,7 @@ class App(Frame):
 
         # Initialize the vertical-offset for the stacked bar chart.
         y_offset = np.zeros(len(columns))
+        print("This is init of y offset", y_offset)
 
         # Plot bars and create text labels for the table
         cell_text = []
@@ -695,7 +702,8 @@ class App(Frame):
             print("This is index:", index)
             plt.bar(index, data[row], bar_width, bottom=y_offset, color=colors[row])
             y_offset = y_offset + data[row]
-            cell_text.append(['%1.1f' % (x / 1000.0) for x in y_offset])
+            #cell_text.append(['%1.1f' % (x / 1000.0) for x in y_offset])
+            cell_text.append(['%1.1f' % (x / 1.0) for x in data[row]])
         # Reverse colors and text labels to display the last value at the top.
         #colors = colors[::-1]
         #cell_text.reverse()
@@ -710,21 +718,20 @@ class App(Frame):
         # Adjust layout to make room for the table:
         plt.subplots_adjust(left=0.25, bottom=0.2)
 
-
-
         plt.ylabel("Downtime, hrs")
         plt.yticks(values * value_increment, ['%d' % val for val in values])
         plt.xticks([])
-        plt.title('Downtime Duration')
+        plt.title('Downtime Duration: ' + self.string_var_strt.get() + " : " + self.string_var_end.get())
         plt.grid(axis='both')
 
-
-        screen_coord= self.get_screen_location()
+        # Get screen coordinates and use them to position bar chart slightly below main canvas
+        screen_coord = self.get_screen_coordinates()
         x_shift = screen_coord[0] - 50
         y_shift = screen_coord[1] + 250
 
-        plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Downtime byby")
-        plt.get_current_fig_manager().window.wm_geometry("+" + str(x_shift) + "+" + str(y_shift))  # Move window "+<x-pos>+<y-pos>"
+        plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Downtime - combined")
+        # Move window "+<x-pos>+<y-pos>"
+        plt.get_current_fig_manager().window.wm_geometry("+" + str(x_shift) + "+" + str(y_shift))
 
         plt.show()
     def dict_test(self):
