@@ -99,7 +99,7 @@ class App(Frame):
         ttk.Button(self.label_frame, text="Calculate Downtime",
                    command=self.button_plot).grid(column=5, rowspan=2, row=2, padx=20)
         ttk.Button(self.label_frame, text="Save Results in .csv",
-                   command=self.dict_manipulation).grid(column=6, rowspan=2, row=2, padx=20)
+                   command=self.file_save).grid(column=6, rowspan=2, row=2, padx=20)
         # ttk.Button(self.label_frame, text="test dict",
         #           command=self.dict_test).grid(column=6, rowspan=2, row=2, padx=20)
 
@@ -1115,12 +1115,13 @@ def about_msg():
 if __name__ == '__main__':
     root = Tk()
     root.title("Downtime Data Analyzer v0.1.1")
-    # img_file_name = "analyzer_icon.png"
-    # curr_dirr = pathlib.Path(img_file_name).parent.resolve()
-    # img_path = curr_dirr.joinpath(img_file_name)
-    # print(img_path)
-    # my_icon = tk.PhotoImage(file=img_path)
-    # root.iconphoto(True, my_icon)
+    img_file_name = "small_icon.ico"
+    curr_dirr = pathlib.Path(img_file_name).parent.resolve()
+    img_path = curr_dirr.joinpath(img_file_name)
+    print(img_path)
+    #my_icon = tk.PhotoImage(file=img_path)
+    #root.iconphoto(True, my_icon)
+
     root.resizable(False, False)
 
     # Width and Height for root = Tk()
@@ -1139,6 +1140,9 @@ if __name__ == '__main__':
     root.geometry('%dx%d+%d+%d' % (root_width, root_height, x, y))
     logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
     logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+
+    root.iconbitmap(img_path)
+
     myapp = App(root)
     myapp.mainloop()
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
