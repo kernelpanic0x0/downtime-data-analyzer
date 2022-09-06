@@ -571,7 +571,8 @@ class App(Frame):
             self.tree_insert()
             self.plot_barchart()
             self.plot_system_availability()
-            self.dict_test()
+            #self.dict_test()
+            self.dict_manipulation()
             plt.show()
 
 
@@ -724,6 +725,9 @@ class App(Frame):
         plt.title('Downtime Duration: ' + self.string_var_strt.get() + " : " + self.string_var_end.get())
         plt.grid(axis='both')
 
+        # Set titles for the figure and the subplot respectively
+        fig.suptitle('Downtime Duration', fontsize=14, fontweight='bold')
+
         # Get screen coordinates and use them to position bar chart slightly below main canvas
         screen_coord = self.get_screen_coordinates()
         x_shift = screen_coord[0] - 50
@@ -872,11 +876,12 @@ class App(Frame):
     def dict_manipulation(self):
         # test data:
         combined_dict = {'tool_group': [],'status': [],'downtime_duration': []}
-        test_data = {
-            0:{'equipment_name': ['PTA01'], 'tool_group': ['Cabin', 'PM', "Extractor", "Bridge", "Some very very long name tool"],'status': ['Partially Available', 'Not Available'],'downtime_duration': [10.7, 122.8, 13.0, 11.0, 25.0]},
-            1:{'equipment_name': ['PTA02'], 'tool_group': ['PM'], 'status': [], 'downtime_duration': []},
-            2:{'equipment_name': ['PTA03'], 'tool_group': ['N/A', 'N/A', 'N/A', 'N/A'],'status': ['Not Available', 'Not Available', 'Partially Available', 'Not Available'],'downtime_duration': [8.9, 2.5, 0.0, 16.4]}
-        }
+        #test_data = {
+        #    0:{'equipment_name': ['PTA01'], 'tool_group': ['Cabin', 'PM', "Extractor", "Bridge", "Some very very long name tool"],'status': ['Partially Available', 'Not Available'],'downtime_duration': [10.7, 122.8, 13.0, 11.0, 25.0]},
+        #    1:{'equipment_name': ['PTA02'], 'tool_group': ['PM'], 'status': [], 'downtime_duration': []},
+        #    2:{'equipment_name': ['PTA03'], 'tool_group': ['N/A', 'N/A', 'N/A', 'N/A'],'status': ['Not Available', 'Not Available', 'Partially Available', 'Not Available'],'downtime_duration': [8.9, 2.5, 0.0, 16.4]}
+        #}
+        test_data = self.temp_dict
         # Empty list to store lists after join command
         result = [[], [], [], []]
 
@@ -939,20 +944,20 @@ class App(Frame):
         data_2 = self.values_frequency
         ingredients_2 = self.keys_frequency
 
-        fig, ax = plt.subplots(1, 2, figsize=(9.5, 4.5), subplot_kw=dict(aspect="equal"), facecolor='beige')
+        fig, ax = plt.subplots( figsize=(9.5, 4.5), subplot_kw=dict(aspect="equal"), facecolor='beige')
 
-        wedges, texts = ax[0].pie(data, wedgeprops=dict(width=0.5), startangle=-40)
+        wedges, texts = ax.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
 
         # Set bat chart
-        x = np.arange(len(recipe))  # the label locations
-        width = 0.35
-        rects1 = ax[1].bar(x, data_2, width, label='Downtime Events')
-        ax[1].set_ylabel('Events')
-        ax[1].set_title('Downtime events count')
-        ax[1].set_xticks(x,ingredients_2 )
-        ax[1].legend()
-        ax[1].bar_label(rects1, padding=3)
-        plt.xticks(rotation=90)
+        #x = np.arange(len(recipe))  # the label locations
+        #width = 0.35
+        #rects1 = ax[1].bar(x, data_2, width, label='Downtime Events')
+        #ax[1].set_ylabel('Events')
+        #ax[1].set_title('Downtime events count')
+        #ax[1].set_xticks(x,ingredients_2 )
+        #ax[1].legend()
+        #ax[1].bar_label(rects1, padding=3)
+        #plt.xticks(rotation=90)
 
         bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
         kw = dict(arrowprops=dict(arrowstyle="-"),
@@ -965,7 +970,7 @@ class App(Frame):
             horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
             connectionstyle = "angle,angleA=0,angleB={}".format(ang)
             kw["arrowprops"].update({"connectionstyle": connectionstyle})
-            ax[0].annotate(recipe[i], xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
+            ax.annotate(recipe[i], xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
                         horizontalalignment=horizontalalignment, **kw)
 
 
@@ -974,8 +979,8 @@ class App(Frame):
 
         # Get screen coordinates and use them to position bar chart slightly below main canvas
         screen_coord = self.get_screen_coordinates()
-        x_shift = screen_coord[0] - 200
-        y_shift = screen_coord[1] + 150
+        x_shift = screen_coord[0] - 300
+        y_shift = screen_coord[1] + 250
 
         plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Downtime by Tool Group")
         # Move window "+<x-pos>+<y-pos>"
