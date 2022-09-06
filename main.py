@@ -873,7 +873,7 @@ class App(Frame):
         # test data:
         combined_dict = {'tool_group': [],'status': [],'downtime_duration': []}
         test_data = {
-            0:{'equipment_name': ['PTA01'], 'tool_group': ['Cabin', 'PM'],'status': ['Partially Available', 'Not Available'],'downtime_duration': [10.7, 122.8]},
+            0:{'equipment_name': ['PTA01'], 'tool_group': ['Cabin', 'PM', "Extractor", "Bridge", "Some very very long name tool"],'status': ['Partially Available', 'Not Available'],'downtime_duration': [10.7, 122.8, 13.0, 11.0, 25.0]},
             1:{'equipment_name': ['PTA02'], 'tool_group': ['PM'], 'status': [], 'downtime_duration': []},
             2:{'equipment_name': ['PTA03'], 'tool_group': ['N/A', 'N/A', 'N/A', 'N/A'],'status': ['Not Available', 'Not Available', 'Partially Available', 'Not Available'],'downtime_duration': [8.9, 2.5, 0.0, 16.4]}
         }
@@ -888,18 +888,18 @@ class App(Frame):
             combined_dict[elem].append(result[num])
         logging.info(f"Combined dictionary: {combined_dict}")
 
-        tool_frequency = {}
+        self.tool_frequency = {}
         # For each element in tool group key find tool breakdown frequency
         # Count number of duplicates in the tool_group list
         for items in combined_dict['tool_group'][0]:
-            tool_frequency[items] = combined_dict['tool_group'][0].count(items)
-        counter = Counter(tool_frequency)
-        keys_frequency = list(counter.keys())
-        values_frequency = list(counter.values())
+            self.tool_frequency[items] = combined_dict['tool_group'][0].count(items)
+        counter = Counter(self.tool_frequency)
+        self.keys_frequency = list(counter.keys())
+        self.values_frequency = list(counter.values())
 
-        logging.info(f"Tool breakdown events Dictionary: {tool_frequency}")
-        logging.info(f"Tool breakdown events Values: {values_frequency}")
-        logging.info(f"Tool breakdown events Keys: { keys_frequency}")
+        logging.info(f"Tool breakdown events Dictionary: {self.tool_frequency}")
+        logging.info(f"Tool breakdown events Values: {self.values_frequency}")
+        logging.info(f"Tool breakdown events Keys: {self.keys_frequency}")
 
         tool_downtime = {}
         # For each item in tool group key find downtime per tool group
@@ -913,18 +913,75 @@ class App(Frame):
 
         # Find Sum of downtime duration per tool group
         logging.info(f"Tool downtime Dictionary Before Sum(): { tool_downtime.items()}")
-        tool_time = {dict_key: sum(val) for dict_key, val in tool_downtime.items()}
-        logging.info(f"Sum() of downtime per tool group calculated: {tool_time}")
+        self.tool_time = {dict_key: sum(val) for dict_key, val in tool_downtime.items()}
+        logging.info(f"Sum() of downtime per tool group calculated: {self.tool_time}")
 
-        counter = Counter(tool_time)
-        keys_time = list(counter.keys())
-        values_time = list(counter.values())
+        counter = Counter(self.tool_time)
+        self.keys_time = list(counter.keys())
+        self.values_time = list(counter.values())
 
-        logging.info(f"Tool breakdown frequency Dictionary: {tool_time}")
-        logging.info(f"Tool breakdown frequency Values: {values_time}")
-        logging.info(f"Tool breakdown frequency Keys: {keys_time}")
+        logging.info(f"Tool breakdown frequency Dictionary: {self.tool_time}")
+        logging.info(f"Tool breakdown frequency Values: {self.values_time}")
+        logging.info(f"Tool breakdown frequency Keys: {self.keys_time}")
+
+        self.plot_tool_downtime()
+
+    def plot_tool_downtime(self):
+        """
+        This function plots donut chart for Tool Group Downtime
+        :return:
+        """
+
+        # Values for downtime duration in hrs
+        data = self.values_time
+        recipe = self.keys_time
+        # Values in downtime events by count
+        data_2 = self.values_frequency
+        ingredients_2 = self.keys_frequency
+
+        fig, ax = plt.subplots(1, 2, figsize=(9.5, 4.5), subplot_kw=dict(aspect="equal"), facecolor='beige')
+
+        wedges, texts = ax[0].pie(data, wedgeprops=dict(width=0.5), startangle=-40)
+
+        # Set bat chart
+        x = np.arange(len(recipe))  # the label locations
+        width = 0.35
+        rects1 = ax[1].bar(x, data_2, width, label='Downtime Events')
+        ax[1].set_ylabel('Events')
+        ax[1].set_title('Downtime events count')
+        ax[1].set_xticks(x,ingredients_2 )
+        ax[1].legend()
+        ax[1].bar_label(rects1, padding=3)
+        plt.xticks(rotation=90)
+
+        bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
+        kw = dict(arrowprops=dict(arrowstyle="-"),
+                  bbox=bbox_props, zorder=0, va="center")
+
+        for i, p in enumerate(wedges):
+            ang = (p.theta2 - p.theta1) / 2. + p.theta1
+            y = np.sin(np.deg2rad(ang))
+            x = np.cos(np.deg2rad(ang))
+            horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
+            connectionstyle = "angle,angleA=0,angleB={}".format(ang)
+            kw["arrowprops"].update({"connectionstyle": connectionstyle})
+            ax[0].annotate(recipe[i], xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
+                        horizontalalignment=horizontalalignment, **kw)
 
 
+        # Set titles for the figure and the subplot respectively
+        fig.suptitle('Equipment Downtime by Tool Group', fontsize=14, fontweight='bold')
+
+        # Get screen coordinates and use them to position bar chart slightly below main canvas
+        screen_coord = self.get_screen_coordinates()
+        x_shift = screen_coord[0] - 200
+        y_shift = screen_coord[1] + 150
+
+        plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Downtime by Tool Group")
+        # Move window "+<x-pos>+<y-pos>"
+        plt.get_current_fig_manager().window.wm_geometry("+" + str(x_shift) + "+" + str(y_shift))
+        fig.tight_layout()
+        plt.show()
 
     def dict_test(self):
         """
