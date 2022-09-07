@@ -575,7 +575,6 @@ class App(Frame):
             self.dict_manipulation()
             plt.show()
 
-
     def file_save(self, *args):
         """
         This function saves .csv through file save dialog
@@ -730,8 +729,9 @@ class App(Frame):
 
         # Get screen coordinates and use them to position bar chart slightly below main canvas
         screen_coord = self.get_screen_coordinates()
-        x_shift = screen_coord[0] - 50
-        y_shift = screen_coord[1] + 250
+
+        x_shift = screen_coord[0] - int(0.1 * screen_coord[0])
+        y_shift = screen_coord[1] + int(0.4 * screen_coord[1])
 
         plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Downtime - combined")
         # Move window "+<x-pos>+<y-pos>"
@@ -864,8 +864,8 @@ class App(Frame):
 
         # Get screen coordinates and use them to position bar chart slightly below main canvas
         screen_coord = self.get_screen_coordinates()
-        x_shift = screen_coord[0] - 200
-        y_shift = screen_coord[1] + 150
+        x_shift = screen_coord[0] - int(0.1 * screen_coord[0])
+        y_shift = screen_coord[1] + int(0.6 * screen_coord[1])
 
         plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Availability - %")
         # Move window "+<x-pos>+<y-pos>"
@@ -977,10 +977,12 @@ class App(Frame):
         # Set titles for the figure and the subplot respectively
         fig.suptitle('Equipment Downtime by Tool Group', fontsize=14, fontweight='bold')
 
+        
+
         # Get screen coordinates and use them to position bar chart slightly below main canvas
         screen_coord = self.get_screen_coordinates()
-        x_shift = screen_coord[0] - 300
-        y_shift = screen_coord[1] + 250
+        x_shift = screen_coord[0] + int(0.30 * screen_coord[0])
+        y_shift = screen_coord[1] + int(0.60 * screen_coord[1])
 
         plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Downtime by Tool Group")
         # Move window "+<x-pos>+<y-pos>"
