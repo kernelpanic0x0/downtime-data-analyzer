@@ -24,7 +24,7 @@ import babel.numbers
 import logging
 from tkinter import messagebox
 
-import test
+import plots
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
@@ -54,6 +54,8 @@ class App(Frame):
         self.df = pd.DataFrame()
         self.df_date = pd.DataFrame()
         self.df_buff = pd.DataFrame()
+
+        #self.about_msg()
 
     def init_ui(self):
         """
@@ -153,7 +155,7 @@ class App(Frame):
         file_menu.add_command(label="Exit", command=root.quit)
         # Top bar Help menu
         my_menu.add_cascade(label="Help", menu=help_menu)
-        help_menu.add_command(label="About", command=about_msg)
+        help_menu.add_command(label="About", command=self.about_msg)
 
     def ui_calendars(self):
         """
@@ -552,6 +554,8 @@ class App(Frame):
         self.df_buff = self.df_buff.sort_index(ascending=True)
         self.df_temp = self.df_buff
 
+
+
         print("Downtime delta")
         print(self.downtime_delta)
         print(self.downtime_delta["tool_group"])
@@ -576,7 +580,10 @@ class App(Frame):
             #self.dict_test()
             self.dict_manipulation()
             plt.show()
-
+        #self.master.change(plots.matplotlibSwitchGraphs, data=self.df_buff)
+        self.about_msg()
+    def change(self, frame, **kwargs):
+        self.frame = frame(self, **kwargs)
     def file_save(self, *args):
         """
         This function saves .csv through file save dialog
@@ -1101,6 +1108,53 @@ class App(Frame):
         y = (win_height / 2) - (root_height / 2)
 
         return int(x), int(y)
+    def get_name(self):
+        print("inside the getter")
+        self.hidden_name = "Josh"
+        print(self.hidden_name)
+        return self.hidden_name
+
+    def about_msg(self):
+        self.top = Toplevel(self.master)
+
+        self.date_picker = []
+        self.date_picker.append(self.string_var_strt.get())
+        self.date_picker.append(self.string_var_end.get())
+
+        self.top.title("Downtime Data Analyzer v0.1.1 - Plots")
+        img_file_name = "small_icon.ico"
+        curr_dirr = pathlib.Path(img_file_name).parent.resolve()
+        img_path = curr_dirr.joinpath(img_file_name)
+        print(img_path)
+        # my_icon = tk.PhotoImage(file=img_path)
+        # root.iconphoto(True, my_icon)
+
+        self.top.resizable(False, False)
+
+        # Width and Height for root = Tk()
+        root_width = 1000
+        root_height = 700
+
+        # Get screen width and height
+        win_width = root.winfo_screenwidth()
+        win_height = root.winfo_screenheight()
+
+        # Calculate x and y coordinates for the Tk root window
+        x = (win_width / 2) - (root_width / 2) + 50
+        y = (win_height / 2) - (root_height / 2)
+
+        # Set dimensions and position of the screen
+        self.top.geometry('%dx%d+%d+%d' % (root_width, root_height, x, y))
+        logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
+        logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+
+        self.top.iconbitmap(img_path)
+        plots.matplotlibSwitchGraphs(self.top, self.df_buff, self.date_picker)
+        # don = Buffer(data)
+        # don.get_name()
+        # plots.matplotlibSwitchGraphs.
+        # top.geometry('%dx%d+%d+%d' % (root_width / 2, root_height / 2, x + 50, y + 50))
+        self.top.mainloop()
 
 
 def get_duration(duration):
@@ -1108,42 +1162,20 @@ def get_duration(duration):
     hours = minutes / 60
     return round(hours, 1)
 
-def about_msg():
-    top = Toplevel(root)
-
-    top.title("Downtime Data Analyzer v0.1.1 - Plots")
-    img_file_name = "small_icon.ico"
-    curr_dirr = pathlib.Path(img_file_name).parent.resolve()
-    img_path = curr_dirr.joinpath(img_file_name)
-    print(img_path)
-    # my_icon = tk.PhotoImage(file=img_path)
-    # root.iconphoto(True, my_icon)
-
-    top.resizable(False, False)
-
-    # Width and Height for root = Tk()
-    root_width = 1000
-    root_height = 700
-
-    # Get screen width and height
-    win_width = root.winfo_screenwidth()
-    win_height = root.winfo_screenheight()
-
-    # Calculate x and y coordinates for the Tk root window
-    x = (win_width / 2) - (root_width / 2) + 50
-    y = (win_height / 2) - (root_height / 2)
-
-    # Set dimensions and position of the screen
-    top.geometry('%dx%d+%d+%d' % (root_width, root_height, x, y))
-    logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
-    logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
-
-    top.iconbitmap(img_path)
-    test.matplotlibSwitchGraphs(top)
-    #top.geometry('%dx%d+%d+%d' % (root_width / 2, root_height / 2, x + 50, y + 50))
-    top.mainloop()
 
 
+# Getter and setter
+class Buffer():
+    def __init__(self, input_name):
+        self.hidden_name = input_name
+    def get_name(self):
+        print("inside the getter")
+        print(self.hidden_name)
+        return self.hidden_name
+
+    def set_name(self, input_name):
+        print('inside setter')
+        self.hidden_name = input_name
 
 def config_plot():
     fig, ax = plt.subplots()
