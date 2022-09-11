@@ -39,22 +39,30 @@ class matplotlibSwitchGraphs(Frame):
 
 
         self.mainframe = ttk.Frame(self.master, padding="3 3 12 12")
-        self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+        #self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
-        ##
+        #
+        #self.label_frame = ttk.LabelFrame(self.mainframe, text='Filters')
+        #self.label_frame.grid(column=0, row=0, sticky=W, pady=10)
+        #ttk.Label(self.master, text="Start Date:").grid(column=0, row=0, pady=5, sticky=W)
+
+        # Set position of the matplotlib toolbar
         self.canvas.mpl_connect("key_press_event", self.on_key_press)
         self.toolbar = NavigationToolbar2Tk(self.canvas, self.master, pack_toolbar=False)
-        self.toolbar.grid(column=5, rowspan=2, row=4, padx=20)
+        self.toolbar.grid(column=0, rowspan=1, row=4, sticky=W)
         self.toolbar.update()
-        #self.canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
-        self.canvas.get_tk_widget().grid(column=5, rowspan=2, row=2, padx=20)
+
+        # Set position of the plot
+        self.canvas.get_tk_widget().grid(column=0, rowspan=1, row=0, sticky=W+E)
+
+        # Set position of the quit button
         self.button = Button(self.master, text="Quit", command=self._quit)
-        #self.button.pack(side=BOTTOM)
-        self.button.grid(column=4, rowspan=2, row=2, padx=20)
+        self.button.grid(column=0, rowspan=1, row=3, padx=20)
+
+        # Set position of the switch graphs button
         self.button_switch = Button(self.master, text="Switch Graphs", command=self.switch_graphs)
-        #self.button_switch.pack(side=BOTTOM)
-        self.button_switch.grid(column=3, rowspan=2, row=2, padx=20)
+        self.button_switch.grid(column=0, rowspan=1, row=2, padx=20)
 
     def draw_graph_one(self):
         t = np.arange(0.0, 2.0, 0.01)
