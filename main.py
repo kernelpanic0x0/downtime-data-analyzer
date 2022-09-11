@@ -24,6 +24,7 @@ import babel.numbers
 import logging
 from tkinter import messagebox
 
+import test
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
@@ -48,6 +49,7 @@ class App(Frame):
         self.ui_tree_view_table()
         self.ui_file_menues()
         self.ui_buttons()
+
         self.df_temp = pd.DataFrame()
         self.df = pd.DataFrame()
         self.df_date = pd.DataFrame()
@@ -977,7 +979,7 @@ class App(Frame):
         # Set titles for the figure and the subplot respectively
         fig.suptitle('Equipment Downtime by Tool Group', fontsize=14, fontweight='bold')
 
-        
+
 
         # Get screen coordinates and use them to position bar chart slightly below main canvas
         screen_coord = self.get_screen_coordinates()
@@ -1106,12 +1108,48 @@ def get_duration(duration):
     hours = minutes / 60
     return round(hours, 1)
 
-
 def about_msg():
     top = Toplevel(root)
-    top.geometry('%dx%d+%d+%d' % (root_width / 2, root_height / 2, x + 50, y + 50))
+
+    top.title("Downtime Data Analyzer v0.1.1 - Plots")
+    img_file_name = "small_icon.ico"
+    curr_dirr = pathlib.Path(img_file_name).parent.resolve()
+    img_path = curr_dirr.joinpath(img_file_name)
+    print(img_path)
+    # my_icon = tk.PhotoImage(file=img_path)
+    # root.iconphoto(True, my_icon)
+
+    top.resizable(False, False)
+
+    # Width and Height for root = Tk()
+    root_width = 1000
+    root_height = 700
+
+    # Get screen width and height
+    win_width = root.winfo_screenwidth()
+    win_height = root.winfo_screenheight()
+
+    # Calculate x and y coordinates for the Tk root window
+    x = (win_width / 2) - (root_width / 2) + 50
+    y = (win_height / 2) - (root_height / 2)
+
+    # Set dimensions and position of the screen
+    top.geometry('%dx%d+%d+%d' % (root_width, root_height, x, y))
+    logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
+    logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+
+    top.iconbitmap(img_path)
+    test.matplotlibSwitchGraphs(top)
+    #top.geometry('%dx%d+%d+%d' % (root_width / 2, root_height / 2, x + 50, y + 50))
     top.mainloop()
 
+
+
+def config_plot():
+    fig, ax = plt.subplots()
+    ax.set(xlabel='time (s)', ylabel='voltage (mV)',
+           title='Graph One')
+    return (fig, ax)
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':

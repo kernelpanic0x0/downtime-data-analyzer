@@ -3,10 +3,14 @@ matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import numpy as np
 from tkinter import *
+from tkinter import ttk
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg, NavigationToolbar2Tk)
 # Implement the default Matplotlib key bindings.
 from matplotlib.backend_bases import key_press_handler
+import logging
+from datetime import datetime
+import pathlib
 
 # Seperated out config of plot to just do it once
 def config_plot():
@@ -15,8 +19,10 @@ def config_plot():
            title='Graph One')
     return (fig, ax)
 
-class matplotlibSwitchGraphs:
+class matplotlibSwitchGraphs(Frame):
     def __init__(self, master):
+        Frame.__init__(self, master)
+
         self.master = master
         self.frame = Frame(self.master)
         self.fig, self.ax = config_plot()
@@ -24,18 +30,31 @@ class matplotlibSwitchGraphs:
         self.canvas = FigureCanvasTkAgg(self.fig, self.master)
         self.config_window()
         self.draw_graph_one()
-        self.frame.pack(expand=YES, fill=BOTH)
+        #self.frame.pack(expand=YES, fill=BOTH)
         #self.on_key_press()
 
+
     def config_window(self):
+        # Using Grid
+
+
+        self.mainframe = ttk.Frame(self.master, padding="3 3 12 12")
+        self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+        self.master.columnconfigure(0, weight=1)
+        self.master.rowconfigure(0, weight=1)
+        ##
         self.canvas.mpl_connect("key_press_event", self.on_key_press)
-        self.toolbar = NavigationToolbar2Tk(self.canvas, self.master)
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self.master, pack_toolbar=False)
+        self.toolbar.grid(column=5, rowspan=2, row=4, padx=20)
         self.toolbar.update()
-        self.canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+        #self.canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+        self.canvas.get_tk_widget().grid(column=5, rowspan=2, row=2, padx=20)
         self.button = Button(self.master, text="Quit", command=self._quit)
-        self.button.pack(side=BOTTOM)
+        #self.button.pack(side=BOTTOM)
+        self.button.grid(column=4, rowspan=2, row=2, padx=20)
         self.button_switch = Button(self.master, text="Switch Graphs", command=self.switch_graphs)
-        self.button_switch.pack(side=BOTTOM)
+        #self.button_switch.pack(side=BOTTOM)
+        self.button_switch.grid(column=3, rowspan=2, row=2, padx=20)
 
     def draw_graph_one(self):
         t = np.arange(0.0, 2.0, 0.01)
@@ -85,8 +104,71 @@ class matplotlibSwitchGraphs:
 
 def main():
     root = Tk()
-    matplotlibSwitchGraphs(root)
-    root.mainloop()
+    root.title("Downtime Data Analyzer v0.1.1")
+    img_file_name = "small_icon.ico"
+    curr_dirr = pathlib.Path(img_file_name).parent.resolve()
+    img_path = curr_dirr.joinpath(img_file_name)
+    print(img_path)
+    # my_icon = tk.PhotoImage(file=img_path)
+    # root.iconphoto(True, my_icon)
+
+    root.resizable(False, False)
+
+    # Width and Height for root = Tk()
+    root_width = 1000
+    root_height = 700
+
+    # Get screen width and height
+    win_width = root.winfo_screenwidth()
+    win_height = root.winfo_screenheight()
+
+    # Calculate x and y coordinates for the Tk root window
+    x = (win_width / 2) - (root_width / 2)
+    y = (win_height / 2) - (root_height / 2)
+
+    # Set dimensions and position of the screen
+    root.geometry('%dx%d+%d+%d' % (root_width, root_height, x, y))
+    logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
+    logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+
+    root.iconbitmap(img_path)
+    #matplotlibSwitchGraphs(root)
+    #root.mainloop()
+    my_plots = matplotlibSwitchGraphs(root)
+    my_plots.mainloop()
 
 if __name__ == '__main__':
-    main()
+    #main()
+    root = Tk()
+    root.title("Downtime Data Analyzer v0.1.1")
+    img_file_name = "small_icon.ico"
+    curr_dirr = pathlib.Path(img_file_name).parent.resolve()
+    img_path = curr_dirr.joinpath(img_file_name)
+    print(img_path)
+    # my_icon = tk.PhotoImage(file=img_path)
+    # root.iconphoto(True, my_icon)
+
+    root.resizable(False, False)
+
+    # Width and Height for root = Tk()
+    root_width = 1000
+    root_height = 700
+
+    # Get screen width and height
+    win_width = root.winfo_screenwidth()
+    win_height = root.winfo_screenheight()
+
+    # Calculate x and y coordinates for the Tk root window
+    x = (win_width / 2) - (root_width / 2)
+    y = (win_height / 2) - (root_height / 2)
+
+    # Set dimensions and position of the screen
+    root.geometry('%dx%d+%d+%d' % (root_width, root_height, x, y))
+    logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
+    logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+
+    root.iconbitmap(img_path)
+    # matplotlibSwitchGraphs(root)
+    # root.mainloop()
+    my_plots = matplotlibSwitchGraphs(root)
+    my_plots.mainloop()
