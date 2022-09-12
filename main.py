@@ -55,7 +55,15 @@ class App(Frame):
         self.df_date = pd.DataFrame()
         self.df_buff = pd.DataFrame()
 
+
+        self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
         #self.about_msg()
+
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to close window?"):
+            root.quit()
+            self.master.destroy()
+
 
     def init_ui(self):
         """
@@ -567,6 +575,10 @@ class App(Frame):
         print(self.temp_dict[2])
 
         # If drop down selection is not for all devices plot pie chart by Tool Group
+        self.date_picker = []
+        self.date_picker.append(self.string_var_strt.get())
+        self.date_picker.append(self.string_var_end.get())
+
         if drop_down_selection != 'All PTA & TMA':
             print(self.downtime_delta)
             self.tree_insert()
@@ -575,17 +587,16 @@ class App(Frame):
             # If drop down selection is for all devices then plot bar chart
             # print(self.df_buff.duplicated(subset='Tool Group', keep=False).sum())
             self.tree_insert()
-            self.plot_barchart()
-            self.plot_system_availability()
+
+            #self.plot_barchart()
+            #self.plot_system_availability()
             #self.dict_test()
             self.dict_manipulation()
-            plt.show()
+            self.open_top_window()
+            #plt.show()
         #self.master.change(plots.matplotlibSwitchGraphs, data=self.df_buff)
         #self.about_msg()
-        self.date_picker = []
-        self.date_picker.append(self.string_var_strt.get())
-        self.date_picker.append(self.string_var_end.get())
-        self.open_top_window()
+
 
     def change(self, frame, **kwargs):
         self.frame = frame(self, **kwargs)
@@ -943,7 +954,13 @@ class App(Frame):
         logging.info(f"Tool breakdown frequency Values: {self.values_time}")
         logging.info(f"Tool breakdown frequency Keys: {self.keys_time}")
 
-        self.plot_tool_downtime()
+        self.tool_calc_resutl = {'duration':[], 'keys':[]}
+        self.tool_calc_resutl['duration'] = self.values_time
+        self.tool_calc_resutl['keys'] = self.keys_time
+
+        #self.plot_tool_downtime()
+
+        # do not call plot as i have moved it to plots.py
 
     def plot_tool_downtime(self):
         """
@@ -1113,15 +1130,12 @@ class App(Frame):
         y = (win_height / 2) - (root_height / 2)
 
         return int(x), int(y)
-    def get_name(self):
-        print("inside the getter")
-        self.hidden_name = "Josh"
-        print(self.hidden_name)
-        return self.hidden_name
 
     def open_top_window(self):
         window = TopWindow(self.master, self.df_buff, self.date_picker)
         window.grab_set()
+
+
 class TopWindow(tk.Toplevel):
     def __init__(self, parent, myData, myDate):
         super().__init__(parent)
@@ -1129,14 +1143,11 @@ class TopWindow(tk.Toplevel):
         self.date_picker = myDate
         self.df_buff = myData
 
-
         self.title("Downtime Data Analyzer v0.1.1 - Plots")
         img_file_name = "small_icon.ico"
         curr_dirr = pathlib.Path(img_file_name).parent.resolve()
         img_path = curr_dirr.joinpath(img_file_name)
         print(img_path)
-        # my_icon = tk.PhotoImage(file=img_path)
-        # root.iconphoto(True, my_icon)
 
         self.resizable(False, False)
 
@@ -1160,16 +1171,13 @@ class TopWindow(tk.Toplevel):
         self.iconbitmap(img_path)
         plots.matplotlibSwitchGraphs(self, self.df_buff, self.date_picker)
 
-        # don = Buffer(data)
-        # don.get_name()
-        # plots.matplotlibSwitchGraphs.
-        # top.geometry('%dx%d+%d+%d' % (root_width / 2, root_height / 2, x + 50, y + 50))
         def on_closing():
             if messagebox.askokcancel("Quit", "Do you want to close window?"):
-                self.top.destroy()
+                self.destroy()
 
         print("I was called")
-        #self.protocol("WM_DELETE_WINDOW", on_closing())
+        self.protocol("WM_DELETE_WINDOW", on_closing)
+
 
         #self.top.mainloop()
     def about_msg(self):
