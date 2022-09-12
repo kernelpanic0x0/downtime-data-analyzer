@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 def config_plot():
     fig, ax = plt.subplots(facecolor='beige')
     ax.set(xlabel='time (s)', ylabel='voltage (mV)',
-           title='Graph One')
+           title='Graph One????')
     return (fig, ax)
 
 class matplotlibSwitchGraphs(Frame):
@@ -31,13 +31,13 @@ class matplotlibSwitchGraphs(Frame):
         self.graphIndex = 1
         self.canvas = FigureCanvasTkAgg(self.fig, self.master)
         self.config_window()
-        self.draw_graph_one()
+
 
         # Date picker values from main frame
         self.date_picker_sel = date_picker_arr
         # Data frame values from main frame
         self.dt_val = myData
-
+        self.draw_graph_one()
         #print("From other class", data)
         #self.on_key_press()
 
@@ -77,13 +77,134 @@ class matplotlibSwitchGraphs(Frame):
         #self.button_switch.grid(column=0, rowspan=1, row=2, padx=20)
 
     def draw_graph_one(self):
-        t = np.arange(0.0, 2.0, 0.01)
-        s = 1 + np.sin(2 * np.pi * t)
-        #print(self.data)
-        self.ax.clear() # clear current axes
-        self.ax.plot(t, s)
-        self.fig.suptitle('Hello World', fontsize=14, fontweight='bold')
-        self.ax.set(title='Graph One')
+        """
+                This function plots System Availability bar chart
+                :return:
+                """
+        # Calculating system availability - PM downtime included
+        # Availability = Uptime / (Uptime + Downtime)
+        print("Executing test py second chart")
+
+        # down_not_available = self.dt_val.iloc[0:int((len(self.dt_val) / 2)), 4].values.tolist()
+        # down_partially_available = self.dt_val.iloc[int((len(self.dt_val) / 2)):len(self.dt_val), 4].values.tolist()
+        # Set max value for the Y axis based on greatest y-offset
+
+        # total_downtime = [elem_x + elem_y for elem_x, elem_y in zip(down_not_available, down_partially_available)]
+        total_downtime = [122.8, 0.0, 16.4, 4.9, 133.4, 77.3, 241.3, 83.4, 16.0, 396.70000000000005, 121.9, 256.1, 0.0,
+                          0.0]  # test data
+        print("the total downtime is:", total_downtime)
+
+        self.ax.clear()
+
+        self.ax.set_facecolor('lightblue')
+
+        columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04', 'PTA05',
+                   'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
+                   'TMA11', 'TMA12', 'TMA13', 'TMA14')
+        col_width = 1 / len(columns)
+        print("Col width is:", col_width)
+        print("Half of that", col_width / 2)
+
+        rows = ['Availability %: ']
+        data = [total_downtime]
+
+        print(data)
+        print(type(data))
+        availability_arr = []
+        colors = []
+        date_frmt = '%Y-%m-%d %H:%M:%S'  # '2022-05-26 10:37:08'
+        start_date_str = datetime.strptime(self.date_picker_sel[0], '%m/%d/%Y')
+        end_date_str = datetime.strptime(self.date_picker_sel[1], '%m/%d/%Y')
+        uptime = self.get_duration((end_date_str - start_date_str).total_seconds())
+
+        for elem in data[0]:
+            result_availab = (uptime * 100.0 / (uptime + elem))
+            availability_arr.append(result_availab)
+            if result_availab < 80:
+                colors.append('r')
+            else:
+                colors.append('g')
+        print(availability_arr)
+        availability_arr = [availability_arr]
+
+        # Get lowest availability value:
+        min_val = min(availability_arr[0])
+        min_index = []
+        # Find index of the lowest value:
+        for i in range(0, len(availability_arr[0])):
+            if min_val == availability_arr[0][i]:
+                min_index.append(i)
+
+        min_index.append(availability_arr[0][min_index[0]])
+        print(min_index)
+
+        # Set max value for the Y axis based on greatest y-offset
+        # max_offset = max([elem_x + elem_y for elem_x, elem_y in zip(down_not_available, down_partially_available)])
+        max_offset = 100
+        # tick_value = round(int(max_offset / 8), -2) --- to be fixed
+        tick_value = 20
+        print("The tick value is", tick_value)
+
+        print("The maximum offset is", max_offset)
+        values = np.arange(0, int(max_offset + 10), tick_value)  # (0 , max_y, y_tick)
+        value_increment = 1
+
+        # Get some pastel shades for the colors
+        # colors = ['Red', 'Yellow']
+        n_rows = len(data)
+        print("The length of data:", len(data))
+
+        index = np.arange(len(columns)) + 0.3
+        bar_width = 0.4
+        print(index)
+        # Initialize the vertical-offset for the stacked bar chart.
+        y_offset = np.zeros(len(columns))
+        print("This is init of y offset", y_offset)
+
+        # Plot bars and create text labels for the table
+
+        cell_text = []
+        for row in range(n_rows):
+            print("This is row", row)
+            print("This is index:", index)
+            self.ax.bar(index, availability_arr[row], bar_width, bottom=y_offset, color=colors)
+            print(colors[row])
+            y_offset = y_offset + data[row]
+            # cell_text.append(['%1.1f' % (x / 1000.0) for x in y_offset])
+            cell_text.append(['%1.1f' % (x / 1.0) for x in availability_arr[row]])
+        # Reverse colors and text labels to display the last value at the top.
+        # colors = colors[::-1]
+        # cell_text.reverse()
+
+        # Add a table at the bottom of the axes
+        the_table = self.ax.table(cellText=cell_text,
+                                  rowLabels=rows,
+                                  rowColours=colors,
+                                  colLabels=columns,
+                                  cellLoc='center',
+                                  loc='bottom')
+        the_table.scale(1, 2)
+
+
+        # plt.subplots_adjust(left=0.25, bottom=0.2)
+
+        # Set titles for the figure and the subplot respectively
+        self.fig.suptitle('Availability = Uptime / (Uptime + Downtime)', fontsize=12, fontweight='bold')
+        self.ax.legend()
+        self.ax.set_ylabel("Availability, %", loc='center')
+        self.ax.set_yticks(values * value_increment, ['%d' % val for val in values])
+        self.ax.set_xticks([])
+        self.ax.set_title('Availability: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
+        self.ax.grid(axis='both')
+
+        # Annotates lowest availability equipment:
+        x = min_index[0] + 0.3
+        y = min_index[1]
+        self.ax.annotate('Lowest Availability', xy=(x, y), xytext=(x + 1, 80),
+                         arrowprops=dict(facecolor='black', shrink=0.05))
+        # Adjust layout to make room for the table:
+        self.fig.tight_layout()
+        self.ax.plot()
         self.canvas.draw()
 
     def draw_graph_two(self):
@@ -216,12 +337,11 @@ class matplotlibSwitchGraphs(Frame):
                               loc='bottom')
         the_table.scale(1, 2)
 
-        # Adjust layout to make room for the table:
-        self.fig.tight_layout()
+
         # plt.subplots_adjust(left=0.25, bottom=0.2)
 
         # Set titles for the figure and the subplot respectively
-        self.fig.suptitle('Availability = Uptime / (Uptime + Downtime)', fontsize=14, fontweight='bold')
+        self.fig.suptitle('Availability = Uptime / (Uptime + Downtime)', fontsize=12, fontweight='bold')
         self.ax.legend()
         self.ax.set_ylabel("Availability, %", loc='center')
         self.ax.set_yticks(values * value_increment, ['%d' % val for val in values])
@@ -233,7 +353,8 @@ class matplotlibSwitchGraphs(Frame):
         x = min_index[0] + 0.3
         y = min_index[1]
         self.ax.annotate('Lowest Availability', xy=(x, y), xytext=(x + 1, 80), arrowprops=dict(facecolor='black', shrink=0.05))
-
+        # Adjust layout to make room for the table:
+        self.fig.tight_layout()
         self.ax.plot()
         self.canvas.draw()
 
@@ -266,7 +387,7 @@ class matplotlibSwitchGraphs(Frame):
 
 
         print("The maximum offset is", max_offset)
-        values = np.arange(0, int(max_offset + 50), tick_value)  # (0 , max_y, y_tick)
+        values = np.arange(0, int(max_offset + 25), tick_value)  # (0 , max_y, y_tick)
         value_increment = 1
 
         # Get some pastel shades for the colors
@@ -300,19 +421,19 @@ class matplotlibSwitchGraphs(Frame):
                               colLabels=columns,
                               loc='bottom')
         the_table.scale(1, 2)
-        # Adjust layout to make room for the table:
-        self.fig.tight_layout()
+
         #plt.subplots_adjust(left=0.25, bottom=0.2)
 
         # Set titles for the figure and the subplot respectively
-        self.fig.suptitle('Downtime Duration', fontsize=14, fontweight='bold')
+        self.fig.suptitle('Downtime Duration', fontsize=12, fontweight='bold')
         self.ax.legend()
         self.ax.set_ylabel("Downtime, hrs", loc='center')
         self.ax.set_yticks(values * value_increment, ['%d' % val for val in values])
         self.ax.set_xticks([])
         self.ax.set_title('Availability: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
         self.ax.grid(axis='both')
-
+        # Adjust layout to make room for the table:
+        self.fig.tight_layout()
         self.ax.plot()
         self.canvas.draw()
 
