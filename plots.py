@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 # Seperated out config of plot to just do it once
 def config_plot():
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(facecolor='beige')
     ax.set(xlabel='time (s)', ylabel='voltage (mV)',
            title='Graph One')
     return (fig, ax)
@@ -28,7 +28,7 @@ class matplotlibSwitchGraphs(Frame):
         self.master = master
         self.frame = Frame(self.master)
         self.fig, self.ax = config_plot()
-        self.graphIndex = 0
+        self.graphIndex = 1
         self.canvas = FigureCanvasTkAgg(self.fig, self.master)
         self.config_window()
         self.draw_graph_one()
@@ -108,7 +108,8 @@ class matplotlibSwitchGraphs(Frame):
         self.ax.plot()
         #self.ax.set(title='Graph Two')
         self.canvas.draw()
-    def plot_system_availability(self):
+
+    def draw_graph_three(self):
         """
         This function calculates system availability and plots it in chart
         :return:
@@ -126,6 +127,7 @@ class matplotlibSwitchGraphs(Frame):
         print("the total downtime is:", total_downtime)
 
         self.ax.clear()
+        self.ax.set_facecolor('lightblue')
 
         columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04', 'PTA05',
                    'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
@@ -166,13 +168,6 @@ class matplotlibSwitchGraphs(Frame):
 
         min_index.append(availability_arr[0][min_index[0]])
         print(min_index)
-
-        # Set face color and anchor points
-
-        #fig, self.ax = plt.subplots()
-        #self.ax.set_aspect(aspect='auto', anchor='C')
-        #self.ax.set_adjustable(adjustable='datalim')
-        #self.ax.set_facecolor('lightblue')
 
         # Set max value for the Y axis based on greatest y-offset
         #max_offset = max([elem_x + elem_y for elem_x, elem_y in zip(down_not_available, down_partially_available)])
@@ -221,6 +216,10 @@ class matplotlibSwitchGraphs(Frame):
                               loc='bottom')
         the_table.scale(1, 2)
 
+        # Adjust layout to make room for the table:
+        self.fig.tight_layout()
+        # plt.subplots_adjust(left=0.25, bottom=0.2)
+
         # Set titles for the figure and the subplot respectively
         self.fig.suptitle('Availability = Uptime / (Uptime + Downtime)', fontsize=14, fontweight='bold')
         self.ax.legend()
@@ -228,6 +227,7 @@ class matplotlibSwitchGraphs(Frame):
         self.ax.set_yticks(values * value_increment, ['%d' % val for val in values])
         self.ax.set_xticks([])
         self.ax.set_title('Availability: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
+        self.ax.grid(axis='both')
 
         # Annotates lowest availability equipment:
         x = min_index[0] + 0.3
@@ -237,7 +237,11 @@ class matplotlibSwitchGraphs(Frame):
         self.ax.plot()
         self.canvas.draw()
 
-    def plot_barchart(self):
+    def draw_graph_four(self):
+        """
+        This function plots downtime duration Bar Chart
+        :return:
+        """
 
         # Data for the bar chart - from downtime calculation
         # The buffer is split in two - 0 to 14 and 14 to 28, for two types of downtime
@@ -251,11 +255,8 @@ class matplotlibSwitchGraphs(Frame):
 
         rows = ['Not Available', 'Partially Available']
 
-        # Set face color and anchor points
-        fig, ax = plt.subplots(facecolor='beige', figsize=(9.5, 4.5))
-        ax.set_aspect(aspect='auto', anchor='C')
-        ax.set_adjustable(adjustable='datalim')
-        ax.set_facecolor('lightblue')
+        self.ax.clear()
+        self.ax.set_facecolor('lightblue')
 
         # Set max value for the Y axis based on greatest y-offset
         max_offset = max([elem_x + elem_y for elem_x, elem_y in zip(down_not_available, down_partially_available)])
@@ -265,7 +266,7 @@ class matplotlibSwitchGraphs(Frame):
 
 
         print("The maximum offset is", max_offset)
-        values = np.arange(0, int(max_offset + 100), tick_value)  # (0 , max_y, y_tick)
+        values = np.arange(0, int(max_offset + 50), tick_value)  # (0 , max_y, y_tick)
         value_increment = 1
 
         # Get some pastel shades for the colors
@@ -284,7 +285,7 @@ class matplotlibSwitchGraphs(Frame):
         for row in range(n_rows):
             print("This is row", row)
             print("This is index:", index)
-            plt.bar(index, data[row], bar_width, bottom=y_offset, color=colors[row])
+            self.ax.bar(index, data[row], bar_width, bottom=y_offset, color=colors[row])
             y_offset = y_offset + data[row]
             # cell_text.append(['%1.1f' % (x / 1000.0) for x in y_offset])
             cell_text.append(['%1.1f' % (x / 1.0) for x in data[row]])
@@ -293,33 +294,28 @@ class matplotlibSwitchGraphs(Frame):
         # cell_text.reverse()
 
         # Add a table at the bottom of the axes
-        the_table = plt.table(cellText=cell_text,
+        the_table = self.ax.table(cellText=cell_text,
                               rowLabels=rows,
                               rowColours=colors,
                               colLabels=columns,
                               loc='bottom')
         the_table.scale(1, 2)
         # Adjust layout to make room for the table:
-        plt.subplots_adjust(left=0.25, bottom=0.2)
-
-        plt.ylabel("Downtime, hrs")
-        plt.yticks(values * value_increment, ['%d' % val for val in values])
-        plt.xticks([])
-        plt.title('Downtime Duration: ' + self.string_var_strt.get() + " : " + self.string_var_end.get())
-        plt.grid(axis='both')
+        self.fig.tight_layout()
+        #plt.subplots_adjust(left=0.25, bottom=0.2)
 
         # Set titles for the figure and the subplot respectively
-        fig.suptitle('Downtime Duration', fontsize=14, fontweight='bold')
+        self.fig.suptitle('Downtime Duration', fontsize=14, fontweight='bold')
+        self.ax.legend()
+        self.ax.set_ylabel("Downtime, hrs", loc='center')
+        self.ax.set_yticks(values * value_increment, ['%d' % val for val in values])
+        self.ax.set_xticks([])
+        self.ax.set_title('Availability: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
+        self.ax.grid(axis='both')
 
-        # Get screen coordinates and use them to position bar chart slightly below main canvas
-        screen_coord = self.get_screen_coordinates()
+        self.ax.plot()
+        self.canvas.draw()
 
-        x_shift = screen_coord[0] - int(0.1 * screen_coord[0])
-        y_shift = screen_coord[1] + int(0.4 * screen_coord[1])
-
-        plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Downtime - combined")
-        # Move window "+<x-pos>+<y-pos>"
-        plt.get_current_fig_manager().window.wm_geometry("+" + str(x_shift) + "+" + str(y_shift))
     def get_duration(self, duration):
         minutes = (duration / 60)
         hours = minutes / 60
@@ -350,80 +346,23 @@ class matplotlibSwitchGraphs(Frame):
 
     def switch_graphs(self):
         # Need to call the correct draw, whether we're on graph one or two
-        self.graphIndex = (self.graphIndex + 1 ) % 2
-        if self.graphIndex == 0:
+        print("The index is", self.graphIndex)
+        self.graphIndex += 1
+        #self.graphIndex = (self.graphIndex + 1 ) % 2
+        #print("The index is", self.graphIndex)
+        if self.graphIndex == 1:
             self.draw_graph_one()
-        else:
-            #self.draw_graph_two()
-            self.plot_system_availability()
 
-def main():
-    root = Tk()
-    root.title("Downtime Data Analyzer v0.1.1")
-    img_file_name = "small_icon.ico"
-    curr_dirr = pathlib.Path(img_file_name).parent.resolve()
-    img_path = curr_dirr.joinpath(img_file_name)
-    print(img_path)
-    # my_icon = tk.PhotoImage(file=img_path)
-    # root.iconphoto(True, my_icon)
+        elif self.graphIndex == 2:
+            self.draw_graph_two()
 
-    root.resizable(False, False)
+        elif self.graphIndex == 3:
+            self.draw_graph_three()
 
-    # Width and Height for root = Tk()
-    root_width = 1000
-    root_height = 700
+        elif self.graphIndex == 4:
+            self.draw_graph_four()
+            self.graphIndex = 0
 
-    # Get screen width and height
-    win_width = root.winfo_screenwidth()
-    win_height = root.winfo_screenheight()
-
-    # Calculate x and y coordinates for the Tk root window
-    x = (win_width / 2) - (root_width / 2)
-    y = (win_height / 2) - (root_height / 2)
-
-    # Set dimensions and position of the screen
-    root.geometry('%dx%d+%d+%d' % (root_width, root_height, x, y))
-    logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
-    logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
-
-    root.iconbitmap(img_path)
-    #matplotlibSwitchGraphs(root)
-    #root.mainloop()
-    my_plots = matplotlibSwitchGraphs(root)
-    my_plots.mainloop()
 
 if __name__ == '__main__':
-    #main()
-    root = Tk()
-    root.title("Downtime Data Analyzer v0.1.1")
-    img_file_name = "small_icon.ico"
-    curr_dirr = pathlib.Path(img_file_name).parent.resolve()
-    img_path = curr_dirr.joinpath(img_file_name)
-    print(img_path)
-    # my_icon = tk.PhotoImage(file=img_path)
-    # root.iconphoto(True, my_icon)
-
-    root.resizable(False, False)
-
-    # Width and Height for root = Tk()
-    root_width = 1000
-    root_height = 700
-
-    # Get screen width and height
-    win_width = root.winfo_screenwidth()
-    win_height = root.winfo_screenheight()
-
-    # Calculate x and y coordinates for the Tk root window
-    x = (win_width / 2) - (root_width / 2)
-    y = (win_height / 2) - (root_height / 2)
-
-    # Set dimensions and position of the screen
-    root.geometry('%dx%d+%d+%d' % (root_width, root_height, x, y))
-    logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
-    logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
-
-    root.iconbitmap(img_path)
-    # matplotlibSwitchGraphs(root)
-    # root.mainloop()
-    my_plots = matplotlibSwitchGraphs(root)
-    my_plots.mainloop()
+    pass
