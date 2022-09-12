@@ -82,6 +82,7 @@ class matplotlibSwitchGraphs(Frame):
         #print(self.data)
         self.ax.clear() # clear current axes
         self.ax.plot(t, s)
+        self.fig.suptitle('Hello World', fontsize=14, fontweight='bold')
         self.ax.set(title='Graph One')
         self.canvas.draw()
 
@@ -219,41 +220,23 @@ class matplotlibSwitchGraphs(Frame):
                               cellLoc='center',
                               loc='bottom')
         the_table.scale(1, 2)
-        # Adjust layout to make room for the table:
-        #plt.subplots_adjust(left=0.25, bottom=0.2)
 
         # Set titles for the figure and the subplot respectively
         self.fig.suptitle('Availability = Uptime / (Uptime + Downtime)', fontsize=14, fontweight='bold')
-
-        #########################################
-        #self.ax.set_ylabel('Scores')
-        #self.ax.set_title('Scores by group and gender')
         self.ax.legend()
         self.ax.set_ylabel("Availability, %", loc='center')
         self.ax.set_yticks(values * value_increment, ['%d' % val for val in values])
         self.ax.set_xticks([])
         self.ax.set_title('Availability: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
-        #plt.title('Availability: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
-        #plt.grid(axis='both')
 
         # Annotates lowest availability equipment:
         x = min_index[0] + 0.3
         y = min_index[1]
         self.ax.annotate('Lowest Availability', xy=(x, y), xytext=(x + 1, 80), arrowprops=dict(facecolor='black', shrink=0.05))
 
-        # Get screen coordinates and use them to position bar chart slightly below main canvas
-        screen_coord = self.get_screen_coordinates()
-        x_shift = screen_coord[0] - int(0.1 * screen_coord[0])
-        y_shift = screen_coord[1] + int(0.6 * screen_coord[1])
-
-        #plt.get_current_fig_manager().canvas.manager.set_window_title("Equipment Availability - %")
-        # Move window "+<x-pos>+<y-pos>"
-        #plt.get_current_fig_manager().window.wm_geometry("+" + str(x_shift) + "+" + str(y_shift))
-        #self.ax.set(title='Graph Two')
         self.ax.plot()
-
         self.canvas.draw()
-        #plt.show()
+
     def plot_barchart(self):
 
         # Data for the bar chart - from downtime calculation

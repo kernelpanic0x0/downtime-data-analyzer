@@ -155,7 +155,7 @@ class App(Frame):
         file_menu.add_command(label="Exit", command=root.quit)
         # Top bar Help menu
         my_menu.add_cascade(label="Help", menu=help_menu)
-        help_menu.add_command(label="About", command=self.about_msg)
+        help_menu.add_command(label="About", command=self.load_datafile)
 
     def ui_calendars(self):
         """
@@ -581,7 +581,12 @@ class App(Frame):
             self.dict_manipulation()
             plt.show()
         #self.master.change(plots.matplotlibSwitchGraphs, data=self.df_buff)
-        self.about_msg()
+        #self.about_msg()
+        self.date_picker = []
+        self.date_picker.append(self.string_var_strt.get())
+        self.date_picker.append(self.string_var_end.get())
+        self.open_top_window()
+
     def change(self, frame, **kwargs):
         self.frame = frame(self, **kwargs)
     def file_save(self, *args):
@@ -1114,6 +1119,59 @@ class App(Frame):
         print(self.hidden_name)
         return self.hidden_name
 
+    def open_top_window(self):
+        window = TopWindow(self.master, self.df_buff, self.date_picker)
+        window.grab_set()
+class TopWindow(tk.Toplevel):
+    def __init__(self, parent, myData, myDate):
+        super().__init__(parent)
+
+        self.date_picker = myDate
+        self.df_buff = myData
+
+
+        self.title("Downtime Data Analyzer v0.1.1 - Plots")
+        img_file_name = "small_icon.ico"
+        curr_dirr = pathlib.Path(img_file_name).parent.resolve()
+        img_path = curr_dirr.joinpath(img_file_name)
+        print(img_path)
+        # my_icon = tk.PhotoImage(file=img_path)
+        # root.iconphoto(True, my_icon)
+
+        self.resizable(False, False)
+
+        # Width and Height for root = Tk()
+        root_width = 1000
+        root_height = 700
+
+        # Get screen width and height
+        win_width = root.winfo_screenwidth()
+        win_height = root.winfo_screenheight()
+
+        # Calculate x and y coordinates for the Tk root window
+        x = (win_width / 2) - (root_width / 2) + 50
+        y = (win_height / 2) - (root_height / 2)
+
+        # Set dimensions and position of the screen
+        self.geometry('%dx%d+%d+%d' % (root_width, root_height, x, y))
+        logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
+        logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+
+        self.iconbitmap(img_path)
+        plots.matplotlibSwitchGraphs(self, self.df_buff, self.date_picker)
+
+        # don = Buffer(data)
+        # don.get_name()
+        # plots.matplotlibSwitchGraphs.
+        # top.geometry('%dx%d+%d+%d' % (root_width / 2, root_height / 2, x + 50, y + 50))
+        def on_closing():
+            if messagebox.askokcancel("Quit", "Do you want to close window?"):
+                self.top.destroy()
+
+        print("I was called")
+        #self.protocol("WM_DELETE_WINDOW", on_closing())
+
+        #self.top.mainloop()
     def about_msg(self):
         self.top = Toplevel(self.master)
 
@@ -1150,32 +1208,25 @@ class App(Frame):
 
         self.top.iconbitmap(img_path)
         plots.matplotlibSwitchGraphs(self.top, self.df_buff, self.date_picker)
+
         # don = Buffer(data)
         # don.get_name()
         # plots.matplotlibSwitchGraphs.
         # top.geometry('%dx%d+%d+%d' % (root_width / 2, root_height / 2, x + 50, y + 50))
+        def on_closing():
+            if messagebox.askokcancel("Quit", "Do you want to close window?"):
+                self.top.destroy()
+
+        self.top.protocol("WM_DELETE_WINDOW", on_closing())
         self.top.mainloop()
+
+
 
 
 def get_duration(duration):
     minutes = (duration / 60)
     hours = minutes / 60
     return round(hours, 1)
-
-
-
-# Getter and setter
-class Buffer():
-    def __init__(self, input_name):
-        self.hidden_name = input_name
-    def get_name(self):
-        print("inside the getter")
-        print(self.hidden_name)
-        return self.hidden_name
-
-    def set_name(self, input_name):
-        print('inside setter')
-        self.hidden_name = input_name
 
 def config_plot():
     fig, ax = plt.subplots()
