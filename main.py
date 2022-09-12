@@ -598,6 +598,7 @@ class App(Frame):
         #self.about_msg()
 
 
+
     def change(self, frame, **kwargs):
         self.frame = frame(self, **kwargs)
     def file_save(self, *args):
