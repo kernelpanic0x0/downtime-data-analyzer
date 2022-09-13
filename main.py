@@ -1154,7 +1154,7 @@ class TopWindow(tk.Toplevel):
 
         # Width and Height for root = Tk()
         root_width = 1000
-        root_height = 700
+        root_height = 550
 
         # Get screen width and height
         win_width = root.winfo_screenwidth()

@@ -49,20 +49,19 @@ class matplotlibSwitchGraphs(Frame):
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
 
-        # Set position of the matplotlib toolbar
-        self.canvas.mpl_connect("key_press_event", self.on_key_press)
-        self.toolbar = NavigationToolbar2Tk(self.canvas, self.master, pack_toolbar=False)
-        self.toolbar.grid(column=0, rowspan=1, row=4, sticky=W)
-        self.toolbar.update()
-
         # Set position of the plot
-        self.canvas.get_tk_widget().grid(column=0, rowspan=1, row=0, sticky=N+S+W+E)
+        self.canvas.get_tk_widget().grid(column=0, rowspan=1, row=0, sticky=N+S+W+E, columnspan=1)
 
-        # Set position of the quit button
-        #self.button = Button(self.master, text="Quit", command=self._quit)
-        #self.button.grid(column=0, rowspan=1, row=3, padx=20)
+        self.label_frame = ttk.LabelFrame(self.master, text='Switch Graphs', labelanchor="n")
+        self.label_frame.grid(column=0, row=2, padx=50, columnspan=1)
+        # Set position of the switch graphs button
+        ttk.Button(self.label_frame, text="Previous",
+                   command=self.switch_graphs).grid(column=0, rowspan=1, row=0, padx=20)
+        # Set position of the switch graphs button
+        ttk.Button(self.label_frame, text="Next",
+                   command=self.switch_graphs).grid(column=1, rowspan=1, row=0, padx=20)
 
-        # Configure tree viewer style
+        # Configure button style
         style = ttk.Style()
         style.theme_use('clam')
         # Configure button style
@@ -70,11 +69,17 @@ class matplotlibSwitchGraphs(Frame):
                         focuscolor='red', height=5)
 
         # Set position of the switch graphs button
-        ttk.Button(self.master, text="Switch Graphs",
-                   command=self.switch_graphs).grid(column=0, rowspan=1, row=2, padx=20)
+        #ttk.Button(self.master, text="Switch Graphs",
+        #           command=self.switch_graphs).grid(column=0, rowspan=1, row=0, padx=20)
 
-        #self.button_switch = Button(self.master, text="Switch Graphs", command=self.switch_graphs)
-        #self.button_switch.grid(column=0, rowspan=1, row=2, padx=20)
+        # Set position of the matplotlib toolbar
+        # row 4
+        self.canvas.mpl_connect("key_press_event", self.on_key_press)
+        self.toolbar = NavigationToolbar2Tk(self.canvas, self.master, pack_toolbar=False)
+        self.toolbar.grid(column=0, rowspan=1, row=2, sticky=W)
+        self.toolbar.update()
+
+
 
     def draw_graph_one(self):
         """
