@@ -1270,7 +1270,9 @@ if __name__ == '__main__':
 
     # Set dimensions and position of the screen
     root.geometry('%dx%d+%d+%d' % (root_width, root_height, x, y))
-    logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
+
+    # Configure debug logger
+    logging.basicConfig(filename='debug.log', encoding='utf-8', level=logging.DEBUG, filemode='w')
     logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
 
     root.iconbitmap(img_path)
