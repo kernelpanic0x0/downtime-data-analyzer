@@ -20,6 +20,11 @@ def config_plot():
            title='Graph One????')
     return (fig, ax)
 
+def config_pie():
+    fig, ax = plt.subplots()
+    #ax.set(xlabel='time (s)', ylabel='voltage (mV)',
+    #       title='Graph One????')
+    return (fig, ax)
 
 class matplotlibSwitchGraphs(Frame):
     def __init__(self, master, myData, date_picker_arr):
@@ -30,10 +35,11 @@ class matplotlibSwitchGraphs(Frame):
         self.frame = Frame(self.master)
         self.graph_page = "0 / 12"
         self.fig, self.ax = config_plot()
-        self.ax2 = config_plot()
+        #self.ax2 = config_plot()
         self.graphIndex = 1
         self.var = StringVar()
         self.canvas = FigureCanvasTkAgg(self.fig, self.master)
+
         self.config_window()
 
 
@@ -325,13 +331,20 @@ class matplotlibSwitchGraphs(Frame):
         #data_2 = self.values_frequency
         #ingredients_2 = self.keys_frequency
 
+
+
         self.ax.clear()
-        self.ax.set_facecolor('lightblue')
+        self.ax.remove()
+        #self.ax.set_facecolor('lightblue')
 
 
         #self.ax = plt.subplots(figsize=(9.5, 4.5), subplot_kw=dict(aspect="equal"), facecolor='beige')
+        self.ax2 = self.fig.subplots()
 
-        wedges, texts = self.ax.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
+        #self.fig, self.ax2 = plt.subplots(figsize=(6.5, 4.5), subplot_kw=dict(aspect="equal"), facecolor='beige')
+
+        wedges, texts = self.ax2.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
+
 
         # Set bat chart
         # x = np.arange(len(recipe))  # the label locations
@@ -358,7 +371,7 @@ class matplotlibSwitchGraphs(Frame):
             horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
             connectionstyle = "angle,angleA=0,angleB={}".format(ang)
             kw["arrowprops"].update({"connectionstyle": connectionstyle})
-            self.ax.annotate(recipe[i], xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
+            self.ax2.annotate(recipe[i], xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
                         horizontalalignment=horizontalalignment, **kw)
 
         # Get some pastel shades for the colors
@@ -378,7 +391,7 @@ class matplotlibSwitchGraphs(Frame):
         #    cell_text.append(['%1.1f' % (x / 1.0) for x in data[row]])
 
         # Add a table at the bottom of the axes
-        the_table = self.ax.table(cellText=cell_text,
+        the_table = self.ax2.table(cellText=cell_text,
                                       rowLabels=rows,
                                       rowColours=colors,
                                       colLabels=columns,
@@ -390,11 +403,12 @@ class matplotlibSwitchGraphs(Frame):
 
         # Set titles for the figure and the subplot respectively
         self.fig.suptitle('Equipment Downtime by Tool Group', fontsize=12, fontweight='bold')
+        self.ax2.set_title('Downtime by Tool Group: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
         #self.fig.set_size_inches(5, 5)
-        self.ax.legend()
+        self.ax2.legend()
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
-        self.ax.plot()
+        self.ax2.plot()
         self.canvas.draw()
 
     def draw_graph_four(self):
@@ -415,8 +429,12 @@ class matplotlibSwitchGraphs(Frame):
 
         rows = ['Not Available', 'Partially Available']
 
-        self.ax.clear()
+        self.ax2.remove()
+        self.ax = self.fig.subplots()
+
         self.ax.set_facecolor('lightblue')
+
+
 
         # Set max value for the Y axis based on greatest y-offset
         max_offset = max([elem_x + elem_y for elem_x, elem_y in zip(down_not_available, down_partially_available)])
