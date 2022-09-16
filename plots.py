@@ -27,8 +27,10 @@ class matplotlibSwitchGraphs(Frame):
         Frame.__init__(self, master)
         self.master = master
         self.frame = Frame(self.master)
+        self.graph_page = "0 / 12"
         self.fig, self.ax = config_plot()
         self.graphIndex = 1
+        self.var = StringVar()
         self.canvas = FigureCanvasTkAgg(self.fig, self.master)
         self.config_window()
 
@@ -55,11 +57,18 @@ class matplotlibSwitchGraphs(Frame):
         self.label_frame = ttk.LabelFrame(self.master, text='Switch Graphs', labelanchor="n")
         self.label_frame.grid(column=0, row=2, padx=50, columnspan=1)
         # Set position of the switch graphs button
-        ttk.Button(self.label_frame, text="Previous",
+        ttk.Button(self.label_frame, text="<< Previous",
                    command=self.switch_graphs).grid(column=0, rowspan=1, row=0, padx=20)
         # Set position of the switch graphs button
-        ttk.Button(self.label_frame, text="Next",
-                   command=self.switch_graphs).grid(column=1, rowspan=1, row=0, padx=20)
+        ttk.Button(self.label_frame, text="Next >>",
+                   command=self.switch_graphs).grid(column=3, rowspan=1, row=0, padx=20)
+
+        # Create Equipment & Downtime Label
+        label = ttk.Label(self.label_frame)
+        label.config(textvariable=self.var)
+        self.var.set('1 / 4')
+        label.grid(column=2, rowspan=1, row=0, padx=20)
+
 
         # Configure button style
         style = ttk.Style()
@@ -474,6 +483,7 @@ class matplotlibSwitchGraphs(Frame):
         # Need to call the correct draw, whether we're on graph one or two
         print("The index is", self.graphIndex)
         self.graphIndex += 1
+        self.var.set(str(self.graphIndex) + "/ 4")
         #self.graphIndex = (self.graphIndex + 1 ) % 2
         #print("The index is", self.graphIndex)
         if self.graphIndex == 1:
