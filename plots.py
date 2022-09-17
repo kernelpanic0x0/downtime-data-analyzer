@@ -13,48 +13,42 @@ from datetime import datetime
 import pathlib
 import matplotlib.pyplot as plt
 
-# Seperated out config of plot to just do it once
+
 def config_plot():
     fig, ax = plt.subplots(facecolor='beige')
-    ax.set(xlabel='time (s)', ylabel='voltage (mV)',
-           title='Graph One????')
+    ax.set(xlabel='Name ()', ylabel='Downtime (hrs)',
+           title='Empty')
     return (fig, ax)
 
-def config_pie():
-    fig, ax = plt.subplots()
-    #ax.set(xlabel='time (s)', ylabel='voltage (mV)',
-    #       title='Graph One????')
-    return (fig, ax)
 
-class matplotlibSwitchGraphs(Frame):
+class MatplotlibSwitchGraphs(Frame):
     def __init__(self, master, myData, date_picker_arr):
         print("This is me data", myData)
         print("This is my date", date_picker_arr)
         Frame.__init__(self, master)
         self.master = master
         self.frame = Frame(self.master)
-        self.graph_page = "0 / 12"
+        self.graph_page = "0 / 4"
         self.fig, self.ax = config_plot()
-        #self.ax2 = config_plot()
         self.graphIndex = 1
         self.previous_index = 0
         self.max_num_of_pages = 4  # maximum number of pages, same as number of graphs
         self.var = StringVar()
         self.canvas = FigureCanvasTkAgg(self.fig, self.master)
-
         self.config_window()
-
 
         # Date picker values from main frame
         self.date_picker_sel = date_picker_arr
         # Data frame values from main frame
         self.dt_val = myData
         self.draw_graph_one()
-        #print("From other class", data)
         #self.on_key_press()
 
-
     def config_window(self):
+        """
+        This function sets UI parameters for plot frame
+        :return:
+        """
 
         # Configure window Using Grid
         self.mainframe = ttk.Frame(self.master, padding="3 3 12 12")
@@ -64,8 +58,10 @@ class matplotlibSwitchGraphs(Frame):
         # Set position of the plot
         self.canvas.get_tk_widget().grid(column=0, rowspan=1, row=0, sticky=N+S+W+E, columnspan=1)
 
+        # Set label frame to hold buttons and page label
         self.label_frame = ttk.LabelFrame(self.master, text='Switch Graphs', labelanchor="n")
         self.label_frame.grid(column=0, row=2, padx=50, columnspan=1)
+
         # Set position of the switch graphs button
         ttk.Button(self.label_frame, text="<< Previous",
                    command=self.previous_graph).grid(column=0, rowspan=1, row=0, padx=20)
@@ -79,7 +75,6 @@ class matplotlibSwitchGraphs(Frame):
         self.var.set('1 / 4')
         label.grid(column=2, rowspan=1, row=0, padx=20)
 
-
         # Configure button style
         style = ttk.Style()
         style.theme_use('clam')
@@ -87,66 +82,60 @@ class matplotlibSwitchGraphs(Frame):
         style.configure('TButton', background='#8B8B83', foreground='black', borderwidth=3, focusthickness=1,
                         focuscolor='red', height=5)
 
-        # Set position of the switch graphs button
-        #ttk.Button(self.master, text="Switch Graphs",
-        #           command=self.switch_graphs).grid(column=0, rowspan=1, row=0, padx=20)
-
         # Set position of the matplotlib toolbar
-        # row 4
         self.canvas.mpl_connect("key_press_event", self.on_key_press)
         self.toolbar = NavigationToolbar2Tk(self.canvas, self.master, pack_toolbar=False)
         self.toolbar.grid(column=0, rowspan=1, row=2, sticky=W)
         self.toolbar.update()
 
-
-
     def draw_graph_one(self):
         """
-                This function plots System Availability bar chart
-                :return:
-                """
-        print("graph 1")
+        This function plots System Availability in Bar Chart
+        :return:
+        """
+
+        print("Plotting Graph 1")
         # Calculating system availability - PM downtime included
         # Availability = Uptime / (Uptime + Downtime)
-        print("Executing test py second chart")
-
 
         # down_not_available = self.dt_val.iloc[0:int((len(self.dt_val) / 2)), 4].values.tolist()
         # down_partially_available = self.dt_val.iloc[int((len(self.dt_val) / 2)):len(self.dt_val), 4].values.tolist()
-        # Set max value for the Y axis based on greatest y-offset
 
+        # Set max value for the Y axis based on greatest y-offset
         # total_downtime = [elem_x + elem_y for elem_x, elem_y in zip(down_not_available, down_partially_available)]
         total_downtime = [122.8, 0.0, 16.4, 4.9, 133.4, 77.3, 241.3, 83.4, 16.0, 396.70000000000005, 121.9, 256.1, 0.0,
                           0.0]  # test data
-        print("the total downtime is:", total_downtime)
+        print("The total downtime is:", total_downtime)
 
-        # Remove axes from previous graphs
-        print("Previous index IS: -----", self.previous_index)
-        if self.previous_index == 4:
+        print("Previous page of the graph - :", self.previous_index)
+        # Remove  and clear axes from previous graphs
+        # Current Graph #1
+        if self.previous_index == self.max_num_of_pages:
             try:
-                self.ax4.clear()  # remove axes from last graph
-                self.ax4.remove()  # remove axes from last graph
+                self.ax4.clear()    # clear axes from last graph
+                self.ax4.remove()   # remove axes from last graph
             except AttributeError:
                 pass
             except ValueError:
                 pass
-        elif self.previous_index == 2:
+        elif self.previous_index == (self.graphIndex + 1):
             try:
-                self.ax2.clear()  # remove axes from last graph
-                self.ax2.remove()  # remove axes from last graph
+                self.ax2.clear()    # clear axes from Graph #2
+                self.ax2.remove()   # remove axes from Graph #2
             except AttributeError:
                 pass
             except ValueError:
                 pass
         elif self.previous_index == 0:
             try:
-                self.ax.clear()  # remove axes from last graph
+                self.ax.clear()  # remove axes from original graph
                 self.ax.remove()
             except AttributeError:
                 pass
             except ValueError:
                 pass
 
+        # Set Graph #1 - Bar Chart
         self.ax1 = self.fig.subplots()
         self.ax1.set_facecolor('lightblue')
 
@@ -237,9 +226,6 @@ class matplotlibSwitchGraphs(Frame):
                                   loc='bottom')
         the_table.scale(1, 2)
 
-
-        # plt.subplots_adjust(left=0.25, bottom=0.2)
-
         # Set titles for the figure and the subplot respectively
         self.fig.suptitle('Availability = Uptime / (Uptime + Downtime)', fontsize=12, fontweight='bold')
         self.ax1.legend()
@@ -262,10 +248,11 @@ class matplotlibSwitchGraphs(Frame):
     def draw_graph_two(self):
 
         """
-                This function plots downtime duration Bar Chart
-                :return:
-                """
-        print("graph 2")
+        This function plots System Downtime (hrs) in Bar Chart
+        :return:
+        """
+
+        print("Plotting Graph 2")
         # Data for the bar chart - from downtime calculation
         # The buffer is split in two - 0 to 14 and 14 to 28, for two types of downtime
         down_not_available = self.dt_val.iloc[0:int((len(self.dt_val) / 2)), 4].values.tolist()
@@ -278,26 +265,27 @@ class matplotlibSwitchGraphs(Frame):
 
         rows = ['Not Available', 'Partially Available']
 
-        print("Previous index IS: -----", self.previous_index)
-        # Remove axes from previous graphs
-        if self.previous_index == 3:
+        print("Previous page of the graph - :", self.previous_index)
+        # Remove  and clear axes from previous graphs
+        # Current Graph #2
+        if self.previous_index == (self.graphIndex + 1):
             try:
-                self.ax3.clear()  # remove axes from last graph
-                self.ax3.remove()  # remove axes from last graph
+                self.ax3.clear()    # clear axes from Graph #3
+                self.ax3.remove()   # remove axes from Graph #3
             except AttributeError:
                 pass
             except ValueError:
                 pass
-        elif self.previous_index == 1:
+        elif self.previous_index == (self.graphIndex - 1):
             try:
-                self.ax1.clear()  # remove axes from last graph
-                self.ax1.remove()  # remove axes from last graph
+                self.ax1.clear()    # clear axes from Graph #1
+                self.ax1.remove()   # remove axes from Graph #1
             except AttributeError:
                 pass
             except ValueError:
                 pass
 
-
+        # Set Graph #2
         self.ax2 = self.fig.subplots()
         self.ax2.set_facecolor('lightblue')
 
@@ -343,8 +331,6 @@ class matplotlibSwitchGraphs(Frame):
                                   loc='bottom')
         the_table.scale(1, 2)
 
-        # plt.subplots_adjust(left=0.25, bottom=0.2)
-
         # Set titles for the figure and the subplot respectively
         self.fig.suptitle('Downtime Duration', fontsize=12, fontweight='bold')
         self.ax2.legend()
@@ -360,67 +346,44 @@ class matplotlibSwitchGraphs(Frame):
 
     def draw_graph_three(self):
         """
-        This function calculates system availability and plots it in chart
+        This function plots System Downtime by Tool Group (hrs) in Bar Chart
         :return:
         """
-        """
-               This function plots donut chart for Tool Group Downtime
-               :return:
-               """
-        print("graph 3")
 
-        # Values for downtime duration in hrs
-        data = [221.1, 1067.6000000000001, 69.8, 241.8, 128.6, 229.6, 207.8]
-        recipe = ['PM', 'N/A', '5T Hoist', 'Long travel', 'PLC or I/O', 'Extractor', '36T Hoist']
+        print("Plotting Graph 3")
+        # Values for downtime duration in hrs - test values
+        data = [221.1, 1067.6000000000001, 69.8, 241.8, 128.6, 229.6, 207.8]                        # Test values
+        recipe = ['PM', 'N/A', '5T Hoist', 'Long travel', 'PLC or I/O', 'Extractor', '36T Hoist']   # Test values
 
+        # Values for downtime duration in hrs from data.csv
         #data = self.values_time
         #recipe = self.keys_time
-        # Values in downtime events by count
-        #data_2 = self.values_frequency
-        #ingredients_2 = self.keys_frequency
 
-        print("Previous index IS: -----", self.previous_index)
-        # Remove axes from previous graphs
-        if self.previous_index == 4:
+        print("Previous page of the graph - :", self.previous_index)
+        # Remove  and clear axes from previous graphs
+        # Current Graph #3
+        if self.previous_index == (self.graphIndex + 1):
             try:
-                self.ax4.clear()  # remove axes from last graph
-                self.ax4.remove()  # remove axes from last graph
+                self.ax4.clear()    # clear axes from Graph #4
+                self.ax4.remove()   # remove axes from Graph #4
             except AttributeError:
                 pass
             except ValueError:
                 pass
-        elif self.previous_index == 2:
+        elif self.previous_index == (self.graphIndex - 1):
             try:
-                self.ax2.clear()  # remove axes from last graph
-                self.ax2.remove()  # remove axes from last graph
+                self.ax2.clear()    # clear axes from Graph #2
+                self.ax2.remove()   # remove axes from Graph #2
             except AttributeError:
                 pass
             except ValueError:
                 pass
 
-        #self.ax.set_facecolor('lightblue')
-
-
-        #self.ax = plt.subplots(figsize=(9.5, 4.5), subplot_kw=dict(aspect="equal"), facecolor='beige')
+        # Set Graph # 3 - pie chart
         self.ax3 = self.fig.subplots()
-
-        #self.fig, self.ax2 = plt.subplots(figsize=(6.5, 4.5), subplot_kw=dict(aspect="equal"), facecolor='beige')
-
         wedges, texts = self.ax3.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
 
-
-        # Set bat chart
-        # x = np.arange(len(recipe))  # the label locations
-        # width = 0.35
-        # rects1 = ax[1].bar(x, data_2, width, label='Downtime Events')
-        # ax[1].set_ylabel('Events')
-        # ax[1].set_title('Downtime events count')
-        # ax[1].set_xticks(x,ingredients_2 )
-        # ax[1].legend()
-        # ax[1].bar_label(rects1, padding=3)
-        # plt.xticks(rotation=90)
         columns = ('PTA01', 'PTA02', 'PTA03')
-
         rows = ['Not Available', 'Partially Available']
 
         bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
@@ -462,12 +425,9 @@ class matplotlibSwitchGraphs(Frame):
                                   bbox=[0.25, -0.5, 0.5, 0.3])
         the_table.scale(1, 2)
 
-
-
         # Set titles for the figure and the subplot respectively
         self.fig.suptitle('Equipment Downtime by Tool Group', fontsize=12, fontweight='bold')
         self.ax3.set_title('Downtime by Tool Group: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
-        #self.fig.set_size_inches(5, 5)
         self.ax3.legend()
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
@@ -476,69 +436,46 @@ class matplotlibSwitchGraphs(Frame):
 
     def draw_graph_four(self):
         """
-        This function calculates system availability and plots it in chart
+        This function plots System Downtime by Tool Group (events) in Bar Chart
         :return:
         """
-        """
-               This function plots donut chart for Tool Group Downtime
-               :return:
-               """
-        print("graph 4")
 
-        # Values for downtime duration in hrs
+        print("Plotting Graph 4")
+        # Values for downtime duration in events - test data
         data = [21.1, 167.6000000000001, 690.8, 41.8, 128.6, 529.6, 107.8]
         recipe = ['PM', 'N/A', '5T Hoist', 'Long travel', 'PLC or I/O', 'Extractor', '36T Hoist']
 
-        #data = self.values_time
-        #recipe = self.keys_time
-        # Values in downtime events by count
+
+        # Values for downtime duration in events
         #data_2 = self.values_frequency
         #ingredients_2 = self.keys_frequency
 
-        print("Previous index IS: -----", self.previous_index)
-        # Remove axes from previous graphs
+        print("Previous page of the graph - :", self.previous_index)
+        # Remove  and clear axes from previous graphs
+        # Current Graph #4
         if self.previous_index == 1:
             try:
-                self.ax1.clear()  # remove axes from last graph
-                self.ax1.remove()  # remove axes from last graph
+                self.ax1.clear()    # clear axes from Graph #1
+                self.ax1.remove()   # remove axes from Graph #1
             except AttributeError:
                 pass
             except ValueError:
                 pass
-        elif self.previous_index == 3:
+        elif self.previous_index == (self.graphIndex - 1):
             try:
-                self.ax3.clear()  # remove axes from last graph
-                self.ax3.remove()  # remove axes from last graph
+                self.ax3.clear()    # clear axes from Graph #3
+                self.ax3.remove()   # remove axes from Graph #3
             except AttributeError:
                 pass
             except ValueError:
                 pass
 
-
-
-        #self.ax.set_facecolor('lightblue')
-
-
-        #self.ax = plt.subplots(figsize=(9.5, 4.5), subplot_kw=dict(aspect="equal"), facecolor='beige')
+        # Set Graph #4 - pie chart
         self.ax4 = self.fig.subplots()
-
-        #self.fig, self.ax2 = plt.subplots(figsize=(6.5, 4.5), subplot_kw=dict(aspect="equal"), facecolor='beige')
-
         wedges, texts = self.ax4.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
 
 
-        # Set bat chart
-        # x = np.arange(len(recipe))  # the label locations
-        # width = 0.35
-        # rects1 = ax[1].bar(x, data_2, width, label='Downtime Events')
-        # ax[1].set_ylabel('Events')
-        # ax[1].set_title('Downtime events count')
-        # ax[1].set_xticks(x,ingredients_2 )
-        # ax[1].legend()
-        # ax[1].bar_label(rects1, padding=3)
-        # plt.xticks(rotation=90)
         columns = ('PTA01', 'PTA02', 'PTA03')
-
         rows = ['Not Available', 'Partially Available']
 
         bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
@@ -580,12 +517,9 @@ class matplotlibSwitchGraphs(Frame):
                                   bbox=[0.25, -0.5, 0.5, 0.3])
         the_table.scale(1, 2)
 
-
-
         # Set titles for the figure and the subplot respectively
         self.fig.suptitle('Downtime by Tool Group - Event Count', fontsize=12, fontweight='bold')
         self.ax4.set_title('Downtime by Tool Group - Event Count: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
-        #self.fig.set_size_inches(5, 5)
         self.ax4.legend()
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
