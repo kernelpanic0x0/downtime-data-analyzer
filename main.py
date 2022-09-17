@@ -1144,7 +1144,7 @@ class TopWindow(tk.Toplevel):
         self.date_picker = myDate
         self.df_buff = myData
 
-        self.title("Downtime Data Analyzer v0.1.1 - Plots")
+        self.title("Downtime Data Analyzer v0.2.1 - Plots")
         img_file_name = "small_icon.ico"
         curr_dirr = pathlib.Path(img_file_name).parent.resolve()
         img_path = curr_dirr.joinpath(img_file_name)
@@ -1170,7 +1170,7 @@ class TopWindow(tk.Toplevel):
         logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
 
         self.iconbitmap(img_path)
-        plots.matplotlibSwitchGraphs(self, self.df_buff, self.date_picker)
+        plots.MatplotlibSwitchGraphs(self, self.df_buff, self.date_picker)
 
         def on_closing():
             if messagebox.askokcancel("Quit", "Do you want to close window?"):
@@ -1216,7 +1216,7 @@ class TopWindow(tk.Toplevel):
         logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
 
         self.top.iconbitmap(img_path)
-        plots.matplotlibSwitchGraphs(self.top, self.df_buff, self.date_picker)
+        plots.MatplotlibSwitchGraphs(self.top, self.df_buff, self.date_picker)
 
         # don = Buffer(data)
         # don.get_name()
@@ -1246,7 +1246,7 @@ def config_plot():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     root = Tk()
-    root.title("Downtime Data Analyzer v0.1.1")
+    root.title("Downtime Data Analyzer v0.2.1")
     img_file_name = "small_icon.ico"
     curr_dirr = pathlib.Path(img_file_name).parent.resolve()
     img_path = curr_dirr.joinpath(img_file_name)
