@@ -37,6 +37,8 @@ class matplotlibSwitchGraphs(Frame):
         self.fig, self.ax = config_plot()
         #self.ax2 = config_plot()
         self.graphIndex = 1
+        self.previous_index = 0
+        self.max_num_of_pages = 4  # maximum number of pages, same as number of graphs
         self.var = StringVar()
         self.canvas = FigureCanvasTkAgg(self.fig, self.master)
 
@@ -103,7 +105,7 @@ class matplotlibSwitchGraphs(Frame):
                 This function plots System Availability bar chart
                 :return:
                 """
-        print("graph one")
+        print("graph 1")
         # Calculating system availability - PM downtime included
         # Availability = Uptime / (Uptime + Downtime)
         print("Executing test py second chart")
@@ -118,9 +120,35 @@ class matplotlibSwitchGraphs(Frame):
                           0.0]  # test data
         print("the total downtime is:", total_downtime)
 
-        self.ax.clear()
+        # Remove axes from previous graphs
+        print("Previous index IS: -----", self.previous_index)
+        if self.previous_index == 4:
+            try:
+                self.ax4.clear()  # remove axes from last graph
+                self.ax4.remove()  # remove axes from last graph
+            except AttributeError:
+                pass
+            except ValueError:
+                pass
+        elif self.previous_index == 2:
+            try:
+                self.ax2.clear()  # remove axes from last graph
+                self.ax2.remove()  # remove axes from last graph
+            except AttributeError:
+                pass
+            except ValueError:
+                pass
+        elif self.previous_index == 0:
+            try:
+                self.ax.clear()  # remove axes from last graph
+                self.ax.remove()
+            except AttributeError:
+                pass
+            except ValueError:
+                pass
 
-        self.ax.set_facecolor('lightblue')
+        self.ax1 = self.fig.subplots()
+        self.ax1.set_facecolor('lightblue')
 
         columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04', 'PTA05',
                    'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
@@ -191,7 +219,7 @@ class matplotlibSwitchGraphs(Frame):
         for row in range(n_rows):
             print("This is row", row)
             print("This is index:", index)
-            self.ax.bar(index, availability_arr[row], bar_width, bottom=y_offset, color=colors)
+            self.ax1.bar(index, availability_arr[row], bar_width, bottom=y_offset, color=colors)
             print(colors[row])
             y_offset = y_offset + data[row]
             # cell_text.append(['%1.1f' % (x / 1000.0) for x in y_offset])
@@ -201,7 +229,7 @@ class matplotlibSwitchGraphs(Frame):
         # cell_text.reverse()
 
         # Add a table at the bottom of the axes
-        the_table = self.ax.table(cellText=cell_text,
+        the_table = self.ax1.table(cellText=cell_text,
                                   rowLabels=rows,
                                   rowColours=colors,
                                   colLabels=columns,
@@ -214,21 +242,21 @@ class matplotlibSwitchGraphs(Frame):
 
         # Set titles for the figure and the subplot respectively
         self.fig.suptitle('Availability = Uptime / (Uptime + Downtime)', fontsize=12, fontweight='bold')
-        self.ax.legend()
-        self.ax.set_ylabel("Availability, %", loc='center')
-        self.ax.set_yticks(values * value_increment, ['%d' % val for val in values])
-        self.ax.set_xticks([])
-        self.ax.set_title('Availability: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
-        self.ax.grid(axis='both')
+        self.ax1.legend()
+        self.ax1.set_ylabel("Availability, %", loc='center')
+        self.ax1.set_yticks(values * value_increment, ['%d' % val for val in values])
+        self.ax1.set_xticks([])
+        self.ax1.set_title('Availability: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
+        self.ax1.grid(axis='both')
 
         # Annotates lowest availability equipment:
         x = min_index[0] + 0.3
         y = min_index[1]
-        self.ax.annotate('Lowest Availability', xy=(x, y), xytext=(x + 1, 80),
+        self.ax1.annotate('Lowest Availability', xy=(x, y), xytext=(x + 1, 80),
                          arrowprops=dict(facecolor='black', shrink=0.05))
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
-        self.ax.plot()
+        self.ax1.plot()
         self.canvas.draw()
 
     def draw_graph_two(self):
@@ -237,7 +265,7 @@ class matplotlibSwitchGraphs(Frame):
                 This function plots downtime duration Bar Chart
                 :return:
                 """
-        print("graph two")
+        print("graph 2")
         # Data for the bar chart - from downtime calculation
         # The buffer is split in two - 0 to 14 and 14 to 28, for two types of downtime
         down_not_available = self.dt_val.iloc[0:int((len(self.dt_val) / 2)), 4].values.tolist()
@@ -250,8 +278,28 @@ class matplotlibSwitchGraphs(Frame):
 
         rows = ['Not Available', 'Partially Available']
 
-        self.ax.clear()
-        self.ax.set_facecolor('lightblue')
+        print("Previous index IS: -----", self.previous_index)
+        # Remove axes from previous graphs
+        if self.previous_index == 3:
+            try:
+                self.ax3.clear()  # remove axes from last graph
+                self.ax3.remove()  # remove axes from last graph
+            except AttributeError:
+                pass
+            except ValueError:
+                pass
+        elif self.previous_index == 1:
+            try:
+                self.ax1.clear()  # remove axes from last graph
+                self.ax1.remove()  # remove axes from last graph
+            except AttributeError:
+                pass
+            except ValueError:
+                pass
+
+
+        self.ax2 = self.fig.subplots()
+        self.ax2.set_facecolor('lightblue')
 
         # Set max value for the Y axis based on greatest y-offset
         max_offset = max([elem_x + elem_y for elem_x, elem_y in zip(down_not_available, down_partially_available)])
@@ -279,7 +327,7 @@ class matplotlibSwitchGraphs(Frame):
         for row in range(n_rows):
             print("This is row", row)
             print("This is index:", index)
-            self.ax.bar(index, data[row], bar_width, bottom=y_offset, color=colors[row])
+            self.ax2.bar(index, data[row], bar_width, bottom=y_offset, color=colors[row])
             y_offset = y_offset + data[row]
             # cell_text.append(['%1.1f' % (x / 1000.0) for x in y_offset])
             cell_text.append(['%1.1f' % (x / 1.0) for x in data[row]])
@@ -288,7 +336,7 @@ class matplotlibSwitchGraphs(Frame):
         # cell_text.reverse()
 
         # Add a table at the bottom of the axes
-        the_table = self.ax.table(cellText=cell_text,
+        the_table = self.ax2.table(cellText=cell_text,
                                   rowLabels=rows,
                                   rowColours=colors,
                                   colLabels=columns,
@@ -299,15 +347,15 @@ class matplotlibSwitchGraphs(Frame):
 
         # Set titles for the figure and the subplot respectively
         self.fig.suptitle('Downtime Duration', fontsize=12, fontweight='bold')
-        self.ax.legend()
-        self.ax.set_ylabel("Downtime, hrs", loc='center')
-        self.ax.set_yticks(values * value_increment, ['%d' % val for val in values])
-        self.ax.set_xticks([])
-        self.ax.set_title('Availability: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
-        self.ax.grid(axis='both')
+        self.ax2.legend()
+        self.ax2.set_ylabel("Downtime, hrs", loc='center')
+        self.ax2.set_yticks(values * value_increment, ['%d' % val for val in values])
+        self.ax2.set_xticks([])
+        self.ax2.set_title('Availability: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
+        self.ax2.grid(axis='both')
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
-        self.ax.plot()
+        self.ax2.plot()
         self.canvas.draw()
 
     def draw_graph_three(self):
@@ -331,19 +379,34 @@ class matplotlibSwitchGraphs(Frame):
         #data_2 = self.values_frequency
         #ingredients_2 = self.keys_frequency
 
+        print("Previous index IS: -----", self.previous_index)
+        # Remove axes from previous graphs
+        if self.previous_index == 4:
+            try:
+                self.ax4.clear()  # remove axes from last graph
+                self.ax4.remove()  # remove axes from last graph
+            except AttributeError:
+                pass
+            except ValueError:
+                pass
+        elif self.previous_index == 2:
+            try:
+                self.ax2.clear()  # remove axes from last graph
+                self.ax2.remove()  # remove axes from last graph
+            except AttributeError:
+                pass
+            except ValueError:
+                pass
 
-
-        self.ax.clear()
-        self.ax.remove()
         #self.ax.set_facecolor('lightblue')
 
 
         #self.ax = plt.subplots(figsize=(9.5, 4.5), subplot_kw=dict(aspect="equal"), facecolor='beige')
-        self.ax2 = self.fig.subplots()
+        self.ax3 = self.fig.subplots()
 
         #self.fig, self.ax2 = plt.subplots(figsize=(6.5, 4.5), subplot_kw=dict(aspect="equal"), facecolor='beige')
 
-        wedges, texts = self.ax2.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
+        wedges, texts = self.ax3.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
 
 
         # Set bat chart
@@ -371,7 +434,7 @@ class matplotlibSwitchGraphs(Frame):
             horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
             connectionstyle = "angle,angleA=0,angleB={}".format(ang)
             kw["arrowprops"].update({"connectionstyle": connectionstyle})
-            self.ax2.annotate(recipe[i], xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
+            self.ax3.annotate(recipe[i], xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
                         horizontalalignment=horizontalalignment, **kw)
 
         # Get some pastel shades for the colors
@@ -391,7 +454,7 @@ class matplotlibSwitchGraphs(Frame):
         #    cell_text.append(['%1.1f' % (x / 1.0) for x in data[row]])
 
         # Add a table at the bottom of the axes
-        the_table = self.ax2.table(cellText=cell_text,
+        the_table = self.ax3.table(cellText=cell_text,
                                       rowLabels=rows,
                                       rowColours=colors,
                                       colLabels=columns,
@@ -403,101 +466,142 @@ class matplotlibSwitchGraphs(Frame):
 
         # Set titles for the figure and the subplot respectively
         self.fig.suptitle('Equipment Downtime by Tool Group', fontsize=12, fontweight='bold')
-        self.ax2.set_title('Downtime by Tool Group: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
+        self.ax3.set_title('Downtime by Tool Group: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
         #self.fig.set_size_inches(5, 5)
-        self.ax2.legend()
+        self.ax3.legend()
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
-        self.ax2.plot()
+        self.ax3.plot()
         self.canvas.draw()
 
     def draw_graph_four(self):
         """
-        This function plots downtime duration Bar Chart
+        This function calculates system availability and plots it in chart
         :return:
         """
+        """
+               This function plots donut chart for Tool Group Downtime
+               :return:
+               """
         print("graph 4")
-        # Data for the bar chart - from downtime calculation
-        # The buffer is split in two - 0 to 14 and 14 to 28, for two types of downtime
-        down_not_available = self.dt_val.iloc[0:int((len(self.dt_val) / 2)), 4].values.tolist()
-        down_partially_available = self.dt_val.iloc[int((len(self.dt_val) / 2)):len(self.dt_val), 4].values.tolist()
-        data = [down_not_available, down_partially_available]
 
-        columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04', 'PTA05',
-                   'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
-                   'TMA11', 'TMA12', 'TMA13', 'TMA14')
+        # Values for downtime duration in hrs
+        data = [21.1, 167.6000000000001, 690.8, 41.8, 128.6, 529.6, 107.8]
+        recipe = ['PM', 'N/A', '5T Hoist', 'Long travel', 'PLC or I/O', 'Extractor', '36T Hoist']
+
+        #data = self.values_time
+        #recipe = self.keys_time
+        # Values in downtime events by count
+        #data_2 = self.values_frequency
+        #ingredients_2 = self.keys_frequency
+
+        print("Previous index IS: -----", self.previous_index)
+        # Remove axes from previous graphs
+        if self.previous_index == 1:
+            try:
+                self.ax1.clear()  # remove axes from last graph
+                self.ax1.remove()  # remove axes from last graph
+            except AttributeError:
+                pass
+            except ValueError:
+                pass
+        elif self.previous_index == 3:
+            try:
+                self.ax3.clear()  # remove axes from last graph
+                self.ax3.remove()  # remove axes from last graph
+            except AttributeError:
+                pass
+            except ValueError:
+                pass
+
+
+
+        #self.ax.set_facecolor('lightblue')
+
+
+        #self.ax = plt.subplots(figsize=(9.5, 4.5), subplot_kw=dict(aspect="equal"), facecolor='beige')
+        self.ax4 = self.fig.subplots()
+
+        #self.fig, self.ax2 = plt.subplots(figsize=(6.5, 4.5), subplot_kw=dict(aspect="equal"), facecolor='beige')
+
+        wedges, texts = self.ax4.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
+
+
+        # Set bat chart
+        # x = np.arange(len(recipe))  # the label locations
+        # width = 0.35
+        # rects1 = ax[1].bar(x, data_2, width, label='Downtime Events')
+        # ax[1].set_ylabel('Events')
+        # ax[1].set_title('Downtime events count')
+        # ax[1].set_xticks(x,ingredients_2 )
+        # ax[1].legend()
+        # ax[1].bar_label(rects1, padding=3)
+        # plt.xticks(rotation=90)
+        columns = ('PTA01', 'PTA02', 'PTA03')
 
         rows = ['Not Available', 'Partially Available']
 
-        self.ax2.remove()
-        self.ax = self.fig.subplots()
+        bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
+        kw = dict(arrowprops=dict(arrowstyle="-"),
+                  bbox=bbox_props, zorder=0, va="center")
 
-        self.ax.set_facecolor('lightblue')
-
-
-
-        # Set max value for the Y axis based on greatest y-offset
-        max_offset = max([elem_x + elem_y for elem_x, elem_y in zip(down_not_available, down_partially_available)])
-        #tick_value = round(int(max_offset / 8), -2) --- to be fixed
-        tick_value = 50
-        print("The tick value is", tick_value)
-
-
-        print("The maximum offset is", max_offset)
-        values = np.arange(0, int(max_offset + 25), tick_value)  # (0 , max_y, y_tick)
-        value_increment = 1
+        for i, p in enumerate(wedges):
+            ang = (p.theta2 - p.theta1) / 2. + p.theta1
+            y = np.sin(np.deg2rad(ang))
+            x = np.cos(np.deg2rad(ang))
+            horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
+            connectionstyle = "angle,angleA=0,angleB={}".format(ang)
+            kw["arrowprops"].update({"connectionstyle": connectionstyle})
+            self.ax4.annotate(recipe[i], xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
+                        horizontalalignment=horizontalalignment, **kw)
 
         # Get some pastel shades for the colors
-        colors = ['Red', 'Yellow']
+        colors = ['Red', 'Green', 'Blue']
         n_rows = len(data)
-
-        index = np.arange(len(columns)) + 0.3
-        bar_width = 0.4
 
         # Initialize the vertical-offset for the stacked bar chart.
         y_offset = np.zeros(len(columns))
         print("This is init of y offset", y_offset)
 
         # Plot bars and create text labels for the table
-        cell_text = []
-        for row in range(n_rows):
-            print("This is row", row)
-            print("This is index:", index)
-            self.ax.bar(index, data[row], bar_width, bottom=y_offset, color=colors[row])
-            y_offset = y_offset + data[row]
-            # cell_text.append(['%1.1f' % (x / 1000.0) for x in y_offset])
-            cell_text.append(['%1.1f' % (x / 1.0) for x in data[row]])
-        # Reverse colors and text labels to display the last value at the top.
-        # colors = colors[::-1]
-        # cell_text.reverse()
+
+        cell_text = [[12 , 50 , 6], [12 , 50 , 12], [121 , 55 , 69]]
+        columns = ('Freeze', 'Wind', 'Flood')
+        rows = ["Row 1 name", "YRow 2 name", "Row 3 name"]
+        #for row in range(n_rows):
+        #    cell_text.append(['%1.1f' % (x / 1.0) for x in data[row]])
 
         # Add a table at the bottom of the axes
-        the_table = self.ax.table(cellText=cell_text,
-                              rowLabels=rows,
-                              rowColours=colors,
-                              colLabels=columns,
-                              loc='bottom')
+        the_table = self.ax4.table(cellText=cell_text,
+                                      rowLabels=rows,
+                                      rowColours=colors,
+                                      colLabels=columns,
+                                      loc='bottom',
+                                  bbox=[0.25, -0.5, 0.5, 0.3])
         the_table.scale(1, 2)
 
-        #plt.subplots_adjust(left=0.25, bottom=0.2)
+
 
         # Set titles for the figure and the subplot respectively
-        self.fig.suptitle('Downtime Duration', fontsize=12, fontweight='bold')
-        self.ax.legend()
-        self.ax.set_ylabel("Downtime, hrs", loc='center')
-        self.ax.set_yticks(values * value_increment, ['%d' % val for val in values])
-        self.ax.set_xticks([])
-        self.ax.set_title('Availability: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
-        self.ax.grid(axis='both')
+        self.fig.suptitle('Downtime by Tool Group - Event Count', fontsize=12, fontweight='bold')
+        self.ax4.set_title('Downtime by Tool Group - Event Count: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
+        #self.fig.set_size_inches(5, 5)
+        self.ax4.legend()
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
-        self.ax.plot()
+        self.ax4.plot()
         self.canvas.draw()
 
     def get_duration(self, duration):
+        """
+        Function to convert seconds to hours
+        :param duration:
+        :return:
+        """
         minutes = (duration / 60)
         hours = minutes / 60
         return round(hours, 1)
+
     def get_screen_coordinates(self):
         """
         This function determines screen coordinates
@@ -515,30 +619,54 @@ class matplotlibSwitchGraphs(Frame):
         y = (win_height / 2) - (root_height / 2)
 
         return int(x), int(y)
+
     def on_key_press(self, event):
         print("you pressed {}".format(event.key))
         key_press_handler(event, self.canvas, self.toolbar)
 
     def _quit(self):
-        self.master.quit()  # stops mainloop
+        """
+        Function to stop mainloop
+        :return:
+        """
+        self.master.quit()
+
     def previous_graph(self):
-        if self.graphIndex <= 0:
-            self.graphIndex = 4
+        """
+        This function increments page number of the graph
+        :return:
+        """
+        if self.graphIndex == 1:
+            self.previous_index = 1
+            self.graphIndex = self.max_num_of_pages
         else:
+            self.previous_index = self.graphIndex
             self.graphIndex -= 1
         self.switch_graphs()
+
     def next_graph(self):
-        if self.graphIndex >= 4:
-            self.graphIndex = 0
+        """
+        This function decrements page number of the graph
+        :return:
+        """
+        if self.graphIndex == self.max_num_of_pages:
+            self.previous_index = self.max_num_of_pages
+            self.graphIndex = 1
         else:
+            self.previous_index = self.graphIndex
             self.graphIndex += 1
         self.switch_graphs()
+
     def switch_graphs(self):
-        # Need to call the correct draw, whether we're on graph one or two
-        print("The index is", self.graphIndex)
+        """
+        This function calls the graph to be drawn based on graph index
+        :return:
+        """
+        print("The graph index is - ", self.graphIndex)
+        # Set variable for the label indicating page number
+        self.var.set(str(self.graphIndex) + "/ " + str(self.max_num_of_pages))
 
-        self.var.set(str(self.graphIndex) + "/ 4")
-
+        # Draw graphs based on graph index
         if self.graphIndex == 1:
             self.draw_graph_one()
 
@@ -550,7 +678,6 @@ class matplotlibSwitchGraphs(Frame):
 
         elif self.graphIndex == 4:
             self.draw_graph_four()
-            self.graphIndex = 0
 
 
 if __name__ == '__main__':
