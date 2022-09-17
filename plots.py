@@ -23,7 +23,7 @@ def config_plot():
 
 class MatplotlibSwitchGraphs(Frame):
     def __init__(self, master, myData, date_picker_arr):
-        print("This is me data", myData)
+        print("This is my data", myData)
         print("This is my date", date_picker_arr)
         Frame.__init__(self, master)
         self.master = master
@@ -397,7 +397,7 @@ class MatplotlibSwitchGraphs(Frame):
             horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
             connectionstyle = "angle,angleA=0,angleB={}".format(ang)
             kw["arrowprops"].update({"connectionstyle": connectionstyle})
-            self.ax3.annotate(recipe[i], xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
+            self.ax3.annotate(recipe[i], xy=(x, y), xytext=(1.25 * np.sign(x), 1.3 * y),
                         horizontalalignment=horizontalalignment, **kw)
 
         # Get some pastel shades for the colors
