@@ -25,6 +25,9 @@ import logging
 from tkinter import messagebox
 
 import plots
+import platform
+import locale
+import sys
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
@@ -55,8 +58,10 @@ class App(Frame):
         self.df_date = pd.DataFrame()
         self.df_buff = pd.DataFrame()
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.app_version = "v0.2.1"
 
         self.tool_calc_result = {'duration': [], 'event_count': [], 'keys': []}
+        self.launched_flag = []
 
     def on_closing(self):
         """
@@ -157,7 +162,7 @@ class App(Frame):
         file_menu.add_command(label="Exit", command=root.quit)
         # Top bar Help menu
         my_menu.add_cascade(label="Help", menu=help_menu)
-        help_menu.add_command(label="About", command=self.load_datafile)
+        help_menu.add_command(label="About", command=self.about_msg)
 
     def ui_calendars(self):
         """
@@ -304,6 +309,9 @@ class App(Frame):
             pass
 
         print("Sort dataframe by Start Date")
+        # Clear dataframe that holds calculation
+        self.launched_flag.clear()
+        # Filter data by date raw data
         self.filter_data_by_date(start_date, end_date)
 
     def get_end_date(self, *args):
@@ -323,6 +331,9 @@ class App(Frame):
             pass
 
         print("Sort dataframe by End Date")
+        # Clear dataframe that holds calculation
+        self.launched_flag.clear()
+        # Filter data by date raw data
         self.filter_data_by_date(start_date, end_date)
 
     def filter_data_by_date(self, start_date, end_date):
@@ -352,7 +363,14 @@ class App(Frame):
         """
         if self.is_file_date_valid():
             print("Calculate downtime")
-            self.calculate_downtime_durr()
+            # If date selection not changed do not recalculate
+            if not self.launched_flag:
+                print("Frame is empty")
+                self.launched_flag.append("Launched")
+                self.calculate_downtime_durr()
+            else:
+                print("Frame is NOT empty")
+                self.open_top_window() # Re-open plots with current data
         else:
             pass
 
@@ -725,6 +743,10 @@ class App(Frame):
         window = TopWindow(self.master, self.df_buff, self.tool_calc_result, self.date_picker)
         window.grab_set()
 
+    def about_msg(self):
+        about_window = AboutTopWindow(self.master, self.app_version)
+        about_window.grab_set()
+
 
 def get_duration(duration):
     """
@@ -735,6 +757,77 @@ def get_duration(duration):
     minutes = (duration / 60)
     hours = minutes / 60
     return round(hours, 1)
+
+class AboutTopWindow(tk.Toplevel):
+    def __init__(self, parent, appversion):
+        super().__init__(parent)
+        self.app_version = appversion
+
+        self.set_title_name()
+        self.set_window_size()
+        self.set_window_icon()
+        self.set_window_frame()
+        self.set_window_labels()
+
+
+    def set_title_name(self):
+        self.title("Downtime Data Analyzer" + self.app_version + "- About")
+
+    def set_window_size(self):
+        self.resizable(False, False)
+
+        # Width and Height for root = Tk()
+        root_width = 525
+        root_height = 225
+
+        # Get screen width and height
+        win_width = root.winfo_screenwidth()
+        win_height = root.winfo_screenheight()
+
+        # Calculate x and y coordinates for the Tk root window
+        x = (win_width / 2) - (root_width / 2) + 50
+        y = (win_height / 2) - (root_height / 2)
+
+        # Set dimensions and position of the screen
+        self.geometry('%dx%d+%d+%d' % (root_width, root_height, x, y))
+        logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
+        logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+
+    def set_window_icon(self):
+        img_file_name = "small_icon.ico"
+        curr_dirr = pathlib.Path(img_file_name).parent.resolve()
+        img_path = curr_dirr.joinpath(img_file_name)
+        print(img_path)
+        self.iconbitmap(img_path)
+
+    def set_window_frame(self):
+        # Configure window Using Grid
+        self.mainframe = ttk.Frame(self, padding="3 3 12 12")
+        self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+
+        # Set label frame to hold buttons and page label
+        self.label_frame = ttk.LabelFrame( self.mainframe, text='Version Information:')
+        self.label_frame.grid(column=0, row=0, sticky=N+W+E+S, columnspan=1)
+
+    def set_window_labels(self):
+        pass
+        # Create Calendar Label
+        ttk.Label(self.label_frame, text="Environment:").grid(column=0, row=2, pady=5, sticky=W)
+        ttk.Label(self.label_frame, text="Version:").grid(column=0, row=3, pady=5, sticky=W)
+        ttk.Label(self.label_frame, text="Locale:").grid(column=0, row=4, pady=5, sticky=W)
+        ttk.Label(self.label_frame, text="User Interface:").grid(column=0, row=5, pady=5, sticky=W)
+        ttk.Label(self.label_frame, text="Python Version:").grid(column=0, row=6, pady=5, sticky=W)
+        ttk.Label(self.label_frame, text="Author: ").grid(column=0, row=7, pady=5, sticky=W)
+
+        # Create Calendar Label
+        ttk.Label(self.label_frame, text=platform.platform()).grid(column=1, row=2, pady=5, sticky=W)
+        ttk.Label(self.label_frame, text=self.app_version).grid(column=1, row=3, pady=5, sticky=W)
+        ttk.Label(self.label_frame, text=locale.getdefaultlocale()).grid(column=1, row=4, pady=5, sticky=W)
+        ttk.Label(self.label_frame, text=("Tkinter: " + str(tkinter.TkVersion))).grid(column=1, row=5, pady=5, sticky=W)
+        ttk.Label(self.label_frame, text=sys.version).grid(column=1, row=6, pady=6, sticky=W)
+        ttk.Label(self.label_frame, text=" VAL").grid(column=1, row=7, pady=6, sticky=W)
 
 
 class TopWindow(tk.Toplevel):
@@ -780,55 +873,6 @@ class TopWindow(tk.Toplevel):
         print("I was called")
         self.protocol("WM_DELETE_WINDOW", on_closing)
 
-
-        #self.top.mainloop()
-    def about_msg(self):
-        self.top = Toplevel(self.master)
-
-        self.date_picker = []
-        self.date_picker.append(self.string_var_strt.get())
-        self.date_picker.append(self.string_var_end.get())
-
-        self.top.title("Downtime Data Analyzer v0.1.1 - Plots")
-        img_file_name = "small_icon.ico"
-        curr_dirr = pathlib.Path(img_file_name).parent.resolve()
-        img_path = curr_dirr.joinpath(img_file_name)
-        print(img_path)
-        # my_icon = tk.PhotoImage(file=img_path)
-        # root.iconphoto(True, my_icon)
-
-        self.top.resizable(False, False)
-
-        # Width and Height for root = Tk()
-        root_width = 1000
-        root_height = 700
-
-        # Get screen width and height
-        win_width = root.winfo_screenwidth()
-        win_height = root.winfo_screenheight()
-
-        # Calculate x and y coordinates for the Tk root window
-        x = (win_width / 2) - (root_width / 2) + 50
-        y = (win_height / 2) - (root_height / 2)
-
-        # Set dimensions and position of the screen
-        self.top.geometry('%dx%d+%d+%d' % (root_width, root_height, x, y))
-        logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
-        logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
-
-        self.top.iconbitmap(img_path)
-        plots.MatplotlibSwitchGraphs(self.top, self.df_buff, self.date_picker)
-
-        # don = Buffer(data)
-        # don.get_name()
-        # plots.matplotlibSwitchGraphs.
-        # top.geometry('%dx%d+%d+%d' % (root_width / 2, root_height / 2, x + 50, y + 50))
-        def on_closing():
-            if messagebox.askokcancel("Quit", "Do you want to close window?"):
-                self.top.destroy()
-
-        self.top.protocol("WM_DELETE_WINDOW", on_closing())
-        self.top.mainloop()
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':

@@ -102,13 +102,13 @@ class MatplotlibSwitchGraphs(Frame):
         # Calculating system availability - PM downtime included
         # Availability = Uptime / (Uptime + Downtime)
 
-        # down_not_available = self.dt_val.iloc[0:int((len(self.dt_val) / 2)), 4].values.tolist()
-        # down_partially_available = self.dt_val.iloc[int((len(self.dt_val) / 2)):len(self.dt_val), 4].values.tolist()
+        down_not_available = self.dt_val.iloc[0:int((len(self.dt_val) / 2)), 4].values.tolist()
+        down_partially_available = self.dt_val.iloc[int((len(self.dt_val) / 2)):len(self.dt_val), 4].values.tolist()
 
         # Set max value for the Y axis based on greatest y-offset
-        # total_downtime = [elem_x + elem_y for elem_x, elem_y in zip(down_not_available, down_partially_available)]
-        total_downtime = [122.8, 0.0, 16.4, 4.9, 133.4, 77.3, 241.3, 83.4, 16.0, 396.70000000000005, 121.9, 256.1, 0.0,
-                          0.0]  # test data
+        total_downtime = [elem_x + elem_y for elem_x, elem_y in zip(down_not_available, down_partially_available)]
+        #total_downtime = [122.8, 0.0, 16.4, 4.9, 133.4, 77.3, 241.3, 83.4, 16.0, 396.70000000000005, 121.9, 256.1, 0.0,
+        #                  0.0]  # test data
         print("The total downtime is:", total_downtime)
 
         print("Previous page of the graph - :", self.previous_index)
