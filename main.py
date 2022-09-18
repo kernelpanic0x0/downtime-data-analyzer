@@ -56,6 +56,8 @@ class App(Frame):
         self.df_buff = pd.DataFrame()
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
 
+        self.tool_calc_result = {'duration': [], 'event_count': [], 'keys': []}
+
     def on_closing(self):
         """
         This function to check if user closing window
@@ -375,6 +377,84 @@ class App(Frame):
         else:
             return True
 
+    def change(self, frame, **kwargs):
+        self.frame = frame(self, **kwargs)
+
+    def file_save(self, *args):
+        """
+        This function saves .csv through file save dialog
+
+        """
+
+        if self.is_file_date_valid():
+            try:
+                file_to_save = fd.asksaveasfile(mode='w', defaultextension=".csv")
+                self.df_temp.to_csv(file_to_save, line_terminator='\r', encoding='utf-8')
+                messagebox.showinfo("File Saved Successfully", "File Saved Successfully!")
+            except AttributeError:
+                logging.exception("User cancelled save operation")
+
+    def load_datafile(self, *args):
+        """
+         This function loads .csv file
+         It converts data column from zulu to PST
+         Data is sorted in ascending order
+         """
+        filetypes = [('Excel files', '*.csv'), ('All files', '*')]  # File type
+        data_columns = ['cr483_name', 'cr483_cranestatus', 'createdon', 'cr483_toolgroup']
+        data_columns_reindex = ['cr483_name', 'cr483_cranestatus', 'cr483_toolgroup', 'createdon']
+
+        # Show the open file dialog
+        file_name = fd.askopenfilename(title='Open .*CSV file', initialdir='/', filetypes=filetypes)
+        print(file_name)
+
+        # Check if file was selected
+        try:
+            self.df = pd.read_csv(file_name, usecols=data_columns, na_filter=False)  # Columns to read from .csv
+            self.df = self.df.reindex(columns=data_columns_reindex)  # Reassign order of columns:
+
+            # Check if valid column exists & sort by date
+            try:
+                # CreateOn column conversion from Zulu to PST time
+                self.df['createdon'] = pd.to_datetime(self.df['createdon'])
+                pacific_t = pytz.timezone('US/Pacific')
+                self.df['createdon'].dt.tz_convert(pacific_t)
+                self.df['createdon'] = self.df['createdon'].dt.strftime('%Y-%m-%d %H:%M:%S')
+                self.df.sort_values(by='createdon', ascending=True, inplace=True)  # Sort  Data by Date
+                # Reset index of dataframe
+                self.df.index = pd.RangeIndex(len(self.df.index))
+
+                # Create a deep copy of dataframe
+                # Modifications to new dataframe will not modify original
+
+                self.df_temp = self.df.copy(deep=True)
+                print(self.df)
+                print(self.df_temp)
+                print('Insert data into tree view table')
+                self.tree_insert()
+            except KeyError:
+                logging.exception("Wrong column names")
+                self.error_message("Wrong column names")
+
+        except FileNotFoundError:
+            logging.exception("No File Selected")
+            self.error_message("No File Selected")
+        except ValueError:
+            logging.exception("File Columns missing")
+            self.error_message("File Columns missing")
+
+    def error_message(self, str_msg):
+        """
+            This function prints error message to Tree view Table
+        """
+        data_columns = self.tree['columns']  # Column names in tree view table
+
+        # For each element in tree view column names
+        # Add error message to column of df_temp
+        for i in range(0, len(data_columns)):
+            self.df_temp.loc[0, data_columns[i]] = str_msg
+        self.tree_insert()  # Write message to tree view table
+
     def calculate_downtime_durr(self, *args):
         """
         This function calculates downtime duration & count
@@ -487,6 +567,7 @@ class App(Frame):
                     sum_full_downtime_durr += get_duration(
                         durr_full_downtime.total_seconds())  # Sum of Full Downtime in hrs
 
+
                     print("Full downtime duration = ", sum_full_downtime_durr)
                     # Set memory variable
                     mem_date = curr_date
@@ -569,84 +650,6 @@ class App(Frame):
         #self.master.change(plots.matplotlibSwitchGraphs, data=self.df_buff)
         #self.about_msg()
 
-    def change(self, frame, **kwargs):
-        self.frame = frame(self, **kwargs)
-
-    def file_save(self, *args):
-        """
-        This function saves .csv through file save dialog
-
-        """
-
-        if self.is_file_date_valid():
-            try:
-                file_to_save = fd.asksaveasfile(mode='w', defaultextension=".csv")
-                self.df_temp.to_csv(file_to_save, line_terminator='\r', encoding='utf-8')
-                messagebox.showinfo("File Saved Successfully", "File Saved Successfully!")
-            except AttributeError:
-                logging.exception("User cancelled save operation")
-
-    def load_datafile(self, *args):
-        """
-         This function loads .csv file
-         It converts data column from zulu to PST
-         Data is sorted in ascending order
-         """
-        filetypes = [('Excel files', '*.csv'), ('All files', '*')]  # File type
-        data_columns = ['cr483_name', 'cr483_cranestatus', 'createdon', 'cr483_toolgroup']
-        data_columns_reindex = ['cr483_name', 'cr483_cranestatus', 'cr483_toolgroup', 'createdon']
-
-        # Show the open file dialog
-        file_name = fd.askopenfilename(title='Open .*CSV file', initialdir='/', filetypes=filetypes)
-        print(file_name)
-
-        # Check if file was selected
-        try:
-            self.df = pd.read_csv(file_name, usecols=data_columns, na_filter=False)  # Columns to read from .csv
-            self.df = self.df.reindex(columns=data_columns_reindex)  # Reassign order of columns:
-
-            # Check if valid column exists & sort by date
-            try:
-                # CreateOn column conversion from Zulu to PST time
-                self.df['createdon'] = pd.to_datetime(self.df['createdon'])
-                pacific_t = pytz.timezone('US/Pacific')
-                self.df['createdon'].dt.tz_convert(pacific_t)
-                self.df['createdon'] = self.df['createdon'].dt.strftime('%Y-%m-%d %H:%M:%S')
-                self.df.sort_values(by='createdon', ascending=True, inplace=True)  # Sort  Data by Date
-                # Reset index of dataframe
-                self.df.index = pd.RangeIndex(len(self.df.index))
-
-                # Create a deep copy of dataframe
-                # Modifications to new dataframe will not modify original
-
-                self.df_temp = self.df.copy(deep=True)
-                print(self.df)
-                print(self.df_temp)
-                print('Insert data into tree view table')
-                self.tree_insert()
-            except KeyError:
-                logging.exception("Wrong column names")
-                self.error_message("Wrong column names")
-
-        except FileNotFoundError:
-            logging.exception("No File Selected")
-            self.error_message("No File Selected")
-        except ValueError:
-            logging.exception("File Columns missing")
-            self.error_message("File Columns missing")
-
-    def error_message(self, str_msg):
-        """
-            This function prints error message to Tree view Table
-        """
-        data_columns = self.tree['columns']  # Column names in tree view table
-
-        # For each element in tree view column names
-        # Add error message to column of df_temp
-        for i in range(0, len(data_columns)):
-            self.df_temp.loc[0, data_columns[i]] = str_msg
-        self.tree_insert()  # Write message to tree view table
-
     def calculate_tool_group(self):
         """
         This function calculates downtime for each Tool Group
@@ -677,6 +680,10 @@ class App(Frame):
         # Count number of duplicates in the tool_group list
         for items in combined_dict['tool_group'][0]:
             self.tool_frequency[items] = combined_dict['tool_group'][0].count(items)
+
+        # Sort dictionary in descending order
+        self.self.tool_frequency = dict(sorted(self.tool_frequency.items(), key=lambda item: item[1], reverse=True))
+
         counter = Counter(self.tool_frequency)
         self.keys_frequency = list(counter.keys())
         self.values_frequency = list(counter.values())
@@ -697,7 +704,9 @@ class App(Frame):
 
         # Find Sum of downtime duration per tool group
         logging.info(f"Tool downtime Dictionary Before Sum(): { tool_downtime.items()}")
-        self.tool_time = {dict_key: sum(val) for dict_key, val in tool_downtime.items()}
+        self.tool_time = {dict_key: round(sum(val),1) for dict_key, val in tool_downtime.items()}
+        # Sort dictionary in descending order
+        self.tool_time = dict(sorted(self.tool_time.items(), key=lambda item: item[1], reverse=True))
         logging.info(f"Sum() of downtime per tool group calculated: {self.tool_time}")
 
         counter = Counter(self.tool_time)
@@ -708,12 +717,12 @@ class App(Frame):
         logging.info(f"Tool breakdown frequency Values: {self.values_time}")
         logging.info(f"Tool breakdown frequency Keys: {self.keys_time}")
 
-        self.tool_calc_resutl = {'duration':[], 'keys':[]}
-        self.tool_calc_resutl['duration'] = self.values_time
-        self.tool_calc_resutl['keys'] = self.keys_time
+        self.tool_calc_result['duration'] = self.values_time
+        self.tool_calc_result['event_count'] = self.values_frequency
+        self.tool_calc_result['keys'] = self.keys_time
 
     def open_top_window(self):
-        window = TopWindow(self.master, self.df_buff, self.date_picker)
+        window = TopWindow(self.master, self.df_buff, self.tool_calc_result, self.date_picker)
         window.grab_set()
 
 
@@ -729,11 +738,12 @@ def get_duration(duration):
 
 
 class TopWindow(tk.Toplevel):
-    def __init__(self, parent, myData, myDate):
+    def __init__(self, parent, myData, myToolData, myDate):
         super().__init__(parent)
 
         self.date_picker = myDate
         self.df_buff = myData
+        self.tool_data = myToolData
 
         self.title("Downtime Data Analyzer v0.2.1 - Plots")
         img_file_name = "small_icon.ico"
@@ -761,7 +771,7 @@ class TopWindow(tk.Toplevel):
         logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
 
         self.iconbitmap(img_path)
-        plots.MatplotlibSwitchGraphs(self, self.df_buff, self.date_picker)
+        plots.MatplotlibSwitchGraphs(self, self.df_buff, self.tool_data, self.date_picker)
 
         def on_closing():
             if messagebox.askokcancel("Quit", "Do you want to close window?"):

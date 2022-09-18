@@ -12,6 +12,7 @@ import logging
 from datetime import datetime
 import pathlib
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
 
 
 def config_plot():
@@ -22,7 +23,7 @@ def config_plot():
 
 
 class MatplotlibSwitchGraphs(Frame):
-    def __init__(self, master, myData, date_picker_arr):
+    def __init__(self, master, myData, myToolData, date_picker_arr):
         print("This is my data", myData)
         print("This is my date", date_picker_arr)
         Frame.__init__(self, master)
@@ -41,6 +42,8 @@ class MatplotlibSwitchGraphs(Frame):
         self.date_picker_sel = date_picker_arr
         # Data frame values from main frame
         self.dt_val = myData
+        # Tool Data from main
+        self.toolData = myToolData
         self.draw_graph_one()
         #self.on_key_press()
 
@@ -352,12 +355,12 @@ class MatplotlibSwitchGraphs(Frame):
 
         print("Plotting Graph 3")
         # Values for downtime duration in hrs - test values
-        data = [221.1, 1067.6000000000001, 69.8, 241.8, 128.6, 229.6, 207.8]                        # Test values
-        recipe = ['PM', 'N/A', '5T Hoist', 'Long travel', 'PLC or I/O', 'Extractor', '36T Hoist']   # Test values
+        #data = [221.1, 1067.6000000000001, 69.8, 241.8, 128.6, 229.6, 207.8]                        # Test values
+        #data_key = ['PM', 'N/A', '5T Hoist', 'Long travel', 'PLC or I/O', 'Extractor', '36T Hoist']   # Test values
 
         # Values for downtime duration in hrs from data.csv
-        #data = self.values_time
-        #recipe = self.keys_time
+        data_val = self.toolData['duration']
+        data_key = self.toolData['keys']
 
         print("Previous page of the graph - :", self.previous_index)
         # Remove  and clear axes from previous graphs
@@ -379,12 +382,15 @@ class MatplotlibSwitchGraphs(Frame):
             except ValueError:
                 pass
 
+        explode_val=[]
+        for elem in range(0, len(data_val)):
+            explode_val.append(0.01)
         # Set Graph # 3 - pie chart
-        self.ax3 = self.fig.subplots()
-        wedges, texts = self.ax3.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
+        self.ax3 = self.fig.subplots(1,2, gridspec_kw={'width_ratios': [6, 1]}, subplot_kw=dict(aspect="equal"))
+        wedges, texts = self.ax3[0].pie(data_val, wedgeprops=dict(width=0.5), startangle=-40, explode=explode_val)
 
-        columns = ('PTA01', 'PTA02', 'PTA03')
-        rows = ['Not Available', 'Partially Available']
+        columns = data_key
+        rows = ['Downtime (hrs)']
 
         bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
         kw = dict(arrowprops=dict(arrowstyle="-"),
@@ -397,41 +403,60 @@ class MatplotlibSwitchGraphs(Frame):
             horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
             connectionstyle = "angle,angleA=0,angleB={}".format(ang)
             kw["arrowprops"].update({"connectionstyle": connectionstyle})
-            self.ax3.annotate(recipe[i], xy=(x, y), xytext=(1.25 * np.sign(x), 1.3 * y),
+            self.ax3[0].annotate(data_key[i], xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
                         horizontalalignment=horizontalalignment, **kw)
 
         # Get some pastel shades for the colors
-        colors = ['Red', 'Green', 'Blue']
-        n_rows = len(data)
+        #colors = ['Red', 'Green', 'Blue', 'Blue']
+        n_rows = len(data_val)
 
         # Initialize the vertical-offset for the stacked bar chart.
         y_offset = np.zeros(len(columns))
         print("This is init of y offset", y_offset)
 
         # Plot bars and create text labels for the table
+        cell_text = []
+        colors = []
+        for index, elem in enumerate(data_val, start=0):
+            cell_text.append([data_val[index]])
+            if index % 2 == 0:
+                colors.append('#F0F0FF')
+            else:
+                colors.append('#C1C1CD')
 
-        cell_text = [[12 , 5 , 6], [12 , 5 , 6], [12 , 5 , 6]]
-        columns = ('Freeze', 'Wind', 'Flood')
-        rows = ["Row 1 name", "YRow 2 name", "Row 3 name"]
+        print(cell_text)
+        #cell_text = []
+        #cell_text.append(data_val)
+        #print(cell_text)
+        #cell_text = [12,15,16,17]
+        columns = (['Downtime,hrs'])
+        rows = data_key
         #for row in range(n_rows):
         #    cell_text.append(['%1.1f' % (x / 1.0) for x in data[row]])
 
         # Add a table at the bottom of the axes
-        the_table = self.ax3.table(cellText=cell_text,
+        the_table = self.ax3[1].table(cellText=cell_text,
                                       rowLabels=rows,
                                       rowColours=colors,
                                       colLabels=columns,
-                                      loc='bottom',
-                                  bbox=[0.25, -0.5, 0.5, 0.3])
-        the_table.scale(1, 2)
+                                      loc='center',
+                                      cellLoc='center'
+                                   ) #[shift on the x-axis//gap between plot and text box//width of the text box//height of text box]
+
+        #self.ax3.
+        the_table.scale(1, 4)
+        the_table.set_fontsize(12)
+
 
         # Set titles for the figure and the subplot respectively
         self.fig.suptitle('Equipment Downtime by Tool Group', fontsize=12, fontweight='bold')
-        self.ax3.set_title('Downtime by Tool Group: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
-        self.ax3.legend()
+        self.ax3[0].set_title('Downtime by Tool Group: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
+        #self.ax3[0].legend()
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
-        self.ax3.plot()
+        self.ax3[0].plot()
+        self.ax3[1].axis('off')
+        self.ax3[1].plot()
         self.canvas.draw()
 
     def draw_graph_four(self):
@@ -442,13 +467,12 @@ class MatplotlibSwitchGraphs(Frame):
 
         print("Plotting Graph 4")
         # Values for downtime duration in events - test data
-        data = [21.1, 167.6000000000001, 690.8, 41.8, 128.6, 529.6, 107.8]
-        recipe = ['PM', 'N/A', '5T Hoist', 'Long travel', 'PLC or I/O', 'Extractor', '36T Hoist']
+        #data_val = [21.1, 167.6000000000001, 690.8, 41.8, 128.6, 529.6, 107.8]
+        #data_key = ['PM', 'N/A', '5T Hoist', 'Long travel', 'PLC or I/O', 'Extractor', '36T Hoist']
 
-
-        # Values for downtime duration in events
-        #data_2 = self.values_frequency
-        #ingredients_2 = self.keys_frequency
+        # Values for downtime  in events from data.csv
+        data_val = self.toolData['duration']
+        data_key = self.toolData['keys']
 
         print("Previous page of the graph - :", self.previous_index)
         # Remove  and clear axes from previous graphs
@@ -472,8 +496,7 @@ class MatplotlibSwitchGraphs(Frame):
 
         # Set Graph #4 - pie chart
         self.ax4 = self.fig.subplots()
-        wedges, texts = self.ax4.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
-
+        wedges, texts = self.ax4.pie(data_val, wedgeprops=dict(width=0.5), startangle=-40)
 
         columns = ('PTA01', 'PTA02', 'PTA03')
         rows = ['Not Available', 'Partially Available']
@@ -489,12 +512,12 @@ class MatplotlibSwitchGraphs(Frame):
             horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
             connectionstyle = "angle,angleA=0,angleB={}".format(ang)
             kw["arrowprops"].update({"connectionstyle": connectionstyle})
-            self.ax4.annotate(recipe[i], xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
+            self.ax4.annotate(data_key[i], xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
                         horizontalalignment=horizontalalignment, **kw)
 
         # Get some pastel shades for the colors
         colors = ['Red', 'Green', 'Blue']
-        n_rows = len(data)
+        n_rows = len(data_val)
 
         # Initialize the vertical-offset for the stacked bar chart.
         y_offset = np.zeros(len(columns))
@@ -514,7 +537,7 @@ class MatplotlibSwitchGraphs(Frame):
                                       rowColours=colors,
                                       colLabels=columns,
                                       loc='bottom',
-                                  bbox=[0.25, -0.5, 0.5, 0.3])
+                                  bbox=[0.25, 0.5, 0.5, 0.3]) #[shift on the x-axis//gap between plot and text box//width of the text box//height of text box]
         the_table.scale(1, 2)
 
         # Set titles for the figure and the subplot respectively
