@@ -115,9 +115,14 @@ class MatplotlibSwitchGraphs(Frame):
         # Current Graph #1
         if self.previous_index == self.max_num_of_pages:
             try:
-                self.ax4.clear()    # clear axes from last graph
-                self.ax4.remove()   # remove axes from last graph
+                self.ax4[0].clear()    # clear axes from last graph
+                self.ax4[0].remove()   # remove axes from last graph
+                self.ax4[1].clear()  # clear axes from last graph
+                self.ax4[1].remove()  # remove axes from last graph
+                self.ax4.clear()  # clear axes from last graph
+                self.ax4.remove()  # remove axes from last graph
             except AttributeError:
+                print("Graph #1 Axis Clear Attribute error")
                 pass
             except ValueError:
                 pass
@@ -273,9 +278,14 @@ class MatplotlibSwitchGraphs(Frame):
         # Current Graph #2
         if self.previous_index == (self.graphIndex + 1):
             try:
+                self.ax3[0].clear()  # clear axes from Graph #3
+                self.ax3[0].remove()  # remove axes from Graph #3
+                self.ax3[1].clear()  # clear axes from Graph #3
+                self.ax3[1].remove()  # remove axes from Graph #3
                 self.ax3.clear()    # clear axes from Graph #3
                 self.ax3.remove()   # remove axes from Graph #3
             except AttributeError:
+                print("Graph #2 Axis Clear Attribute error")
                 pass
             except ValueError:
                 pass
@@ -367,9 +377,14 @@ class MatplotlibSwitchGraphs(Frame):
         # Current Graph #3
         if self.previous_index == (self.graphIndex + 1):
             try:
-                self.ax4.clear()    # clear axes from Graph #4
-                self.ax4.remove()   # remove axes from Graph #4
+                self.ax4[0].clear()    # clear axes from Graph #4
+                self.ax4[0].remove()   # remove axes from Graph #4
+                self.ax4[1].clear()  # clear axes from Graph #4
+                self.ax4[1].remove()  # remove axes from Graph #4
+                self.ax4.clear()  # clear axes from Graph #4
+                self.ax4.remove()  # remove axes from Graph #4
             except AttributeError:
+                print("Graph #3 Axis Clear Attribute error")
                 pass
             except ValueError:
                 pass
@@ -444,8 +459,8 @@ class MatplotlibSwitchGraphs(Frame):
         the_table.set_fontsize(12)
 
         # Set titles for the figure and the subplot respectively
-        self.fig.suptitle('Equipment Downtime by Tool Group', fontsize=12, fontweight='bold')
-        self.ax3[0].set_title('Downtime by Tool Group: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
+        self.fig.suptitle('Equipment Downtime by Tool Group ->' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1], fontsize=12, fontweight='bold')
+        #self.ax3[0].set_title('Downtime by Tool Group: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
 
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
@@ -466,7 +481,7 @@ class MatplotlibSwitchGraphs(Frame):
         #data_key = ['PM', 'N/A', '5T Hoist', 'Long travel', 'PLC or I/O', 'Extractor', '36T Hoist']
 
         # Values for downtime  in events from data.csv
-        data_val = self.toolData['duration']
+        data_val = self.toolData['event_count']
         data_key = self.toolData['keys']
 
         print("Previous page of the graph - :", self.previous_index)
@@ -486,7 +501,10 @@ class MatplotlibSwitchGraphs(Frame):
                 self.ax3[0].remove()   # remove axes from Graph #3
                 self.ax3[1].clear()  # clear axes from Graph #3
                 self.ax3[1].remove()  # remove axes from Graph #3
+                self.ax3.clear()  # clear axes from Graph #3
+                self.ax3.remove()  # remove axes from Graph #3
             except AttributeError:
+                print("Graph #4 Axis Clear Attribute error")
                 pass
             except ValueError:
                 pass
@@ -552,8 +570,8 @@ class MatplotlibSwitchGraphs(Frame):
         the_table.set_fontsize(12)
 
         # Set titles for the figure and the subplot respectively
-        self.fig.suptitle('Downtime Events by Tool Group', fontsize=12, fontweight='bold')
-        self.ax4[0].set_title('Downtime events by Tool Group: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
+        self.fig.suptitle('Downtime Events by Tool Group ->' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1], fontsize=12, fontweight='bold')
+        #self.ax4[0].set_title('Downtime events by Tool Group: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
 
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
