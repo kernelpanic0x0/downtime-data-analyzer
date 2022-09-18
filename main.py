@@ -682,7 +682,7 @@ class App(Frame):
             self.tool_frequency[items] = combined_dict['tool_group'][0].count(items)
 
         # Sort dictionary in descending order
-        self.self.tool_frequency = dict(sorted(self.tool_frequency.items(), key=lambda item: item[1], reverse=True))
+        self.tool_frequency = dict(sorted(self.tool_frequency.items(), key=lambda item: item[1], reverse=True))
 
         counter = Counter(self.tool_frequency)
         self.keys_frequency = list(counter.keys())
