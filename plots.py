@@ -13,6 +13,7 @@ from datetime import datetime
 import pathlib
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
+import traceback
 
 
 def config_plot():
@@ -116,32 +117,50 @@ class MatplotlibSwitchGraphs(Frame):
         if self.previous_index == self.max_num_of_pages:
             try:
                 self.ax4[0].clear()    # clear axes from last graph
-                self.ax4[0].remove()   # remove axes from last graph
-                self.ax4[1].clear()  # clear axes from last graph
-                self.ax4[1].remove()  # remove axes from last graph
-                self.ax4.clear()  # clear axes from last graph
-                self.ax4.remove()  # remove axes from last graph
             except AttributeError:
-                print("Graph #1 Axis Clear Attribute error")
+                traceback.print_exc()
                 pass
-            except ValueError:
+            try:
+                self.ax4[0].remove()   # remove axes from last graph
+            except AttributeError:
+                traceback.print_exc()
                 pass
+            try:
+                self.ax4[1].clear()  # clear axes from last graph
+            except AttributeError:
+                traceback.print_exc()
+                pass
+            try:
+                self.ax4[1].remove()  # remove axes from last graph
+            except AttributeError:
+                traceback.print_exc()
+                pass
+
         elif self.previous_index == (self.graphIndex + 1):
             try:
                 self.ax2.clear()    # clear axes from Graph #2
+            except AttributeError:
+                traceback.print_exc()
+                pass
+            try:
                 self.ax2.remove()   # remove axes from Graph #2
             except AttributeError:
+                traceback.print_exc()
                 pass
             except ValueError:
                 pass
         elif self.previous_index == 0:
             try:
                 self.ax.clear()  # remove axes from original graph
+            except AttributeError:
+                traceback.print_exc()
+                pass
+            try:
                 self.ax.remove()
             except AttributeError:
+                traceback.print_exc()
                 pass
-            except ValueError:
-                pass
+
 
         # Set Graph #1 - Bar Chart
         self.ax1 = self.fig.subplots()
@@ -279,24 +298,37 @@ class MatplotlibSwitchGraphs(Frame):
         if self.previous_index == (self.graphIndex + 1):
             try:
                 self.ax3[0].clear()  # clear axes from Graph #3
-                self.ax3[0].remove()  # remove axes from Graph #3
-                self.ax3[1].clear()  # clear axes from Graph #3
-                self.ax3[1].remove()  # remove axes from Graph #3
-                self.ax3.clear()    # clear axes from Graph #3
-                self.ax3.remove()   # remove axes from Graph #3
             except AttributeError:
-                print("Graph #2 Axis Clear Attribute error")
+                traceback.print_exc()
                 pass
-            except ValueError:
+            try:
+                self.ax3[0].remove()  # remove axes from Graph #3
+            except AttributeError:
+                traceback.print_exc()
                 pass
+            try:
+                self.ax3[1].clear()  # clear axes from Graph #3
+            except AttributeError:
+                traceback.print_exc()
+                pass
+            try:
+                self.ax3[1].remove()  # remove axes from Graph #3
+            except AttributeError:
+                traceback.print_exc()
+                pass
+
         elif self.previous_index == (self.graphIndex - 1):
             try:
                 self.ax1.clear()    # clear axes from Graph #1
+            except AttributeError:
+                traceback.print_exc()
+                pass
+            try:
                 self.ax1.remove()   # remove axes from Graph #1
             except AttributeError:
+                traceback.print_exc()
                 pass
-            except ValueError:
-                pass
+
 
         # Set Graph #2
         self.ax2 = self.fig.subplots()
@@ -378,24 +410,37 @@ class MatplotlibSwitchGraphs(Frame):
         if self.previous_index == (self.graphIndex + 1):
             try:
                 self.ax4[0].clear()    # clear axes from Graph #4
-                self.ax4[0].remove()   # remove axes from Graph #4
-                self.ax4[1].clear()  # clear axes from Graph #4
-                self.ax4[1].remove()  # remove axes from Graph #4
-                self.ax4.clear()  # clear axes from Graph #4
-                self.ax4.remove()  # remove axes from Graph #4
             except AttributeError:
-                print("Graph #3 Axis Clear Attribute error")
+                traceback.print_exc()
                 pass
-            except ValueError:
+            try:
+                self.ax4[0].remove()   # remove axes from Graph #4
+            except AttributeError:
+                traceback.print_exc()
                 pass
+            try:
+                self.ax4[1].clear()  # clear axes from Graph #4
+            except AttributeError:
+                traceback.print_exc()
+                pass
+            try:
+                self.ax4[1].remove()  # remove axes from Graph #4
+            except AttributeError:
+                traceback.print_exc()
+                pass
+
         elif self.previous_index == (self.graphIndex - 1):
             try:
                 self.ax2.clear()    # clear axes from Graph #2
+            except AttributeError:
+                traceback.print_exc()
+                pass
+            try:
                 self.ax2.remove()   # remove axes from Graph #2
             except AttributeError:
+                traceback.print_exc()
                 pass
-            except ValueError:
-                pass
+
 
         explode_val=[]
         for elem in range(0, len(data_val)):
@@ -490,24 +535,37 @@ class MatplotlibSwitchGraphs(Frame):
         if self.previous_index == 1:
             try:
                 self.ax1.clear()    # clear axes from Graph #1
+            except AttributeError:
+                traceback.print_exc()
+                pass
+            try:
                 self.ax1.remove()   # remove axes from Graph #1
             except AttributeError:
+                traceback.print_exc()
                 pass
-            except ValueError:
-                pass
+
         elif self.previous_index == (self.graphIndex - 1):
             try:
                 self.ax3[0].clear()    # clear axes from Graph #3
-                self.ax3[0].remove()   # remove axes from Graph #3
-                self.ax3[1].clear()  # clear axes from Graph #3
-                self.ax3[1].remove()  # remove axes from Graph #3
-                self.ax3.clear()  # clear axes from Graph #3
-                self.ax3.remove()  # remove axes from Graph #3
             except AttributeError:
-                print("Graph #4 Axis Clear Attribute error")
+                traceback.print_exc()
                 pass
-            except ValueError:
+            try:
+                self.ax3[0].remove()   # remove axes from Graph #3
+            except AttributeError:
+                traceback.print_exc()
                 pass
+            try:
+                self.ax3[1].clear()  # clear axes from Graph #3
+            except AttributeError:
+                traceback.print_exc()
+                pass
+            try:
+                self.ax3[1].remove()  # remove axes from Graph #3
+            except AttributeError:
+                traceback.print_exc()
+                pass
+
 
         explode_val = []
         for elem in range(0, len(data_val)):
