@@ -2,7 +2,7 @@
 #
 # Downtime data plotting script
 # September 4, 2022
-# Version 0.1.1
+# Version 0.2.2
 #
 ##################################
 import tkinter
@@ -58,7 +58,7 @@ class App(Frame):
         self.df_date = pd.DataFrame()
         self.df_buff = pd.DataFrame()
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
-        self.app_version = "v0.2.1"
+        self.app_version = "v0.2.2"
 
         self.tool_calc_result = {'duration': [], 'event_count': [], 'keys': []}
         self.launched_flag = []
@@ -560,7 +560,7 @@ class App(Frame):
 
                     #self.temp_dict[num]["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[k])
 
-                    # here is the bug !!!!!!!
+
                     # if not last row and all equipment
                     if drop_down_selection != 'All PTA & TMA' and k != len(self.df_temp):
                         self.downtime_delta["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[k])
@@ -858,7 +858,7 @@ class TopWindow(tk.Toplevel):
         self.df_buff = myData
         self.tool_data = myToolData
 
-        self.title("Downtime Data Analyzer v0.2.1 - Plots")
+        self.title("Downtime Data Analyzer v0.2.2 - Plots")
         img_file_name = "small_icon.ico"
         curr_dirr = pathlib.Path(img_file_name).parent.resolve()
         img_path = curr_dirr.joinpath(img_file_name)
@@ -897,7 +897,7 @@ class TopWindow(tk.Toplevel):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     root = Tk()
-    root.title("Downtime Data Analyzer v0.2.1")
+    root.title("Downtime Data Analyzer v0.2.2")
     img_file_name = "small_icon.ico"
     curr_dirr = pathlib.Path(img_file_name).parent.resolve()
     img_path = curr_dirr.joinpath(img_file_name)
