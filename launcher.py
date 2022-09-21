@@ -558,9 +558,11 @@ class App(Frame):
                     mem_date = datetime.strptime(self.df_temp['createdon'].iloc[k], date_frmt)
                     mem_status = self.df_temp['cr483_cranestatus'].iloc[k]
 
-                    self.temp_dict[num]["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[k])
+                    #self.temp_dict[num]["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[k])
 
-                    if drop_down_selection != 'All PTA & TMA':
+                    # here is the bug !!!!!!!
+                    # if not last row and all equipment
+                    if drop_down_selection != 'All PTA & TMA' and k != len(self.df_temp):
                         self.downtime_delta["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[k])
                         self.temp_dict[num]["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[k])
 
@@ -644,6 +646,7 @@ class App(Frame):
         print(self.temp_dict[0])
         print(self.temp_dict[1])
         print(self.temp_dict[2])
+        # look at PTA #7 there is bug 08/31/2022
 
         # If drop down selection is not for all devices plot pie chart by Tool Group
         self.date_picker = []
@@ -677,11 +680,13 @@ class App(Frame):
         # Test data:
         combined_dict = {'tool_group': [],'status': [],'downtime_duration': []}
         #test_data = {
-        #    0:{'equipment_name': ['PTA01'], 'tool_group': ['Cabin', 'PM', "Extractor", "Bridge", "Some very very long name tool"],'status': ['Partially Available', 'Not Available'],'downtime_duration': [10.7, 122.8, 13.0, 11.0, 25.0]},
+        #    0:{'equipment_name': ['PTA01'], 'tool_group': ['Cabin', 'PM', "Extractor", "Bridge", "Some tool"],'status': ['Partially Available', 'Not Available'],'downtime_duration': [10.7, 122.8, 13.0, 11.0, 25.0]},
         #    1:{'equipment_name': ['PTA02'], 'tool_group': ['PM'], 'status': [], 'downtime_duration': []},
         #    2:{'equipment_name': ['PTA03'], 'tool_group': ['N/A', 'N/A', 'N/A', 'N/A'],'status': ['Not Available', 'Not Available', 'Partially Available', 'Not Available'],'downtime_duration': [8.9, 2.5, 0.0, 16.4]}
         #}
         test_data = self.temp_dict
+        print("below is data from frame")
+        print(test_data)
         # Empty list to store lists after join command
         result = [[], [], [], []]
 
@@ -692,13 +697,20 @@ class App(Frame):
                     result[num] = result[num] + test_data[index][elem]
             combined_dict[elem].append(result[num])
         logging.info(f"Combined dictionary: {combined_dict}")
+        print(f"Combined dictionary: {combined_dict}")
 
         self.tool_frequency = {}
         # For each element in tool group key find tool breakdown frequency
         # Count number of duplicates in the tool_group list
+        print("Combined dictionary")
+        print(combined_dict)
+        print("[]0 dictionary")
+        print(combined_dict['tool_group'][0])
         for items in combined_dict['tool_group'][0]:
             self.tool_frequency[items] = combined_dict['tool_group'][0].count(items)
 
+        print("blblblb")
+        print(self.tool_frequency)
         # Sort dictionary in descending order
         self.tool_frequency = dict(sorted(self.tool_frequency.items(), key=lambda item: item[1], reverse=True))
 
@@ -712,6 +724,8 @@ class App(Frame):
 
         tool_downtime = {}
         # For each item in tool group key find downtime per tool group
+        print("length of the combinded dict")
+        print(combined_dict['tool_group'][0])
         for index, items in enumerate(combined_dict['tool_group'][0], start=0):
 
             if items in tool_downtime:   # Key Already Exists
@@ -719,6 +733,12 @@ class App(Frame):
             else:  # Key Doesn't Exist
                 logging.info("Key Doesn't Exist")
                 tool_downtime[items] = [combined_dict['downtime_duration'][0][index]]
+                print("Key doesnt exists")
+                print("length of combined_dict['tool_group'][0]")
+                print(len(combined_dict['tool_group'][0]))
+                print("index")
+                print(index)
+                print(tool_downtime[items])
 
         # Find Sum of downtime duration per tool group
         logging.info(f"Tool downtime Dictionary Before Sum(): { tool_downtime.items()}")
