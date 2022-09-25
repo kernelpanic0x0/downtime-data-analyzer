@@ -53,8 +53,9 @@ class App(Frame):
         self.ui_file_menues()
         self.ui_buttons()
 
-        self.df_temp = pd.DataFrame()
+        self.df_sorted = pd.DataFrame()
         self.df = pd.DataFrame()
+        self.df_sorted = pd.DataFrame()
         self.df_date = pd.DataFrame()
         self.df_buff = pd.DataFrame()
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -127,9 +128,8 @@ class App(Frame):
         equipment_comb = ttk.Combobox(self.label_frame, textvariable=self.selected_equipment)
         equipment_comb.grid(column=3, row=2, padx=10, sticky=W)
         # self.selected_equipment.trace('w', self.get_selected_equipmnt())
-        equipment_comb['values'] = ('All PTA & TMA', 'PTA01', 'PTA02', 'PTA03', 'PTA04',
-                                    'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
-                                    'TMA11', 'TMA12', 'TMA13', 'TMA14')
+        equipment_comb['values'] = ('PTA & TMA', 'ABRF', 'Gantry', 'CTC',
+                                    '2x20', 'MLLB', 'Fiberlabs', 'Raising Girders', 'Hoppers')
         equipment_comb['state'] = 'readonly'
         equipment_comb.current(0)
         equipment_comb.bind('<<ComboboxSelected>>', self.drop_down_activate)
@@ -257,13 +257,13 @@ class App(Frame):
             self.tree.delete(item)
 
         elem_count = 0
-        for index in range(0, len(self.df_temp)):
+        for index in range(0, len(self.df_sorted)):
             if elem_count % 2 == 0:  # even row
                 self.tree.insert(parent='', index=index, iid=index,
-                                 values=self.df_temp.loc[index, :].values.tolist(), tags=('odd_row',))
+                                 values=self.df_sorted.loc[index, :].values.tolist(), tags=('odd_row',))
             else:
                 self.tree.insert(parent='', index=index, iid=index,
-                                 values=self.df_temp.loc[index, :].values.tolist(), tags=('even_row',))
+                                 values=self.df_sorted.loc[index, :].values.tolist(), tags=('even_row',))
             elem_count += 1
 
         self.tree.tag_configure('odd_row', background='#F0F0FF')
@@ -277,13 +277,14 @@ class App(Frame):
 
         if self.is_file_date_valid():
             print("Sort dataframe by Start Date")
+            # Filter data by date range based on drop down values
             self.filter_data_by_date(datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').date(),
                                      datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').date())
-            if self.selected_equipment.get() != "All PTA & TMA":
-                self.df_temp = self.df_temp.loc[self.df_temp['cr483_name'] == self.selected_equipment.get()]
-            self.df_temp.index = pd.RangeIndex(len(self.df_temp.index))
+
+            self.filter_data_by_name()
+
             print("sorted by name")
-            print(self.df_temp)
+            print(self.df_sorted)
             self.tree_insert()
         else:
             pass
@@ -345,11 +346,37 @@ class App(Frame):
         end_date = end_date.strftime('%Y-%m-%d %H:%M:%S')
 
         try:
-            self.df_temp = self.df.loc[self.df['createdon'].between(start_date, end_date)]
-            self.df_temp.index = pd.RangeIndex(len(self.df_temp.index))
+            self.df_sorted = self.df.loc[self.df['createdon'].between(start_date, end_date)]
+            self.df_sorted.index = pd.RangeIndex(len(self.df_sorted.index))
+            self.filter_data_by_name()
             self.tree_insert()
         except KeyError:
-            print("Dataframe was not loaded")
+            logging.exception("Dataframe was not loaded")
+
+    def filter_data_by_name(self):
+        """
+        This function filters data based on drop down selection for equipment name
+        :return:
+        """
+
+        # Filter rows that contain equipment in drop down selection
+        if self.selected_equipment.get() == "PTA & TMA":
+            self.df_sorted = self.df_sorted.loc[self.df_sorted['cr483_name'].str.contains("PTA|TMA")]
+        elif self.selected_equipment.get() == "Fiberlabs":
+            self.df_sorted = self.df_sorted.loc[self.df_sorted['cr483_name'].str.contains("Fiberlab")]
+
+        elif self.selected_equipment.get() == "Raising Girders":
+            self.df_sorted = self.df_sorted.loc[self.df_sorted['cr483_name'].str.contains("Girder")]
+
+        elif self.selected_equipment.get() == "Hoppers":
+            self.df_sorted = self.df_sorted.loc[self.df_sorted['cr483_name'].str.contains("Hopper")]
+
+        else:
+            self.df_sorted = self.df_sorted.loc[self.df_sorted['cr483_name'].str.contains(self.selected_equipment.get())]
+
+        # Re-index data frame
+        self.df_sorted.index = pd.RangeIndex(len(self.df_sorted.index))
+        logging.info(f"Filtered data by equipment name: {self.df_sorted}")
 
     def convert_date(self, *args):
         print("converting date")
@@ -407,7 +434,7 @@ class App(Frame):
         if self.is_file_date_valid():
             try:
                 file_to_save = fd.asksaveasfile(mode='w', defaultextension=".csv")
-                self.df_temp.to_csv(file_to_save, line_terminator='\r', encoding='utf-8')
+                self.df_sorted.to_csv(file_to_save, line_terminator='\r', encoding='utf-8')
                 messagebox.showinfo("File Saved Successfully", "File Saved Successfully!")
             except AttributeError:
                 logging.exception("User cancelled save operation")
@@ -431,6 +458,8 @@ class App(Frame):
             self.df = pd.read_csv(file_name, usecols=data_columns, na_filter=False)  # Columns to read from .csv
             self.df = self.df.reindex(columns=data_columns_reindex)  # Reassign order of columns:
 
+
+
             # Check if valid column exists & sort by date
             try:
                 # CreateOn column conversion from Zulu to PST time
@@ -445,10 +474,11 @@ class App(Frame):
                 # Create a deep copy of dataframe
                 # Modifications to new dataframe will not modify original
 
-                self.df_temp = self.df.copy(deep=True)
+                self.df_sorted = self.df.copy(deep=True)
+                self.filter_data_by_name()
                 print(self.df)
-                print(self.df_temp)
-                print('Insert data into tree view table')
+                print(self.df_sorted)
+                logging.info(f"Filtered data by equipment name: {self.df_sorted}")
                 self.tree_insert()
             except KeyError:
                 logging.exception("Wrong column names")
@@ -470,7 +500,7 @@ class App(Frame):
         # For each element in tree view column names
         # Add error message to column of df_temp
         for i in range(0, len(data_columns)):
-            self.df_temp.loc[0, data_columns[i]] = str_msg
+            self.df_sorted.loc[0, data_columns[i]] = str_msg
         self.tree_insert()  # Write message to tree view table
 
     def calculate_downtime_durr(self, *args):
@@ -484,56 +514,84 @@ class App(Frame):
         end_date_str = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').strftime('%m/%d/%y')
         drop_down_selection = self.selected_equipment.get()
 
-        if drop_down_selection == 'All PTA & TMA':
-            equipment_list = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
+        if drop_down_selection == 'PTA & TMA':
+            self.equipment_list = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
                               'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
                               'TMA11', 'TMA12', 'TMA13', 'TMA14']
+        elif drop_down_selection == 'ABRF':
+            self.equipment_list = ['ABRF01', 'ABRF02']
+
+        elif drop_down_selection == 'Gantry':
+            self.equipment_list = ['Gantry']
+
+        elif drop_down_selection == 'CTC':
+            self.equipment_list = ['CTC']
+
+        elif drop_down_selection == '2x20':
+            self.equipment_list = ['2x20']
+
+        elif drop_down_selection == 'MLLB':
+            self.equipment_list = ['MLLB01', 'MLLB02', 'MLLB03', 'MLLB04', 'MLLB05', 'MLLB06']
+
+        elif drop_down_selection == 'Fiberlabs':
+            self.equipment_list = ['Fiberlab01', 'Fiberlab02', 'Fiberlab03', 'Fiberlab04']
+
+        elif drop_down_selection == 'Raising Girders':
+            self.equipment_list = ['Girder1000', 'Girder2000', 'Girder3000', 'Girder4000']
+
+        elif drop_down_selection == 'Hoppers':
+            self.equipment_list = ['Hopper01', 'Hopper02', 'Hopper03', 'Hopper04', 'Hopper05',
+                              'Hopper06', 'Hopper07', 'Hopper08', 'Hopper09', 'Hopper10']
+
         else:
-            equipment_list = [drop_down_selection]
+            self.equipment_list = [drop_down_selection]
 
+        # Data frame to use for calculation is copy of data sorted by date
+        self.df_date = self.df_sorted.copy()  # Data frame stores values filtered by Date Range
+
+        # Data frame to store results to be stored in tree view
         self.df_buff = pd.DataFrame()  # Data frame for values going to tree view table
-        self.df_date = self.df_temp.copy()  # Data frame stores values filtered by Date Range
 
-        mem_tool = []
-        mem_downt_arr = []
         # Dictionary to store deltas for each calculation
         self.downtime_delta = {"equipment_name": [], "tool_group": [], "status": [], "downtime_duration": []}
 
         # Nested dictionary for each piece of equipment
-        self.temp_dict = {0: {}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {},
-                           7: {}, 8: {}, 9: {}, 10: {}, 11: {}, 12: {}, 13: {}}
+        self.temp_dict = {}
+        for i in range(len(self.equipment_list)):
+            self.temp_dict[i] = {}
+        print("This should be empty dictionary")
+        print(self.temp_dict)
+        #self.temp_dict = {0: {}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {},
+        #                   7: {}, 8: {}, 9: {}, 10: {}, 11: {}, 12: {}, 13: {}}
         for key in range(0,len(self.temp_dict)):
             self.temp_dict[key] = {"equipment_name": [], "tool_group": [], "status": [], "downtime_duration": []}
-
+        print("This should be not empty dictionary")
+        print(self.temp_dict)
         # Iterate over each element of the dataframe sorted by equipment name
         # Determine when status changed from Not Available to Available
         # Determine when status changed from Partially Available to Available
         # Record time difference
-        for num, element in enumerate(equipment_list, start=0):
+        for num, element in enumerate(self.equipment_list, start=0):
 
             # Sort dataframe by equipment name && Reset index of the dataframe
-            self.df_temp = self.df_date.loc[self.df_date['cr483_name'] == equipment_list[num]]
-            self.df_temp.index = pd.RangeIndex(len(self.df_temp.index))
+            self.df_sorted = self.df_date.loc[self.df_date['cr483_name'] == self.equipment_list[num]]
+            self.df_sorted.index = pd.RangeIndex(len(self.df_sorted.index))
 
             ### test
-            self.temp_dict[num]["equipment_name"].append(equipment_list[num])
-            self.downtime_delta["equipment_name"].append(equipment_list[num])
+            self.temp_dict[num]["equipment_name"].append(self.equipment_list[num])
+            self.downtime_delta["equipment_name"].append(self.equipment_list[num])
 
             # Get first value from first row of dataframe
             # Reject first row if it has garbage name (early database entries have garbage)
             first_row = 0
-            for i in range(0, len(self.df_temp)):
+            for i in range(0, len(self.df_sorted)):
 
-                mem_date = datetime.strptime(self.df_temp['createdon'].iloc[i], date_frmt)
-                mem_status = self.df_temp['cr483_cranestatus'].iloc[i]
+                mem_date = datetime.strptime(self.df_sorted['createdon'].iloc[i], date_frmt)
+                mem_status = self.df_sorted['cr483_cranestatus'].iloc[i]
 
-                if mem_status == "Not Available":
-                    self.downtime_delta["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[i])
-                    self.temp_dict[num]["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[i])
-                    break
-                elif mem_status == "Partially Available":
-                    self.downtime_delta["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[i])
-                    self.temp_dict[num]["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[i])
+                if mem_status == "Not Available" or mem_status == "Partially Available":
+                    self.downtime_delta["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[i])
+                    self.temp_dict[num]["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[i])
                     break
                 elif mem_status == "Available":
                     break
@@ -547,24 +605,24 @@ class App(Frame):
             sum_partial_downtime_durr = 0
 
             # For each row of dataframe sorted by equipment name
-            for k in range(first_row, len(self.df_temp)):
+            for k in range(first_row, len(self.df_sorted)):
 
-                curr_status = self.df_temp['cr483_cranestatus'].iloc[k]  # Get current status
-                curr_date = datetime.strptime(self.df_temp['createdon'].iloc[k], date_frmt)  # Get current date
+                curr_status = self.df_sorted['cr483_cranestatus'].iloc[k]  # Get current status
+                curr_date = datetime.strptime(self.df_sorted['createdon'].iloc[k], date_frmt)  # Get current date
 
                 # Start of Downtime
                 if ((curr_status == 'Not Available' and mem_status == 'Available')
                         or (curr_status == 'Partially Available' and mem_status == 'Available')):
-                    mem_date = datetime.strptime(self.df_temp['createdon'].iloc[k], date_frmt)
-                    mem_status = self.df_temp['cr483_cranestatus'].iloc[k]
+                    mem_date = datetime.strptime(self.df_sorted['createdon'].iloc[k], date_frmt)
+                    mem_status = self.df_sorted['cr483_cranestatus'].iloc[k]
 
                     #self.temp_dict[num]["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[k])
 
 
                     # if not last row and all equipment
-                    if drop_down_selection != 'All PTA & TMA' and k != len(self.df_temp):
-                        self.downtime_delta["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[k])
-                        self.temp_dict[num]["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[k])
+                    if drop_down_selection != 'All PTA & TMA' and k != len(self.df_sorted):
+                        self.downtime_delta["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[k])
+                        self.temp_dict[num]["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[k])
 
                     print("Change in status mem date = ", mem_date)
                 else:
@@ -616,7 +674,7 @@ class App(Frame):
                     partial_downtime_cnt += 1  # Partial Downtime counter
 
             # Write value to first half of the table [ rows 0 to 13 - depends on number of equipment ]
-            self.df_buff.loc[num, 'Equipment Name'] = equipment_list[num]
+            self.df_buff.loc[num, 'Equipment Name'] = self.equipment_list[num]
             self.df_buff.loc[num, 'Tool Group'] = "All Tools"
             self.df_buff.loc[num, 'Status'] = "Not Available"
             self.df_buff.loc[num, 'Date'] = start_date_str + "_to_" + end_date_str
@@ -624,16 +682,16 @@ class App(Frame):
             self.df_buff.loc[num, 'Downtime Count'] = full_downtime_cnt
 
             # Write values to second half of the table [ rows 13 to 27 - depends on number of equipment]
-            self.df_buff.loc[num + len(equipment_list), 'Equipment Name'] = equipment_list[num]
-            self.df_buff.loc[num + len(equipment_list), 'Tool Group'] = "All Tools"
-            self.df_buff.loc[num + len(equipment_list), 'Status'] = "Partially Available"
-            self.df_buff.loc[num + len(equipment_list), 'Date'] = start_date_str + "_to_" + end_date_str
-            self.df_buff.loc[num + len(equipment_list), 'Downtime Duration'] = round(sum_partial_downtime_durr, 1)
-            self.df_buff.loc[num + len(equipment_list), 'Downtime Count'] = partial_downtime_cnt
+            self.df_buff.loc[num + len(self.equipment_list), 'Equipment Name'] = self.equipment_list[num]
+            self.df_buff.loc[num + len(self.equipment_list), 'Tool Group'] = "All Tools"
+            self.df_buff.loc[num + len(self.equipment_list), 'Status'] = "Partially Available"
+            self.df_buff.loc[num + len(self.equipment_list), 'Date'] = start_date_str + "_to_" + end_date_str
+            self.df_buff.loc[num + len(self.equipment_list), 'Downtime Duration'] = round(sum_partial_downtime_durr, 1)
+            self.df_buff.loc[num + len(self.equipment_list), 'Downtime Count'] = partial_downtime_cnt
 
         # Store results of downtime calculation in temporary dataframe
         self.df_buff = self.df_buff.sort_index(ascending=True)
-        self.df_temp = self.df_buff
+        self.df_sorted = self.df_buff
 
 
 
@@ -643,9 +701,8 @@ class App(Frame):
         print(self.downtime_delta["status"])
         print(self.downtime_delta["downtime_duration"])
         print("temp dictionaery")
-        print(self.temp_dict[0])
-        print(self.temp_dict[1])
-        print(self.temp_dict[2])
+        print(self.temp_dict)
+
         # look at PTA #7 there is bug 08/31/2022
 
         # If drop down selection is not for all devices plot pie chart by Tool Group
@@ -653,23 +710,13 @@ class App(Frame):
         self.date_picker.append(self.string_var_strt.get())
         self.date_picker.append(self.string_var_end.get())
 
-        if drop_down_selection != 'All PTA & TMA':
-            print(self.downtime_delta)
-            self.tree_insert()
-            self.dict_test()
-        else:
-            # If drop down selection is for all devices then plot bar chart
-            # print(self.df_buff.duplicated(subset='Tool Group', keep=False).sum())
-            self.tree_insert()
 
-            #self.plot_barchart()
-            #self.plot_system_availability()
-            #self.dict_test()
-            self.calculate_tool_group()
-            self.open_top_window()
-            #plt.show()
-        #self.master.change(plots.matplotlibSwitchGraphs, data=self.df_buff)
-        #self.about_msg()
+        # If drop down selection is for all devices then plot bar chart
+        # print(self.df_buff.duplicated(subset='Tool Group', keep=False).sum())
+        self.tree_insert()
+        self.calculate_tool_group()
+        self.open_top_window()
+
 
     def calculate_tool_group(self):
         """
@@ -760,7 +807,7 @@ class App(Frame):
         self.tool_calc_result['keys'] = self.keys_time
 
     def open_top_window(self):
-        window = TopWindow(self.master, self.df_buff, self.tool_calc_result, self.date_picker)
+        window = TopWindow(self.master, self.df_buff, self.tool_calc_result, self.date_picker, self.equipment_list)
         window.grab_set()
 
     def about_msg(self):
@@ -851,12 +898,13 @@ class AboutTopWindow(tk.Toplevel):
 
 
 class TopWindow(tk.Toplevel):
-    def __init__(self, parent, myData, myToolData, myDate):
+    def __init__(self, parent, myData, myToolData, myDate, equipment_list):
         super().__init__(parent)
 
         self.date_picker = myDate
         self.df_buff = myData
         self.tool_data = myToolData
+        self.equipment_list = equipment_list
 
         self.title("Downtime Data Analyzer v0.2.2 - Plots")
         img_file_name = "small_icon.ico"
@@ -884,7 +932,7 @@ class TopWindow(tk.Toplevel):
         logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
 
         self.iconbitmap(img_path)
-        plots.MatplotlibSwitchGraphs(self, self.df_buff, self.tool_data, self.date_picker)
+        plots.MatplotlibSwitchGraphs(self, self.df_buff, self.tool_data, self.date_picker, self.equipment_list)
 
         def on_closing():
             if messagebox.askokcancel("Quit", "Do you want to close window?"):
@@ -922,8 +970,14 @@ if __name__ == '__main__':
     root.geometry('%dx%d+%d+%d' % (root_width, root_height, x, y))
 
     # Configure debug logger
-    logging.basicConfig(filename='debug.log', encoding='utf-8', level=logging.DEBUG, filemode='w')
-    logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+    logging.basicConfig(level=logging.INFO,
+                        format="%(asctime)s [%(funcName)20s()] [%(levelname)-5.5s] %(message)s",
+                        handlers=[
+                            logging.FileHandler("debug.log"),
+                            logging.StreamHandler()
+                        ])
+    #logging.basicConfig(filename='debug.log', encoding='utf-8', level=logging.DEBUG, filemode='w')
+    #logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
 
     root.iconbitmap(img_path)
 

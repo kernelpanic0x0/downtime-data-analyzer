@@ -24,7 +24,7 @@ def config_plot():
 
 
 class MatplotlibSwitchGraphs(Frame):
-    def __init__(self, master, myData, myToolData, date_picker_arr):
+    def __init__(self, master, myData, myToolData, date_picker_arr, equipment_list):
         print("This is my data", myData)
         print("This is my date", date_picker_arr)
         Frame.__init__(self, master)
@@ -32,6 +32,7 @@ class MatplotlibSwitchGraphs(Frame):
         self.frame = Frame(self.master)
         self.graph_page = "0 / 4"
         self.fig, self.ax = config_plot()
+        self.equipment_list = equipment_list
         self.graphIndex = 1
         self.previous_index = 0
         self.max_num_of_pages = 4  # maximum number of pages, same as number of graphs
@@ -166,9 +167,10 @@ class MatplotlibSwitchGraphs(Frame):
         self.ax1 = self.fig.subplots()
         self.ax1.set_facecolor('lightblue')
 
-        columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04', 'PTA05',
-                   'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
-                   'TMA11', 'TMA12', 'TMA13', 'TMA14')
+        #columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04', 'PTA05',
+        #           'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
+        #           'TMA11', 'TMA12', 'TMA13', 'TMA14')
+        columns = self.equipment_list
         col_width = 1 / len(columns)
         print("Col width is:", col_width)
         print("Half of that", col_width / 2)
@@ -286,9 +288,10 @@ class MatplotlibSwitchGraphs(Frame):
         down_partially_available = self.dt_val.iloc[int((len(self.dt_val) / 2)):len(self.dt_val), 4].values.tolist()
         data = [down_not_available, down_partially_available]
 
-        columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04', 'PTA05',
-                   'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
-                   'TMA11', 'TMA12', 'TMA13', 'TMA14')
+        #columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04', 'PTA05',
+        #           'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
+        #           'TMA11', 'TMA12', 'TMA13', 'TMA14')
+        columns = self.equipment_list
 
         rows = ['Not Available', 'Partially Available']
 
