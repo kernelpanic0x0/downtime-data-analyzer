@@ -506,15 +506,19 @@ class App(Frame):
 
     def calculate_downtime_durr(self, *args):
         """
-        This function calculates downtime duration & count
+        This function calculates downtime duration & number of downtime events
         """
 
         # Date format for time difference calculation
         date_frmt = '%Y-%m-%d %H:%M:%S'  # '2022-05-26 10:37:08'
 
-        # Calendar selections for start / end dates
-        calendar_start_date = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').strftime('%m/%d/%y')
-        calendar_end_date = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').strftime('%m/%d/%y')
+        # Calendar selections for start / end dates - in date time format
+        calendar_start_date = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y')
+        calendar_end_date = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y')
+
+        # Convert calendar values to string
+        calendar_start_date_str = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').strftime('%m/%d/%y')
+        calendar_end_date_str = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').strftime('%m/%d/%y')
 
         # Selected equipment in drop down menu
         drop_down_selection = self.selected_equipment.get()
@@ -557,9 +561,6 @@ class App(Frame):
         # Data frame to store results to be stored in tree view
         self.df_buff = pd.DataFrame()  # Data frame for values going to tree view table
 
-        # Dictionary to store deltas for each calculation
-        self.downtime_delta = {"equipment_name": [], "tool_group": [], "status": [], "downtime_duration": []}
-
         # Nested dictionary for each piece of equipment
         self.tool_dict = {}
         for i in range(len(self.equipment_list)):
@@ -582,9 +583,8 @@ class App(Frame):
             self.df_sorted = self.df_date.loc[self.df_date['cr483_name'] == self.equipment_list[num]]
             self.df_sorted.index = pd.RangeIndex(len(self.df_sorted.index))
 
-            ### test
+            # Attach equipment name to data frame
             self.tool_dict[num]["equipment_name"].append(self.equipment_list[num])
-            self.downtime_delta["equipment_name"].append(self.equipment_list[num])
 
             # Get first value from first row of dataframe
             # Reject first row if it has garbage name (early database entries have garbage)
@@ -595,7 +595,6 @@ class App(Frame):
                 mem_status = self.df_sorted['cr483_cranestatus'].iloc[i]
 
                 if mem_status == "Not Available" or mem_status == "Partially Available":
-                    self.downtime_delta["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[i])
                     self.tool_dict[num]["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[i])
                     break
                 elif mem_status == "Available":
@@ -625,7 +624,6 @@ class App(Frame):
 
                     # If not last row of the table
                     if k != len(self.df_sorted):
-                        self.downtime_delta["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[k])
                         self.tool_dict[num]["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[k])
                     else:
                         # If the record is last in the row with "Not Available" status
@@ -645,7 +643,23 @@ class App(Frame):
                     logging.info("No change in Status")
 
                 # End of Downtime
-                if ((row_status == 'Available' and mem_status == 'Not Available')
+                # If first entry begins with "Available" assume "Not Available" was
+                # from calendar start date selection
+                if (row_status == 'Available') and (k == first_row):
+                    # record tool group and calculate time difference from the time stamp to drop down end date
+                    downtime_complete_hrs = row_timestamp - calendar_start_date
+                    downtime_complete_hrs = convert_to_hrs(downtime_complete_hrs.total_seconds())
+
+                    # Record tool group
+                    self.tool_dict[num]["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[k])
+
+                    # Record time difference - this is Time of being out of service
+                    self.tool_dict[num]["downtime_duration"].append(downtime_complete_hrs)
+                    self.tool_dict[num]["status"].append('Not Available')
+
+                    full_downtime_cnt += 1  # Full downtime counter
+
+                elif ((row_status == 'Available' and mem_status == 'Not Available')
                         or (row_status == 'Partially Available' and mem_status == 'Not Available')):
                     # Record time difference - this is Time of being Fully out of service
                     downtime_complete_hrs = row_timestamp - mem_date
@@ -687,7 +701,7 @@ class App(Frame):
             self.df_buff.loc[num, 'Equipment Name'] = self.equipment_list[num]
             self.df_buff.loc[num, 'Tool Group'] = "All Tools"
             self.df_buff.loc[num, 'Status'] = "Not Available"
-            self.df_buff.loc[num, 'Date'] = calendar_start_date + "_to_" + calendar_end_date
+            self.df_buff.loc[num, 'Date'] = calendar_start_date_str + "_to_" + calendar_end_date_str
             self.df_buff.loc[num, 'Downtime Duration'] = round(sum_downtime_complete_hrs, 1)
             self.df_buff.loc[num, 'Downtime Count'] = full_downtime_cnt
 
@@ -695,7 +709,7 @@ class App(Frame):
             self.df_buff.loc[num + len(self.equipment_list), 'Equipment Name'] = self.equipment_list[num]
             self.df_buff.loc[num + len(self.equipment_list), 'Tool Group'] = "All Tools"
             self.df_buff.loc[num + len(self.equipment_list), 'Status'] = "Partially Available"
-            self.df_buff.loc[num + len(self.equipment_list), 'Date'] = calendar_start_date + "_to_" + calendar_end_date
+            self.df_buff.loc[num + len(self.equipment_list), 'Date'] = calendar_start_date_str + "_to_" + calendar_end_date_str
             self.df_buff.loc[num + len(self.equipment_list), 'Downtime Duration'] = round(sum_downtime_partial_hrs, 1)
             self.df_buff.loc[num + len(self.equipment_list), 'Downtime Count'] = partial_downtime_cnt
 
