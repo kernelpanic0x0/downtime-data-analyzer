@@ -282,7 +282,8 @@ class App(Frame):
                                      datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').date())
 
             self.filter_data_by_name()
-
+            # Clear dataframe that holds calculation
+            self.launched_flag.clear()
             print("sorted by name")
             print(self.df_sorted)
             self.tree_insert()
@@ -510,10 +511,15 @@ class App(Frame):
 
         # Date format for time difference calculation
         date_frmt = '%Y-%m-%d %H:%M:%S'  # '2022-05-26 10:37:08'
-        start_date_str = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').strftime('%m/%d/%y')
-        end_date_str = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').strftime('%m/%d/%y')
+
+        # Calendar selections for start / end dates
+        calendar_start_date = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').strftime('%m/%d/%y')
+        calendar_end_date = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').strftime('%m/%d/%y')
+
+        # Selected equipment in drop down menu
         drop_down_selection = self.selected_equipment.get()
 
+        # Select equipment list based on drop down selection
         if drop_down_selection == 'PTA & TMA':
             self.equipment_list = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
                               'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
@@ -542,7 +548,6 @@ class App(Frame):
         elif drop_down_selection == 'Hoppers':
             self.equipment_list = ['Hopper01', 'Hopper02', 'Hopper03', 'Hopper04', 'Hopper05',
                               'Hopper06', 'Hopper07', 'Hopper08', 'Hopper09', 'Hopper10']
-
         else:
             self.equipment_list = [drop_down_selection]
 
@@ -556,17 +561,17 @@ class App(Frame):
         self.downtime_delta = {"equipment_name": [], "tool_group": [], "status": [], "downtime_duration": []}
 
         # Nested dictionary for each piece of equipment
-        self.temp_dict = {}
+        self.tool_dict = {}
         for i in range(len(self.equipment_list)):
-            self.temp_dict[i] = {}
-        print("This should be empty dictionary")
-        print(self.temp_dict)
-        #self.temp_dict = {0: {}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {},
-        #                   7: {}, 8: {}, 9: {}, 10: {}, 11: {}, 12: {}, 13: {}}
-        for key in range(0,len(self.temp_dict)):
-            self.temp_dict[key] = {"equipment_name": [], "tool_group": [], "status": [], "downtime_duration": []}
-        print("This should be not empty dictionary")
-        print(self.temp_dict)
+            self.tool_dict[i] = {}
+        logging.info(f"Empty Tool Dictionary: {self.tool_dict}")
+
+        # Add keys to tool dictionary
+        # self.temp_dict = {0: {}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}, etc}
+        for key in range(0, len(self.tool_dict)):
+            self.tool_dict[key] = {"equipment_name": [], "tool_group": [], "status": [], "downtime_duration": []}
+        logging.info(f"Tool Dictionary with keys: {self.tool_dict}")
+
         # Iterate over each element of the dataframe sorted by equipment name
         # Determine when status changed from Not Available to Available
         # Determine when status changed from Partially Available to Available
@@ -578,7 +583,7 @@ class App(Frame):
             self.df_sorted.index = pd.RangeIndex(len(self.df_sorted.index))
 
             ### test
-            self.temp_dict[num]["equipment_name"].append(self.equipment_list[num])
+            self.tool_dict[num]["equipment_name"].append(self.equipment_list[num])
             self.downtime_delta["equipment_name"].append(self.equipment_list[num])
 
             # Get first value from first row of dataframe
@@ -591,7 +596,7 @@ class App(Frame):
 
                 if mem_status == "Not Available" or mem_status == "Partially Available":
                     self.downtime_delta["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[i])
-                    self.temp_dict[num]["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[i])
+                    self.tool_dict[num]["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[i])
                     break
                 elif mem_status == "Available":
                     break
@@ -601,115 +606,107 @@ class App(Frame):
             # Set downtime counters
             full_downtime_cnt = 0
             partial_downtime_cnt = 0
-            sum_full_downtime_durr = 0
-            sum_partial_downtime_durr = 0
+            sum_downtime_complete_hrs = 0
+            sum_downtime_partial_hrs = 0
 
             # For each row of dataframe sorted by equipment name
             for k in range(first_row, len(self.df_sorted)):
 
-                curr_status = self.df_sorted['cr483_cranestatus'].iloc[k]  # Get current status
-                curr_date = datetime.strptime(self.df_sorted['createdon'].iloc[k], date_frmt)  # Get current date
+                row_status = self.df_sorted['cr483_cranestatus'].iloc[k]  # Get current status
+                row_timestamp = datetime.strptime(self.df_sorted['createdon'].iloc[k], date_frmt)  # Get current date
 
                 # Start of Downtime
-                if ((curr_status == 'Not Available' and mem_status == 'Available')
-                        or (curr_status == 'Partially Available' and mem_status == 'Available')):
-                    mem_date = datetime.strptime(self.df_sorted['createdon'].iloc[k], date_frmt)
-                    mem_status = self.df_sorted['cr483_cranestatus'].iloc[k]
+                if ((row_status == 'Not Available' and mem_status == 'Available')
+                        or (row_status == 'Partially Available' and mem_status == 'Available')):
 
-                    #self.temp_dict[num]["tool_group"].append(self.df_temp['cr483_toolgroup'].iloc[k])
+                    # Set memory variable
+                    mem_date = row_timestamp
+                    mem_status = row_status
 
-
-                    # if not last row and all equipment
-                    if drop_down_selection != 'All PTA & TMA' and k != len(self.df_sorted):
+                    # If not last row of the table
+                    if k != len(self.df_sorted):
                         self.downtime_delta["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[k])
-                        self.temp_dict[num]["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[k])
+                        self.tool_dict[num]["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[k])
+                    else:
+                        # If the record is last in the row with "Not Available" status
+                        # record tool group and calculate time difference from the time stamp to drop down end date
+                        downtime_complete_hrs = calendar_end_date - row_timestamp
+                        downtime_complete_hrs = convert_to_hrs(downtime_complete_hrs.total_seconds())
 
-                    print("Change in status mem date = ", mem_date)
+                        # Record tool group
+                        self.tool_dict[num]["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[k])
+
+                        # Record time difference - this is Time of being out of service
+                        self.tool_dict[num]["downtime_duration"].append(downtime_complete_hrs)
+                        self.tool_dict[num]["status"].append(row_status)
+
+                    logging.info(f"Change in status mem date = {mem_date}")
                 else:
-                    print("No change in Status")
+                    logging.info("No change in Status")
 
                 # End of Downtime
-                if ((curr_status == 'Available' and mem_status == 'Not Available')
-                        or (curr_status == 'Partially Available' and mem_status == 'Not Available')):
+                if ((row_status == 'Available' and mem_status == 'Not Available')
+                        or (row_status == 'Partially Available' and mem_status == 'Not Available')):
                     # Record time difference - this is Time of being Fully out of service
-                    durr_full_downtime = curr_date - mem_date
+                    downtime_complete_hrs = row_timestamp - mem_date
+                    downtime_complete_hrs = convert_to_hrs(downtime_complete_hrs.total_seconds())
 
                     # Downtime duration for each iteration
-                    self.downtime_delta["downtime_duration"].append(get_duration(durr_full_downtime.total_seconds()))
-                    self.downtime_delta["status"].append(mem_status)
+                    self.tool_dict[num]["downtime_duration"].append(downtime_complete_hrs)
+                    self.tool_dict[num]["status"].append(mem_status)
 
-                    self.temp_dict[num]["downtime_duration"].append(get_duration(durr_full_downtime.total_seconds()))
-                    self.temp_dict[num]["status"].append(mem_status)
+                    # Sum of complete downtime in hrs - total
+                    sum_downtime_complete_hrs += downtime_complete_hrs
+                    logging.info(f"Sum of complete downtime in hrs: {sum_downtime_complete_hrs}")
 
-                    # Sum of downtime in hrs - total
-                    sum_full_downtime_durr += get_duration(
-                        durr_full_downtime.total_seconds())  # Sum of Full Downtime in hrs
-
-
-                    print("Full downtime duration = ", sum_full_downtime_durr)
                     # Set memory variable
-                    mem_date = curr_date
-                    mem_status = curr_status
+                    mem_date = row_timestamp
+                    mem_status = row_status
                     full_downtime_cnt += 1  # Full downtime counter
 
-                elif ((curr_status == 'Not Available') and (mem_status == 'Partially Available')
-                      or (curr_status == 'Available') and (mem_status == 'Partially Available')):
+                elif ((row_status == 'Not Available') and (mem_status == 'Partially Available')
+                      or (row_status == 'Available') and (mem_status == 'Partially Available')):
                     # Record time difference - this is Time of being Partially out of service
-                    durr_partial_downtime = curr_date - mem_date
+                    downtime_partial_hrs = row_timestamp - mem_date
+                    downtime_partial_hrs = convert_to_hrs(downtime_partial_hrs.total_seconds())
 
                     # Downtime duration for each iteration
-                    self.downtime_delta["downtime_duration"].append(get_duration(durr_partial_downtime.total_seconds()))
-                    self.downtime_delta["status"].append(mem_status)
-
-                    self.temp_dict[num]["downtime_duration"].append(get_duration(durr_partial_downtime.total_seconds()))
-                    self.temp_dict[num]["status"].append(mem_status)
+                    self.tool_dict[num]["downtime_duration"].append(downtime_partial_hrs)
+                    self.tool_dict[num]["status"].append(mem_status)
 
                     # Sum of partial downtime in hrs - total
-                    sum_partial_downtime_durr += get_duration(
-                        durr_partial_downtime.total_seconds())  # Sum of Partial Downtime in hrs
-                    print("Partial downtime duration = ", sum_partial_downtime_durr)
+                    sum_downtime_partial_hrs += downtime_partial_hrs
+                    logging.info(f" Sum of partial downtime in hrs: {sum_downtime_partial_hrs}")
+
                     # Set memory variable
-                    mem_date = curr_date
-                    mem_status = curr_status
+                    mem_date = row_timestamp
+                    mem_status = row_status
                     partial_downtime_cnt += 1  # Partial Downtime counter
 
             # Write value to first half of the table [ rows 0 to 13 - depends on number of equipment ]
             self.df_buff.loc[num, 'Equipment Name'] = self.equipment_list[num]
             self.df_buff.loc[num, 'Tool Group'] = "All Tools"
             self.df_buff.loc[num, 'Status'] = "Not Available"
-            self.df_buff.loc[num, 'Date'] = start_date_str + "_to_" + end_date_str
-            self.df_buff.loc[num, 'Downtime Duration'] = round(sum_full_downtime_durr, 1)
+            self.df_buff.loc[num, 'Date'] = calendar_start_date + "_to_" + calendar_end_date
+            self.df_buff.loc[num, 'Downtime Duration'] = round(sum_downtime_complete_hrs, 1)
             self.df_buff.loc[num, 'Downtime Count'] = full_downtime_cnt
 
             # Write values to second half of the table [ rows 13 to 27 - depends on number of equipment]
             self.df_buff.loc[num + len(self.equipment_list), 'Equipment Name'] = self.equipment_list[num]
             self.df_buff.loc[num + len(self.equipment_list), 'Tool Group'] = "All Tools"
             self.df_buff.loc[num + len(self.equipment_list), 'Status'] = "Partially Available"
-            self.df_buff.loc[num + len(self.equipment_list), 'Date'] = start_date_str + "_to_" + end_date_str
-            self.df_buff.loc[num + len(self.equipment_list), 'Downtime Duration'] = round(sum_partial_downtime_durr, 1)
+            self.df_buff.loc[num + len(self.equipment_list), 'Date'] = calendar_start_date + "_to_" + calendar_end_date
+            self.df_buff.loc[num + len(self.equipment_list), 'Downtime Duration'] = round(sum_downtime_partial_hrs, 1)
             self.df_buff.loc[num + len(self.equipment_list), 'Downtime Count'] = partial_downtime_cnt
 
         # Store results of downtime calculation in temporary dataframe
         self.df_buff = self.df_buff.sort_index(ascending=True)
         self.df_sorted = self.df_buff
 
-
-
-        print("Downtime delta")
-        print(self.downtime_delta)
-        print(self.downtime_delta["tool_group"])
-        print(self.downtime_delta["status"])
-        print(self.downtime_delta["downtime_duration"])
-        print("temp dictionaery")
-        print(self.temp_dict)
-
-        # look at PTA #7 there is bug 08/31/2022
-
         # If drop down selection is not for all devices plot pie chart by Tool Group
         self.date_picker = []
         self.date_picker.append(self.string_var_strt.get())
         self.date_picker.append(self.string_var_end.get())
-
 
         # If drop down selection is for all devices then plot bar chart
         # print(self.df_buff.duplicated(subset='Tool Group', keep=False).sum())
@@ -731,7 +728,7 @@ class App(Frame):
         #    1:{'equipment_name': ['PTA02'], 'tool_group': ['PM'], 'status': [], 'downtime_duration': []},
         #    2:{'equipment_name': ['PTA03'], 'tool_group': ['N/A', 'N/A', 'N/A', 'N/A'],'status': ['Not Available', 'Not Available', 'Partially Available', 'Not Available'],'downtime_duration': [8.9, 2.5, 0.0, 16.4]}
         #}
-        test_data = self.temp_dict
+        test_data = self.tool_dict
         print("below is data from frame")
         print(test_data)
         # Empty list to store lists after join command
@@ -744,15 +741,10 @@ class App(Frame):
                     result[num] = result[num] + test_data[index][elem]
             combined_dict[elem].append(result[num])
         logging.info(f"Combined dictionary: {combined_dict}")
-        print(f"Combined dictionary: {combined_dict}")
 
-        self.tool_frequency = {}
         # For each element in tool group key find tool breakdown frequency
         # Count number of duplicates in the tool_group list
-        print("Combined dictionary")
-        print(combined_dict)
-        print("[]0 dictionary")
-        print(combined_dict['tool_group'][0])
+        self.tool_frequency = {}
         for items in combined_dict['tool_group'][0]:
             self.tool_frequency[items] = combined_dict['tool_group'][0].count(items)
 
@@ -769,10 +761,9 @@ class App(Frame):
         logging.info(f"Tool breakdown events Values: {self.values_frequency}")
         logging.info(f"Tool breakdown events Keys: {self.keys_frequency}")
 
-        tool_downtime = {}
+
         # For each item in tool group key find downtime per tool group
-        print("length of the combinded dict")
-        print(combined_dict['tool_group'][0])
+        tool_downtime = {}
         for index, items in enumerate(combined_dict['tool_group'][0], start=0):
 
             if items in tool_downtime:   # Key Already Exists
@@ -780,16 +771,11 @@ class App(Frame):
             else:  # Key Doesn't Exist
                 logging.info("Key Doesn't Exist")
                 tool_downtime[items] = [combined_dict['downtime_duration'][0][index]]
-                print("Key doesnt exists")
-                print("length of combined_dict['tool_group'][0]")
-                print(len(combined_dict['tool_group'][0]))
-                print("index")
-                print(index)
-                print(tool_downtime[items])
 
         # Find Sum of downtime duration per tool group
         logging.info(f"Tool downtime Dictionary Before Sum(): { tool_downtime.items()}")
         self.tool_time = {dict_key: round(sum(val),1) for dict_key, val in tool_downtime.items()}
+
         # Sort dictionary in descending order
         self.tool_time = dict(sorted(self.tool_time.items(), key=lambda item: item[1], reverse=True))
         logging.info(f"Sum() of downtime per tool group calculated: {self.tool_time}")
@@ -815,7 +801,7 @@ class App(Frame):
         about_window.grab_set()
 
 
-def get_duration(duration):
+def convert_to_hrs(duration):
     """
     Function to convert seconds to hours
     :param duration:
