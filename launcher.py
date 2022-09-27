@@ -28,6 +28,7 @@ import plots
 import platform
 import locale
 import sys
+from dateutil.relativedelta import relativedelta
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
@@ -601,6 +602,65 @@ class App(Frame):
                     break
                 else:
                     first_row += 1
+
+            ########################################################################################
+            # Check if table has entries for this equipment within given date range
+            # if not - find the latest record in range calendare_start_date - (n month)
+            if self.df_sorted.empty:
+                logging.info("The record is empty - looking for last entry from previous date range")
+                logging.info(f"The element is {element}")
+
+                # Find data frame range in months
+                #datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').date()
+                lower_date_val = datetime.strptime(self.df['createdon'].min(), '%Y-%m-%d %H:%M:%S').date()
+                upper_date_val = datetime.strptime(self.df['createdon'].max(), '%Y-%m-%d %H:%M:%S').date()
+                logging.info(f"Upper {lower_date_val.month}")
+                logging.info(f"Lower {upper_date_val.month}")
+                max_range_months = (upper_date_val.month - lower_date_val.month)
+                logging.info(f"Max range in months is {max_range_months}")
+
+                try:
+                    for i in range(0, max_range_months):
+
+
+                # Start / end date bounds
+                self.this_start_date = calendar_start_date - relativedelta(months=1)
+                self.this_end_date = calendar_start_date
+
+                # Start / end date bounds - string
+                self.this_start_date = self.this_start_date.strftime('%Y-%m-%d %H:%M:%S')
+                self.this_end_date = self.this_end_date.strftime('%Y-%m-%d %H:%M:%S')
+
+                logging.info(f"This is the date calendar -1 month - {self.this_start_date}")
+                logging.info(f"This is the date - {self.this_end_date}")
+                self.df_searched = self.df.loc[self.df['createdon'].between(self.this_start_date, self.this_end_date)]
+
+                # Sort dataframe by equipment name && Reset index of the dataframe
+                self.df_searched = self.df_searched.loc[self.df_searched['cr483_name'] == self.equipment_list[num]]
+                self.df_searched.index = pd.RangeIndex(len(self.df_searched.index))
+
+                last_timestamp = self.df_searched['createdon'].max()
+                last_timestamp_index = self.df_searched.loc[self.df_searched['createdon'] == last_timestamp].index.item()
+
+                name_of_equipment = self.df_searched['cr483_name'].iloc[last_timestamp_index]
+                name_of_tool = self.df_searched['cr483_name'].iloc[last_timestamp_index]
+                name_of_status = self.df_searched['cr483_name'].iloc[last_timestamp_index]
+
+                logging.info(f"Index value for searched index {last_timestamp_index}")
+                logging.info(f"Searched equipment name {name_of_equipment}")
+                logging.info(f"Searched tool group name {name_of_tool}")
+                logging.info(f"Searched equipment status {name_of_status}")
+                logging.info(f"Search date stamp {last_timestamp}")
+
+
+
+
+
+
+
+
+
+
 
             # Set downtime counters
             full_downtime_cnt = 0
