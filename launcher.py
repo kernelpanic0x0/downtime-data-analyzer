@@ -619,38 +619,43 @@ class App(Frame):
                 max_range_months = (upper_date_val.month - lower_date_val.month)
                 logging.info(f"Max range in months is {max_range_months}")
 
+                self.df_searched = pd.DataFrame()
+                for i in range(1, max_range_months):
+
+                    if not self.df_searched:
+                        # Start / end date bounds
+                        self.this_start_date = calendar_start_date - relativedelta(months=i)
+                        self.this_end_date = calendar_start_date
+
+                        # Start / end date bounds - string
+                        self.this_start_date = self.this_start_date.strftime('%Y-%m-%d %H:%M:%S')
+                        self.this_end_date = self.this_end_date.strftime('%Y-%m-%d %H:%M:%S')
+
+                        logging.info(f"This is the date calendar -1 month - {self.this_start_date}")
+                        logging.info(f"This is the date - {self.this_end_date}")
+                        self.df_searched = self.df.loc[self.df['createdon'].between(self.this_start_date, self.this_end_date)]
+
+                        # Sort dataframe by equipment name && Reset index of the dataframe
+                        self.df_searched = self.df_searched.loc[self.df_searched['cr483_name'] == self.equipment_list[num]]
+                        self.df_searched.index = pd.RangeIndex(len(self.df_searched.index))
+                    else:
+                        logging.info("Search found most recent entry")
+                        break
                 try:
-                    for i in range(0, max_range_months):
+                    last_timestamp = self.df_searched['createdon'].max() # will cause exception if empty frame
+                    last_timestamp_index = self.df_searched.loc[self.df_searched['createdon'] == last_timestamp].index.item()
 
+                    name_of_equipment = self.df_searched['cr483_name'].iloc[last_timestamp_index]
+                    name_of_tool = self.df_searched['cr483_name'].iloc[last_timestamp_index]
+                    name_of_status = self.df_searched['cr483_name'].iloc[last_timestamp_index]
 
-                # Start / end date bounds
-                self.this_start_date = calendar_start_date - relativedelta(months=1)
-                self.this_end_date = calendar_start_date
-
-                # Start / end date bounds - string
-                self.this_start_date = self.this_start_date.strftime('%Y-%m-%d %H:%M:%S')
-                self.this_end_date = self.this_end_date.strftime('%Y-%m-%d %H:%M:%S')
-
-                logging.info(f"This is the date calendar -1 month - {self.this_start_date}")
-                logging.info(f"This is the date - {self.this_end_date}")
-                self.df_searched = self.df.loc[self.df['createdon'].between(self.this_start_date, self.this_end_date)]
-
-                # Sort dataframe by equipment name && Reset index of the dataframe
-                self.df_searched = self.df_searched.loc[self.df_searched['cr483_name'] == self.equipment_list[num]]
-                self.df_searched.index = pd.RangeIndex(len(self.df_searched.index))
-
-                last_timestamp = self.df_searched['createdon'].max()
-                last_timestamp_index = self.df_searched.loc[self.df_searched['createdon'] == last_timestamp].index.item()
-
-                name_of_equipment = self.df_searched['cr483_name'].iloc[last_timestamp_index]
-                name_of_tool = self.df_searched['cr483_name'].iloc[last_timestamp_index]
-                name_of_status = self.df_searched['cr483_name'].iloc[last_timestamp_index]
-
-                logging.info(f"Index value for searched index {last_timestamp_index}")
-                logging.info(f"Searched equipment name {name_of_equipment}")
-                logging.info(f"Searched tool group name {name_of_tool}")
-                logging.info(f"Searched equipment status {name_of_status}")
-                logging.info(f"Search date stamp {last_timestamp}")
+                    logging.info(f"Index value for searched index {last_timestamp_index}")
+                    logging.info(f"Searched equipment name {name_of_equipment}")
+                    logging.info(f"Searched tool group name {name_of_tool}")
+                    logging.info(f"Searched equipment status {name_of_status}")
+                    logging.info(f"Search date stamp {last_timestamp}")
+                except ValueError:
+                    logging.info(ValueError)
 
 
 
