@@ -622,7 +622,7 @@ class App(Frame):
                 self.df_searched = pd.DataFrame()
                 for i in range(1, max_range_months):
 
-                    if not self.df_searched:
+                    if self.df_searched.empty:
                         # Start / end date bounds
                         self.this_start_date = calendar_start_date - relativedelta(months=i)
                         self.this_end_date = calendar_start_date
@@ -656,16 +656,6 @@ class App(Frame):
                     logging.info(f"Search date stamp {last_timestamp}")
                 except ValueError:
                     logging.info(ValueError)
-
-
-
-
-
-
-
-
-
-
 
             # Set downtime counters
             full_downtime_cnt = 0
