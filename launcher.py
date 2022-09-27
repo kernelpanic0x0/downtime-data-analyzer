@@ -505,6 +505,60 @@ class App(Frame):
             self.df_sorted.loc[0, data_columns[i]] = str_msg
         self.tree_insert()  # Write message to tree view table
 
+    def find_latest_entry(self):
+        """
+        This function finds the latest timestap if the current date range doesn't
+        contain any values for this equipment
+        :return:
+        """
+
+        # Find data frame range in months
+        # datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').date()
+        lower_date_val = datetime.strptime(self.df['createdon'].min(), '%Y-%m-%d %H:%M:%S').date()
+        upper_date_val = datetime.strptime(self.df['createdon'].max(), '%Y-%m-%d %H:%M:%S').date()
+        logging.info(f"Upper {lower_date_val.month}")
+        logging.info(f"Lower {upper_date_val.month}")
+        max_range_months = (upper_date_val.month - lower_date_val.month)
+        logging.info(f"Max range in months is {max_range_months}")
+
+        self.df_searched = pd.DataFrame()
+        for i in range(1, max_range_months):
+
+            if self.df_searched.empty:
+                # Start / end date bounds
+                self.this_start_date = self.calendar_start_date - relativedelta(months=i)
+                self.this_end_date = self.calendar_start_date
+
+                # Start / end date bounds - string
+                self.this_start_date = self.this_start_date.strftime('%Y-%m-%d %H:%M:%S')
+                self.this_end_date = self.this_end_date.strftime('%Y-%m-%d %H:%M:%S')
+
+                logging.info(f"This is the date calendar -1 month - {self.this_start_date}")
+                logging.info(f"This is the date - {self.this_end_date}")
+                self.df_searched = self.df.loc[self.df['createdon'].between(self.this_start_date, self.this_end_date)]
+
+                # Sort dataframe by equipment name && Reset index of the dataframe
+                self.df_searched = self.df_searched.loc[self.df_searched['cr483_name'] == self.equipment_list[num]]
+                self.df_searched.index = pd.RangeIndex(len(self.df_searched.index))
+            else:
+                logging.info("Search found most recent entry")
+                break
+        try:
+            last_timestamp = self.df_searched['createdon'].max()  # will cause exception if empty frame
+            last_timestamp_index = self.df_searched.loc[self.df_searched['createdon'] == last_timestamp].index.item()
+
+            name_of_equipment = self.df_searched['cr483_name'].iloc[last_timestamp_index]
+            name_of_tool = self.df_searched['cr483_name'].iloc[last_timestamp_index]
+            name_of_status = self.df_searched['cr483_name'].iloc[last_timestamp_index]
+
+            logging.info(f"Index value for searched index {last_timestamp_index}")
+            logging.info(f"Searched equipment name {name_of_equipment}")
+            logging.info(f"Searched tool group name {name_of_tool}")
+            logging.info(f"Searched equipment status {name_of_status}")
+            logging.info(f"Search date stamp {last_timestamp}")
+        except ValueError:
+            logging.info(ValueError)
+
     def calculate_downtime_durr(self, *args):
         """
         This function calculates downtime duration & number of downtime events
@@ -514,8 +568,8 @@ class App(Frame):
         date_frmt = '%Y-%m-%d %H:%M:%S'  # '2022-05-26 10:37:08'
 
         # Calendar selections for start / end dates - in date time format
-        calendar_start_date = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y')
-        calendar_end_date = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y')
+        self.calendar_start_date = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y')
+        self.calendar_end_date = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y')
 
         # Convert calendar values to string
         calendar_start_date_str = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').strftime('%m/%d/%y')
@@ -609,53 +663,11 @@ class App(Frame):
             if self.df_sorted.empty:
                 logging.info("The record is empty - looking for last entry from previous date range")
                 logging.info(f"The element is {element}")
+                ## Call function
+                self.find_latest_entry()
 
-                # Find data frame range in months
-                #datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').date()
-                lower_date_val = datetime.strptime(self.df['createdon'].min(), '%Y-%m-%d %H:%M:%S').date()
-                upper_date_val = datetime.strptime(self.df['createdon'].max(), '%Y-%m-%d %H:%M:%S').date()
-                logging.info(f"Upper {lower_date_val.month}")
-                logging.info(f"Lower {upper_date_val.month}")
-                max_range_months = (upper_date_val.month - lower_date_val.month)
-                logging.info(f"Max range in months is {max_range_months}")
 
-                self.df_searched = pd.DataFrame()
-                for i in range(1, max_range_months):
-
-                    if self.df_searched.empty:
-                        # Start / end date bounds
-                        self.this_start_date = calendar_start_date - relativedelta(months=i)
-                        self.this_end_date = calendar_start_date
-
-                        # Start / end date bounds - string
-                        self.this_start_date = self.this_start_date.strftime('%Y-%m-%d %H:%M:%S')
-                        self.this_end_date = self.this_end_date.strftime('%Y-%m-%d %H:%M:%S')
-
-                        logging.info(f"This is the date calendar -1 month - {self.this_start_date}")
-                        logging.info(f"This is the date - {self.this_end_date}")
-                        self.df_searched = self.df.loc[self.df['createdon'].between(self.this_start_date, self.this_end_date)]
-
-                        # Sort dataframe by equipment name && Reset index of the dataframe
-                        self.df_searched = self.df_searched.loc[self.df_searched['cr483_name'] == self.equipment_list[num]]
-                        self.df_searched.index = pd.RangeIndex(len(self.df_searched.index))
-                    else:
-                        logging.info("Search found most recent entry")
-                        break
-                try:
-                    last_timestamp = self.df_searched['createdon'].max() # will cause exception if empty frame
-                    last_timestamp_index = self.df_searched.loc[self.df_searched['createdon'] == last_timestamp].index.item()
-
-                    name_of_equipment = self.df_searched['cr483_name'].iloc[last_timestamp_index]
-                    name_of_tool = self.df_searched['cr483_name'].iloc[last_timestamp_index]
-                    name_of_status = self.df_searched['cr483_name'].iloc[last_timestamp_index]
-
-                    logging.info(f"Index value for searched index {last_timestamp_index}")
-                    logging.info(f"Searched equipment name {name_of_equipment}")
-                    logging.info(f"Searched tool group name {name_of_tool}")
-                    logging.info(f"Searched equipment status {name_of_status}")
-                    logging.info(f"Search date stamp {last_timestamp}")
-                except ValueError:
-                    logging.info(ValueError)
+            ########################################################################################
 
             # Set downtime counters
             full_downtime_cnt = 0
@@ -683,7 +695,7 @@ class App(Frame):
                     else:
                         # If the record is last in the row with "Not Available" status
                         # record tool group and calculate time difference from the time stamp to drop down end date
-                        downtime_complete_hrs = calendar_end_date - row_timestamp
+                        downtime_complete_hrs = self.calendar_end_date - row_timestamp
                         downtime_complete_hrs = convert_to_hrs(downtime_complete_hrs.total_seconds())
 
                         # Record tool group
@@ -702,7 +714,7 @@ class App(Frame):
                 # from calendar start date selection
                 if (row_status == 'Available') and (k == first_row):
                     # record tool group and calculate time difference from the time stamp to drop down end date
-                    downtime_complete_hrs = row_timestamp - calendar_start_date
+                    downtime_complete_hrs = row_timestamp - self.calendar_start_date
                     downtime_complete_hrs = convert_to_hrs(downtime_complete_hrs.total_seconds())
 
                     # Record tool group
@@ -1029,7 +1041,7 @@ if __name__ == '__main__':
                         format="%(asctime)s [%(funcName)20s()] [%(levelname)-5.5s] %(message)s",
                         handlers=[
                             logging.FileHandler("debug.log"),
-                            logging.StreamHandler()
+                            logging.StreamHandler(sys.stdout)
                         ])
     #logging.basicConfig(filename='debug.log', encoding='utf-8', level=logging.DEBUG, filemode='w')
     #logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
