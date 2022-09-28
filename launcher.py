@@ -505,7 +505,7 @@ class App(Frame):
             self.df_sorted.loc[0, data_columns[i]] = str_msg
         self.tree_insert()  # Write message to tree view table
 
-    def find_latest_entry(self):
+    def find_latest_entry(self, num):
         """
         This function finds the latest timestap if the current date range doesn't
         contain any values for this equipment
@@ -548,16 +548,21 @@ class App(Frame):
             last_timestamp_index = self.df_searched.loc[self.df_searched['createdon'] == last_timestamp].index.item()
 
             name_of_equipment = self.df_searched['cr483_name'].iloc[last_timestamp_index]
-            name_of_tool = self.df_searched['cr483_name'].iloc[last_timestamp_index]
-            name_of_status = self.df_searched['cr483_name'].iloc[last_timestamp_index]
+            name_of_tool = self.df_searched['cr483_toolgroup'].iloc[last_timestamp_index]
+            name_of_status = self.df_searched['cr483_cranestatus'].iloc[last_timestamp_index]
 
             logging.info(f"Index value for searched index {last_timestamp_index}")
             logging.info(f"Searched equipment name {name_of_equipment}")
             logging.info(f"Searched tool group name {name_of_tool}")
             logging.info(f"Searched equipment status {name_of_status}")
             logging.info(f"Search date stamp {last_timestamp}")
+
+
         except ValueError:
             logging.info(ValueError)
+
+        return [name_of_status, name_of_tool]
+
 
     def calculate_downtime_durr(self, *args):
         """
@@ -657,17 +662,7 @@ class App(Frame):
                 else:
                     first_row += 1
 
-            ########################################################################################
-            # Check if table has entries for this equipment within given date range
-            # if not - find the latest record in range calendare_start_date - (n month)
-            if self.df_sorted.empty:
-                logging.info("The record is empty - looking for last entry from previous date range")
-                logging.info(f"The element is {element}")
-                ## Call function
-                self.find_latest_entry()
 
-
-            ########################################################################################
 
             # Set downtime counters
             full_downtime_cnt = 0
@@ -764,7 +759,30 @@ class App(Frame):
                     mem_status = row_status
                     partial_downtime_cnt += 1  # Partial Downtime counter
 
-            # Write value to first half of the table [ rows 0 to 13 - depends on number of equipment ]
+            ########################################################################################
+            # Check if table has entries for this equipment within given date range
+            # if not - find the latest record in range calendare_start_date - (n month)
+            if self.df_sorted.empty:
+                logging.info("The record is empty - looking for last entry from previous date range")
+                logging.info(f"The element is {element}")
+                # Call function
+                search_result = self.find_latest_entry(num)
+                logging.info(f"Function return is {search_result}")
+                time_slice_hrs = (self.calendar_end_date - self.calendar_start_date).total_seconds()
+                time_slice_hrs = convert_to_hrs(time_slice_hrs)
+                # [name_of_status, name_of_tool]
+                if search_result[0] == 'Not Available':
+                    full_downtime_cnt = 1  # Full downtime counter
+                    sum_downtime_complete_hrs = time_slice_hrs
+                    logging.info(f"Time slice fully Unavailable {sum_downtime_complete_hrs}")
+                elif search_result[0] == 'Partially Available':
+                    partial_downtime_cnt = 1  # Partial Downtime counter
+                    sum_downtime_partial_hrs = time_slice_hrs
+                    logging.info(f"Time slice Partially Available {sum_downtime_partial_hrs}")
+
+            ########################################################################################
+                    # Write value to first half of the table [ rows 0 to 13 - depends on number of equipment ]
+
             self.df_buff.loc[num, 'Equipment Name'] = self.equipment_list[num]
             self.df_buff.loc[num, 'Tool Group'] = "All Tools"
             self.df_buff.loc[num, 'Status'] = "Not Available"
