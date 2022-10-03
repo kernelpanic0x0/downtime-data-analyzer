@@ -991,7 +991,7 @@ class TopWindow(tk.Toplevel):
         self.tool_data = myToolData
         self.equipment_list = equipment_list
 
-        self.title("Downtime Data Analyzer v0.2.2 - Plots")
+        self.title("Downtime Data Analyzer v0.2.3 - Plots")
         img_file_name = "small_icon.ico"
         curr_dirr = pathlib.Path(img_file_name).parent.resolve()
         img_path = curr_dirr.joinpath(img_file_name)
@@ -1030,7 +1030,7 @@ class TopWindow(tk.Toplevel):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     root = Tk()
-    root.title("Downtime Data Analyzer v0.2.2")
+    root.title("Downtime Data Analyzer v0.2.3")
     img_file_name = "small_icon.ico"
     curr_dirr = pathlib.Path(img_file_name).parent.resolve()
     img_path = curr_dirr.joinpath(img_file_name)

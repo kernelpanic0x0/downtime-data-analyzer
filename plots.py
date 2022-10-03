@@ -106,6 +106,8 @@ class MatplotlibSwitchGraphs(Frame):
         """
         plt.clf()
 
+
+
         print("Plotting Graph 1")
         # Calculating system availability - PM downtime included
         # Availability = Uptime / (Uptime + Downtime)
@@ -227,7 +229,7 @@ class MatplotlibSwitchGraphs(Frame):
                          arrowprops=dict(facecolor='black', shrink=0.05))
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
-        #self.ax1.plot()
+        self.ax1.plot()
         self.canvas.draw()
 
     def draw_graph_two(self):
@@ -237,6 +239,7 @@ class MatplotlibSwitchGraphs(Frame):
         :return:
         """
         plt.clf()
+
         print("Plotting Graph 2")
         # Data for the bar chart - from downtime calculation
         # The buffer is split in two - 0 to 14 and 14 to 28, for two types of downtime
@@ -308,7 +311,7 @@ class MatplotlibSwitchGraphs(Frame):
         self.ax2.grid(axis='both')
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
-        #self.ax2.plot()
+        self.ax2.plot()
         self.canvas.draw()
 
     def draw_graph_three(self):
@@ -317,6 +320,7 @@ class MatplotlibSwitchGraphs(Frame):
         :return:
         """
         plt.clf()
+
         print("Plotting Graph 3")
         # Values for downtime duration in hrs - test values
         #data = [221.1, 1067.6000000000001, 69.8, 241.8, 128.6, 229.6, 207.8]                        # Test values
@@ -333,7 +337,7 @@ class MatplotlibSwitchGraphs(Frame):
         for elem in range(0, len(data_val)):
             explode_val.append(0.01)
         # Set Graph # 3 - pie chart
-        self.fig.clear()
+
         self.ax3 = self.fig.subplots(1,2, gridspec_kw={'width_ratios': [6, 1]}, subplot_kw=dict(aspect="equal"))
         wedges, texts = self.ax3[0].pie(data_val, wedgeprops=dict(width=0.7), startangle=-40, explode=explode_val)
 
@@ -358,7 +362,7 @@ class MatplotlibSwitchGraphs(Frame):
             kw["arrowprops"].update({"connectionstyle": connectionstyle})
             prcnt = round((data_val[i] / sum(data_val) * 100), 2)
 
-            an3 = self.ax3[0].annotate(f"{data_key[i]} : {prcnt} %", xy=(x, y), xytext=(1.35 * np.sign(x), self.adjust_text( x, y)),
+            an3 = self.ax3[0].annotate(f"{data_key[i]} : {prcnt} %", xy=(x, y), xytext=(1.15 * np.sign(x), self.adjust_text( x, y)),
                         horizontalalignment=horizontalalignment, **kw)
             an3.draggable()
 
@@ -406,9 +410,9 @@ class MatplotlibSwitchGraphs(Frame):
 
         # Adjust layout to make room for the table:
         # pad=2.3, w_pad=2.0, h_pad=2.0
-        #self.ax3[0].plot()
+        self.ax3[0].plot()
         self.ax3[1].axis('off')
-        #self.ax3[1].plot()
+        self.ax3[1].plot()
         self.fig.tight_layout()
 
         self.canvas.draw()
@@ -419,6 +423,7 @@ class MatplotlibSwitchGraphs(Frame):
         :return:
         """
         plt.clf()
+
         print("Plotting Graph 4")
         # Values for downtime duration in events - test data
         #data_val = [21.1, 167.6000000000001, 690.8, 41.8, 128.6, 529.6, 107.8]
@@ -435,7 +440,7 @@ class MatplotlibSwitchGraphs(Frame):
         for elem in range(0, len(data_val)):
             explode_val.append(0.01)
         # Set Graph # 3 - pie chart
-        self.fig.clear()
+
         self.ax4 = self.fig.subplots(1, 2, gridspec_kw={'width_ratios': [6, 1]}, subplot_kw=dict(aspect="equal"))
         wedges, texts = self.ax4[0].pie(data_val, wedgeprops=dict(width=0.7), startangle=-40, explode=explode_val)
 
@@ -465,7 +470,7 @@ class MatplotlibSwitchGraphs(Frame):
             kw["arrowprops"].update({"connectionstyle": connectionstyle})
             prcnt = round((data_val[i] / sum(data_val) * 100), 2)
 
-            an4 = self.ax4[0].annotate(f"{data_key[i]} : {prcnt} %", xy=(x, y), xytext=(1.35 * np.sign(x), self.adjust_text(x , y)),
+            an4 = self.ax4[0].annotate(f"{data_key[i]} : {prcnt} %", xy=(x, y), xytext=(1.15 * np.sign(x), self.adjust_text(x , y)),
                                  horizontalalignment=horizontalalignment, **kw)
 
             an4.draggable()
@@ -513,9 +518,9 @@ class MatplotlibSwitchGraphs(Frame):
 
         # Adjust layout to make room for the table:
         #self.fig.tight_layout(pad=4.6, w_pad=5.0, h_pad=5.0)
-        #self.ax4[0].plot()
+        self.ax4[0].plot()
         self.ax4[1].axis('off')
-        #self.ax4[1].plot()
+        self.ax4[1].plot()
         #self.graph4_tight()
 
         self.fig.tight_layout()
