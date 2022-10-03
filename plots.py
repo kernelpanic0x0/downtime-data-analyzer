@@ -35,6 +35,7 @@ class MatplotlibSwitchGraphs(Frame):
         self.frame = Frame(self.master)
         self.graph_page = "0 / 4"
         self.fig, self.ax = plt.subplots(facecolor='beige', figsize=(9,7))
+        self.fig.tight_layout()
 
         self.equipment_list = equipment_list
         self.graphIndex = 1
@@ -103,6 +104,7 @@ class MatplotlibSwitchGraphs(Frame):
         This function plots System Availability in Bar Chart
         :return:
         """
+        plt.clf()
 
         print("Plotting Graph 1")
         # Calculating system availability - PM downtime included
@@ -118,75 +120,6 @@ class MatplotlibSwitchGraphs(Frame):
         print("The total downtime is:", total_downtime)
 
         print("Previous page of the graph - :", self.previous_index)
-        # Remove  and clear axes from previous graphs
-        # Current Graph #1
-        if self.previous_index == self.max_num_of_pages:
-            try:
-                self.ax4[0].clear()    # clear axes from last graph
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax4[0].remove()   # remove axes from last graph
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax4[1].clear()  # clear axes from last graph
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax4[1].remove()  # remove axes from last graph
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax4.remove()  # remove axes from last graph
-                print("Removed ax4")
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax4.remove()  # remove axes from last graph
-            except AttributeError:
-                traceback.print_exc()
-                pass
-
-        elif self.previous_index == (self.graphIndex + 1):
-            try:
-                self.ax2.clear()    # clear axes from Graph #2
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax2.remove()   # remove axes from Graph #2
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            except ValueError:
-                pass
-        elif self.previous_index == 0:
-            pass
-            try:
-                self.ax.clear()  # remove axes from original graph
-                print("Clearing on zero index")
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax.remove()
-                print("Removing on zero index")
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.fig.clear(True)
-                print("Removing FIG on zero index")
-            except AttributeError:
-                traceback.print_exc()
-                pass
-
 
 
         # Set Graph #1 - Bar Chart
@@ -303,7 +236,7 @@ class MatplotlibSwitchGraphs(Frame):
         This function plots System Downtime (hrs) in Bar Chart
         :return:
         """
-
+        plt.clf()
         print("Plotting Graph 2")
         # Data for the bar chart - from downtime calculation
         # The buffer is split in two - 0 to 14 and 14 to 28, for two types of downtime
@@ -316,41 +249,7 @@ class MatplotlibSwitchGraphs(Frame):
         rows = ['Not Available', 'Partially Available']
 
         print("Previous page of the graph - :", self.previous_index)
-        # Remove  and clear axes from previous graphs
-        # Current Graph #2
-        if self.previous_index == (self.graphIndex + 1):
-            try:
-                self.ax3[0].clear()  # clear axes from Graph #3
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax3[0].remove()  # remove axes from Graph #3
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax3[1].clear()  # clear axes from Graph #3
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax3[1].remove()  # remove axes from Graph #3
-            except AttributeError:
-                traceback.print_exc()
-                pass
 
-        elif self.previous_index == (self.graphIndex - 1):
-            try:
-                self.ax1.clear()    # clear axes from Graph #1
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax1.remove()   # remove axes from Graph #1
-            except AttributeError:
-                traceback.print_exc()
-                pass
 
 
         # Set Graph #2
@@ -417,7 +316,7 @@ class MatplotlibSwitchGraphs(Frame):
         This function plots System Downtime by Tool Group (hrs) in Bar Chart
         :return:
         """
-
+        plt.clf()
         print("Plotting Graph 3")
         # Values for downtime duration in hrs - test values
         #data = [221.1, 1067.6000000000001, 69.8, 241.8, 128.6, 229.6, 207.8]                        # Test values
@@ -428,49 +327,13 @@ class MatplotlibSwitchGraphs(Frame):
         data_key = self.toolData['keys']
 
         print("Previous page of the graph - :", self.previous_index)
-        # Remove  and clear axes from previous graphs
-        # Current Graph #3
-        if self.previous_index == (self.graphIndex + 1):
-            print("Removing axis from graph #4")
-            try:
-                self.ax4[0].clear()    # clear axes from Graph #4
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax4[0].remove()   # remove axes from Graph #4
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax4[1].clear()  # clear axes from Graph #4
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax4[1].remove()  # remove axes from Graph #4
-            except AttributeError:
-                traceback.print_exc()
-                pass
-
-        elif self.previous_index == (self.graphIndex - 1):
-            print("Removing axis from graph #2")
-            try:
-                self.ax2.clear()    # clear axes from Graph #2
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax2.remove()   # remove axes from Graph #2
-            except AttributeError:
-                traceback.print_exc()
-                pass
 
 
         explode_val=[]
         for elem in range(0, len(data_val)):
             explode_val.append(0.01)
         # Set Graph # 3 - pie chart
+        self.fig.clear()
         self.ax3 = self.fig.subplots(1,2, gridspec_kw={'width_ratios': [6, 1]}, subplot_kw=dict(aspect="equal"))
         wedges, texts = self.ax3[0].pie(data_val, wedgeprops=dict(width=0.7), startangle=-40, explode=explode_val)
 
@@ -481,10 +344,10 @@ class MatplotlibSwitchGraphs(Frame):
         kw = dict(arrowprops=dict(arrowstyle="-"),
                   bbox=bbox_props, zorder=0, va="center")
 
-        self.q1_var_y = 1.4
-        self.q2_var_y = 1.4
-        self.q3_var_y = 1.4
-        self.q4_var_y = 1.8
+        self.q1_var_y = 1.2
+        self.q2_var_y = 1.2
+        self.q3_var_y = 1.2
+        self.q4_var_y = 1.6
 
         for i, p in enumerate(wedges):
             ang = (p.theta2 - p.theta1) / 2. + p.theta1
@@ -536,15 +399,18 @@ class MatplotlibSwitchGraphs(Frame):
         the_table.scale(1, 4)
         the_table.set_fontsize(12)
 
+
         # Set titles for the figure and the subplot respectively
         self.fig.suptitle('Equipment Downtime by Tool Group ->' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1], fontsize=12, fontweight='bold')
         #self.ax3[0].set_title('Downtime by Tool Group: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
 
         # Adjust layout to make room for the table:
-        self.fig.tight_layout()
+        # pad=2.3, w_pad=2.0, h_pad=2.0
         #self.ax3[0].plot()
         self.ax3[1].axis('off')
         #self.ax3[1].plot()
+        self.fig.tight_layout()
+
         self.canvas.draw()
 
     def draw_graph_four(self):
@@ -552,7 +418,7 @@ class MatplotlibSwitchGraphs(Frame):
         This function plots System Downtime by Tool Group (events) in Bar Chart
         :return:
         """
-
+        plt.clf()
         print("Plotting Graph 4")
         # Values for downtime duration in events - test data
         #data_val = [21.1, 167.6000000000001, 690.8, 41.8, 128.6, 529.6, 107.8]
@@ -563,49 +429,13 @@ class MatplotlibSwitchGraphs(Frame):
         data_key = self.toolData['keys']
 
         print("Previous page of the graph - :", self.previous_index)
-        # Remove  and clear axes from previous graphs
-        # Current Graph #4
-        if self.previous_index == 1:
-            try:
-                self.ax1.clear()    # clear axes from Graph #1
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax1.remove()   # remove axes from Graph #1
-            except AttributeError:
-                traceback.print_exc()
-                pass
-
-        elif self.previous_index == (self.graphIndex - 1):
-            print("Removing previous axes on graph 4")
-            try:
-                self.ax3[0].clear()    # clear axes from Graph #3
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax3[0].remove()   # remove axes from Graph #3
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax3[1].clear()  # clear axes from Graph #3
-            except AttributeError:
-                traceback.print_exc()
-                pass
-            try:
-                self.ax3[1].remove()  # remove axes from Graph #3
-            except AttributeError:
-                traceback.print_exc()
-                pass
-
 
 
         explode_val = []
         for elem in range(0, len(data_val)):
             explode_val.append(0.01)
         # Set Graph # 3 - pie chart
+        self.fig.clear()
         self.ax4 = self.fig.subplots(1, 2, gridspec_kw={'width_ratios': [6, 1]}, subplot_kw=dict(aspect="equal"))
         wedges, texts = self.ax4[0].pie(data_val, wedgeprops=dict(width=0.7), startangle=-40, explode=explode_val)
 
@@ -616,10 +446,10 @@ class MatplotlibSwitchGraphs(Frame):
                   bbox=bbox_props, zorder=0, va="center")
 
 
-        self.q1_var_y = 1.4
-        self.q2_var_y = 1.4
-        self.q3_var_y = 1.4
-        self.q4_var_y = 1.8
+        self.q1_var_y = 1.2
+        self.q2_var_y = 1.2
+        self.q3_var_y = 1.2
+        self.q4_var_y = 1.6
 
         for i, p in enumerate(wedges):
             ang = (p.theta2 - p.theta1) / 2. + p.theta1
@@ -639,6 +469,7 @@ class MatplotlibSwitchGraphs(Frame):
                                  horizontalalignment=horizontalalignment, **kw)
 
             an4.draggable()
+        print(f"Quadrant 4 value {self.q4_var_y}")
         # Get some pastel shades for the colors
         # colors = ['Red', 'Green', 'Blue', 'Blue']
         n_rows = len(data_val)
@@ -681,11 +512,33 @@ class MatplotlibSwitchGraphs(Frame):
         #self.ax4[0].set_title('Downtime events by Tool Group: ' + self.date_picker_sel[0] + " : " + self.date_picker_sel[1])
 
         # Adjust layout to make room for the table:
-        self.fig.tight_layout()
+        #self.fig.tight_layout(pad=4.6, w_pad=5.0, h_pad=5.0)
         #self.ax4[0].plot()
         self.ax4[1].axis('off')
         #self.ax4[1].plot()
+        #self.graph4_tight()
+
+        self.fig.tight_layout()
         self.canvas.draw()
+
+    def run_once(f):
+        def wrapper(*args, **kwargs):
+            if not wrapper.has_run:
+                wrapper.has_run = True
+                return f(*args, **kwargs)
+
+        wrapper.has_run = False
+        return wrapper
+
+    @run_once
+    def graph3_tight(self):
+        self.fig.tight_layout()
+        print("Tight layout on graph #3 once")
+    @run_once
+    def graph4_tight(self):
+        self.fig.tight_layout()
+        print("Tight layout on graph #4 once")
+
     def adjust_text(self, x , y):
         """
         This function adjusts annotation position
