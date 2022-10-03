@@ -16,10 +16,13 @@ from matplotlib import gridspec
 import traceback
 
 
+
 def config_plot():
-    fig, ax = plt.subplots(facecolor='beige')
+    fig, ax = plt.subplots(facecolor='beige', figsize=(8,6))
     ax.set(xlabel='Name ()', ylabel='Downtime (hrs)',
            title='Empty')
+    fig.tight_layout()
+
     return (fig, ax)
 
 
@@ -31,7 +34,8 @@ class MatplotlibSwitchGraphs(Frame):
         self.master = master
         self.frame = Frame(self.master)
         self.graph_page = "0 / 4"
-        self.fig, self.ax = config_plot()
+        self.fig, self.ax = plt.subplots(facecolor='beige', figsize=(9,7))
+
         self.equipment_list = equipment_list
         self.graphIndex = 1
         self.previous_index = 0
@@ -48,6 +52,7 @@ class MatplotlibSwitchGraphs(Frame):
         self.toolData = myToolData
         self.draw_graph_one()
         #self.on_key_press()
+
 
     def config_window(self):
         """
@@ -136,6 +141,17 @@ class MatplotlibSwitchGraphs(Frame):
             except AttributeError:
                 traceback.print_exc()
                 pass
+            try:
+                self.ax4.remove()  # remove axes from last graph
+                print("Removed ax4")
+            except AttributeError:
+                traceback.print_exc()
+                pass
+            try:
+                self.ax4.remove()  # remove axes from last graph
+            except AttributeError:
+                traceback.print_exc()
+                pass
 
         elif self.previous_index == (self.graphIndex + 1):
             try:
@@ -151,25 +167,32 @@ class MatplotlibSwitchGraphs(Frame):
             except ValueError:
                 pass
         elif self.previous_index == 0:
+            pass
             try:
                 self.ax.clear()  # remove axes from original graph
+                print("Clearing on zero index")
             except AttributeError:
                 traceback.print_exc()
                 pass
             try:
                 self.ax.remove()
+                print("Removing on zero index")
             except AttributeError:
                 traceback.print_exc()
                 pass
+            try:
+                self.fig.clear(True)
+                print("Removing FIG on zero index")
+            except AttributeError:
+                traceback.print_exc()
+                pass
+
 
 
         # Set Graph #1 - Bar Chart
         self.ax1 = self.fig.subplots()
         self.ax1.set_facecolor('lightblue')
 
-        #columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04', 'PTA05',
-        #           'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
-        #           'TMA11', 'TMA12', 'TMA13', 'TMA14')
         columns = self.equipment_list
         col_width = 1 / len(columns)
         print("Col width is:", col_width)
@@ -257,7 +280,7 @@ class MatplotlibSwitchGraphs(Frame):
 
         # Set titles for the figure and the subplot respectively
         self.fig.suptitle('Availability = Uptime / (Uptime + Downtime)', fontsize=12, fontweight='bold')
-        self.ax1.legend()
+        #self.ax1.legend()
         self.ax1.set_ylabel("Availability, %", loc='center')
         self.ax1.set_yticks(values * value_increment, ['%d' % val for val in values])
         self.ax1.set_xticks([])
@@ -271,7 +294,7 @@ class MatplotlibSwitchGraphs(Frame):
                          arrowprops=dict(facecolor='black', shrink=0.05))
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
-        self.ax1.plot()
+        #self.ax1.plot()
         self.canvas.draw()
 
     def draw_graph_two(self):
@@ -288,9 +311,6 @@ class MatplotlibSwitchGraphs(Frame):
         down_partially_available = self.dt_val.iloc[int((len(self.dt_val) / 2)):len(self.dt_val), 4].values.tolist()
         data = [down_not_available, down_partially_available]
 
-        #columns = ('PTA01', 'PTA02', 'PTA03', 'PTA04', 'PTA05',
-        #           'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
-        #           'TMA11', 'TMA12', 'TMA13', 'TMA14')
         columns = self.equipment_list
 
         rows = ['Not Available', 'Partially Available']
@@ -381,7 +401,7 @@ class MatplotlibSwitchGraphs(Frame):
 
         # Set titles for the figure and the subplot respectively
         self.fig.suptitle('Downtime Duration', fontsize=12, fontweight='bold')
-        self.ax2.legend()
+        #self.ax2.legend()
         self.ax2.set_ylabel("Downtime, hrs", loc='center')
         self.ax2.set_yticks(values * value_increment, ['%d' % val for val in values])
         self.ax2.set_xticks([])
@@ -389,7 +409,7 @@ class MatplotlibSwitchGraphs(Frame):
         self.ax2.grid(axis='both')
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
-        self.ax2.plot()
+        #self.ax2.plot()
         self.canvas.draw()
 
     def draw_graph_three(self):
@@ -411,6 +431,7 @@ class MatplotlibSwitchGraphs(Frame):
         # Remove  and clear axes from previous graphs
         # Current Graph #3
         if self.previous_index == (self.graphIndex + 1):
+            print("Removing axis from graph #4")
             try:
                 self.ax4[0].clear()    # clear axes from Graph #4
             except AttributeError:
@@ -433,6 +454,7 @@ class MatplotlibSwitchGraphs(Frame):
                 pass
 
         elif self.previous_index == (self.graphIndex - 1):
+            print("Removing axis from graph #2")
             try:
                 self.ax2.clear()    # clear axes from Graph #2
             except AttributeError:
@@ -450,7 +472,7 @@ class MatplotlibSwitchGraphs(Frame):
             explode_val.append(0.01)
         # Set Graph # 3 - pie chart
         self.ax3 = self.fig.subplots(1,2, gridspec_kw={'width_ratios': [6, 1]}, subplot_kw=dict(aspect="equal"))
-        wedges, texts = self.ax3[0].pie(data_val, wedgeprops=dict(width=0.5), startangle=-40, explode=explode_val)
+        wedges, texts = self.ax3[0].pie(data_val, wedgeprops=dict(width=0.7), startangle=-40, explode=explode_val)
 
         columns = data_key
         rows = ['Downtime (hrs)']
@@ -459,6 +481,11 @@ class MatplotlibSwitchGraphs(Frame):
         kw = dict(arrowprops=dict(arrowstyle="-"),
                   bbox=bbox_props, zorder=0, va="center")
 
+        self.q1_var_y = 1.4
+        self.q2_var_y = 1.4
+        self.q3_var_y = 1.4
+        self.q4_var_y = 1.8
+
         for i, p in enumerate(wedges):
             ang = (p.theta2 - p.theta1) / 2. + p.theta1
             y = np.sin(np.deg2rad(ang))
@@ -466,8 +493,11 @@ class MatplotlibSwitchGraphs(Frame):
             horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
             connectionstyle = "angle,angleA=0,angleB={}".format(ang)
             kw["arrowprops"].update({"connectionstyle": connectionstyle})
-            self.ax3[0].annotate(data_key[i], xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
+            prcnt = round((data_val[i] / sum(data_val) * 100), 2)
+
+            an3 = self.ax3[0].annotate(f"{data_key[i]} : {prcnt} %", xy=(x, y), xytext=(1.35 * np.sign(x), self.adjust_text( x, y)),
                         horizontalalignment=horizontalalignment, **kw)
+            an3.draggable()
 
         # Get some pastel shades for the colors
         #colors = ['Red', 'Green', 'Blue', 'Blue']
@@ -512,9 +542,9 @@ class MatplotlibSwitchGraphs(Frame):
 
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
-        self.ax3[0].plot()
+        #self.ax3[0].plot()
         self.ax3[1].axis('off')
-        self.ax3[1].plot()
+        #self.ax3[1].plot()
         self.canvas.draw()
 
     def draw_graph_four(self):
@@ -548,6 +578,7 @@ class MatplotlibSwitchGraphs(Frame):
                 pass
 
         elif self.previous_index == (self.graphIndex - 1):
+            print("Removing previous axes on graph 4")
             try:
                 self.ax3[0].clear()    # clear axes from Graph #3
             except AttributeError:
@@ -570,12 +601,13 @@ class MatplotlibSwitchGraphs(Frame):
                 pass
 
 
+
         explode_val = []
         for elem in range(0, len(data_val)):
             explode_val.append(0.01)
         # Set Graph # 3 - pie chart
         self.ax4 = self.fig.subplots(1, 2, gridspec_kw={'width_ratios': [6, 1]}, subplot_kw=dict(aspect="equal"))
-        wedges, texts = self.ax4[0].pie(data_val, wedgeprops=dict(width=0.5), startangle=-40, explode=explode_val)
+        wedges, texts = self.ax4[0].pie(data_val, wedgeprops=dict(width=0.7), startangle=-40, explode=explode_val)
 
         columns = data_key
 
@@ -583,16 +615,30 @@ class MatplotlibSwitchGraphs(Frame):
         kw = dict(arrowprops=dict(arrowstyle="-"),
                   bbox=bbox_props, zorder=0, va="center")
 
+
+        self.q1_var_y = 1.4
+        self.q2_var_y = 1.4
+        self.q3_var_y = 1.4
+        self.q4_var_y = 1.8
+
         for i, p in enumerate(wedges):
             ang = (p.theta2 - p.theta1) / 2. + p.theta1
             y = np.sin(np.deg2rad(ang))
             x = np.cos(np.deg2rad(ang))
+            print(f" Index is {i}")
+            print(f" Y : {y}")
+            print(f" X : {x}")
+            print(f"Length of wegeds: {len(wedges)}")
+
             horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
             connectionstyle = "angle,angleA=0,angleB={}".format(ang)
             kw["arrowprops"].update({"connectionstyle": connectionstyle})
-            self.ax4[0].annotate(data_key[i], xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
+            prcnt = round((data_val[i] / sum(data_val) * 100), 2)
+
+            an4 = self.ax4[0].annotate(f"{data_key[i]} : {prcnt} %", xy=(x, y), xytext=(1.35 * np.sign(x), self.adjust_text(x , y)),
                                  horizontalalignment=horizontalalignment, **kw)
 
+            an4.draggable()
         # Get some pastel shades for the colors
         # colors = ['Red', 'Green', 'Blue', 'Blue']
         n_rows = len(data_val)
@@ -636,10 +682,45 @@ class MatplotlibSwitchGraphs(Frame):
 
         # Adjust layout to make room for the table:
         self.fig.tight_layout()
-        self.ax4[0].plot()
+        #self.ax4[0].plot()
         self.ax4[1].axis('off')
-        self.ax4[1].plot()
+        #self.ax4[1].plot()
         self.canvas.draw()
+    def adjust_text(self, x , y):
+        """
+        This function adjusts annotation position
+        :param x: wedge
+        :param y: wedge
+        :return: adjusted position for y coordinate
+        """
+        # quadrant #1:  x,y ( 1.2, 1.2)
+        # quadrant #2:  x,y ( - 1.2, 1.2)
+        # quadrant #3:  x,y ( -1.2, -1.2)
+        # quadrant #4:  x,y ( 1.2, - 1.2)
+        if x >= 0 and y >= 0:
+            # Text is in first quadrant
+            self.q1_var_y += 0.2
+            var_y = self.q1_var_y * y
+            print(f"First Quadrant Y:{var_y}")
+            return var_y
+        elif x <= 0 and y >= 0:
+            # Text is in second quadrant
+            self.q2_var_y -= 0.2
+            var_y = self.q2_var_y * y
+            print(f"Second Quadrant Y:{var_y}")
+            return var_y
+        elif x <= 0 and y <= 0:
+            # Text is in third quadrant
+            self.q3_var_y += 0.01
+            var_y = self.q3_var_y * y
+            print(f"Third Quadrant Y:{var_y}")
+            return var_y
+        elif x >= 0 and y <= 0:
+            # Text is in fourth quadrant
+            self.q4_var_y -= 0.2
+            var_y = self.q4_var_y * y
+            print(f"Fourth Quadrant Y:{var_y}")
+            return var_y
 
     def get_duration(self, duration):
         """
