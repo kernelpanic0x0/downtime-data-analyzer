@@ -392,13 +392,27 @@ class App(Frame):
         """
         if self.is_file_date_valid():
             print("Calculate downtime")
+            logging.info(f".csv loaded - user clicked button plot")
             # If date selection not changed do not recalculate
             if not self.launched_flag:
-                print("Frame is empty")
+
+                logging.info(f"The data frame is empty - calculating downtime")
                 self.launched_flag.append("Launched")
+
+                # Calculate downtime duration
                 self.calculate_downtime_durr()
+
+                # Insert calculated downtime tree table on main canvas
+                self.tree_insert()
+
+                # Calculate downtime and events by tool group
+                self.calculate_tool_group()
+
+                # Open the top window with plotlib embedded in tkinter
+                self.open_top_window()
+
             else:
-                print("Frame is NOT empty")
+                logging.info(f"The data frame is not empty - reopening old window")
                 self.open_top_window() # Re-open plots with current data
         else:
             pass
@@ -726,12 +740,9 @@ class App(Frame):
                     downtime_complete_hrs = convert_to_hrs(downtime_complete_hrs.total_seconds())
 
                     # Record tool group
-                    #self.tool_dict[num]["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[k])
                     self.tool_dict[num]["tool_group"].append(search_result[1])
 
                     # Record time difference - this is Time of being out of service
-                    #self.tool_dict[num]["downtime_duration"].append(downtime_complete_hrs)
-                    #self.tool_dict[num]["status"].append('Not Available')
                     self.tool_dict[num]["downtime_duration"].append(downtime_complete_hrs)
                     self.tool_dict[num]["status"].append(search_result[0])
 
@@ -777,7 +788,7 @@ class App(Frame):
 
             ########################################################################################
             # Check if table has entries for this equipment within given date range
-            # if not - find the latest record in range calendare_start_date - (n month)
+            # if not - find the latest record in range calendar_start_date - (n month)
             if self.df_sorted.empty:
                 logging.info("The record is empty - looking for last entry from previous date range")
                 logging.info(f"The element is {element}")
@@ -825,9 +836,6 @@ class App(Frame):
 
         # If drop down selection is for all devices then plot bar chart
         # print(self.df_buff.duplicated(subset='Tool Group', keep=False).sum())
-        self.tree_insert()
-        self.calculate_tool_group()
-        self.open_top_window()
 
 
     def calculate_tool_group(self):
