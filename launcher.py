@@ -705,19 +705,35 @@ class App(Frame):
                     logging.info("No change in Status")
 
                 # End of Downtime
-                # If first entry begins with "Available" assume "Not Available" was
-                # from calendar start date selection
+                # If first entry begins with "Available" assume "Not Available"
+                # Example: selected date range 11/11/2022 to 21/11/2022
+                # The first entry for machine was 15/11/2022 - "Available" which means from 11/11/2022 to 15/11/2022
+                # it was out of service for 4 days, we then search for the most recent "Not Available / Partially" tag
+                # and find Tool Group. Duration is still from drop down start to end date
+
                 if (row_status == 'Available') and (k == first_row):
+
+                    # 0.2.4
+                    logging.info("The first entry is 'Available' - looking for last entry from previous date range")
+                    logging.info(f"The element is {element}")
+                    # Call function
+                    search_result = self.find_latest_entry(num)
+                    logging.info(f"Function return is {search_result}")
+
+                    # Find most recent tool group for downtime entry - outside date picker selection
                     # record tool group and calculate time difference from the time stamp to drop down end date
                     downtime_complete_hrs = row_timestamp - self.calendar_start_date
                     downtime_complete_hrs = convert_to_hrs(downtime_complete_hrs.total_seconds())
 
                     # Record tool group
-                    self.tool_dict[num]["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[k])
+                    #self.tool_dict[num]["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[k])
+                    self.tool_dict[num]["tool_group"].append(search_result[1])
 
                     # Record time difference - this is Time of being out of service
+                    #self.tool_dict[num]["downtime_duration"].append(downtime_complete_hrs)
+                    #self.tool_dict[num]["status"].append('Not Available')
                     self.tool_dict[num]["downtime_duration"].append(downtime_complete_hrs)
-                    self.tool_dict[num]["status"].append('Not Available')
+                    self.tool_dict[num]["status"].append(search_result[0])
 
                     full_downtime_cnt += 1  # Full downtime counter
 
