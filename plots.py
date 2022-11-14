@@ -28,8 +28,8 @@ def config_plot():
 
 class MatplotlibSwitchGraphs(Frame):
     def __init__(self, master, myData, myToolData, date_picker_arr, equipment_list):
-        print("This is my data", myData)
-        print("This is my date", date_picker_arr)
+        logging.info("This is my data for plots", myData)
+        logging.info("This is my date picker selection", date_picker_arr)
         Frame.__init__(self, master)
         self.master = master
         self.frame = Frame(self.master)
@@ -108,7 +108,7 @@ class MatplotlibSwitchGraphs(Frame):
 
 
 
-        print("Plotting Graph 1")
+        logging.warning("Plotting Graph 1")
         # Calculating system availability - PM downtime included
         # Availability = Uptime / (Uptime + Downtime)
 
@@ -119,9 +119,9 @@ class MatplotlibSwitchGraphs(Frame):
         total_downtime = [elem_x + elem_y for elem_x, elem_y in zip(down_not_available, down_partially_available)]
         #total_downtime = [122.8, 0.0, 16.4, 4.9, 133.4, 77.3, 241.3, 83.4, 16.0, 396.70000000000005, 121.9, 256.1, 0.0,
         #                  0.0]  # test data
-        print("The total downtime is:", total_downtime)
+        logging.info("The total downtime is:", total_downtime)
 
-        print("Previous page of the graph - :", self.previous_index)
+        logging.info("Previous page of the graph - :", self.previous_index)
 
 
         # Set Graph #1 - Bar Chart
@@ -240,7 +240,7 @@ class MatplotlibSwitchGraphs(Frame):
         """
         plt.clf()
 
-        print("Plotting Graph 2")
+        logging.warning("Plotting Graph 2")
         # Data for the bar chart - from downtime calculation
         # The buffer is split in two - 0 to 14 and 14 to 28, for two types of downtime
         down_not_available = self.dt_val.iloc[0:int((len(self.dt_val) / 2)), 4].values.tolist()
@@ -251,7 +251,7 @@ class MatplotlibSwitchGraphs(Frame):
 
         rows = ['Not Available', 'Partially Available']
 
-        print("Previous page of the graph - :", self.previous_index)
+        logging.info("Previous page of the graph - :", self.previous_index)
 
 
 
@@ -321,7 +321,7 @@ class MatplotlibSwitchGraphs(Frame):
         """
         plt.clf()
 
-        print("Plotting Graph 3")
+        logging.warning("Plotting Graph 3")
         # Values for downtime duration in hrs - test values
         #data = [221.1, 1067.6000000000001, 69.8, 241.8, 128.6, 229.6, 207.8]                        # Test values
         #data_key = ['PM', 'N/A', '5T Hoist', 'Long travel', 'PLC or I/O', 'Extractor', '36T Hoist']   # Test values

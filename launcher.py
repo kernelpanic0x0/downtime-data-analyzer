@@ -253,7 +253,7 @@ class App(Frame):
         This function inserts values into Tree View Table
         """
 
-        print(self.tree.get_children())
+        logging.info(self.tree.get_children())
         for item in self.tree.get_children():
             self.tree.delete(item)
 
@@ -277,7 +277,7 @@ class App(Frame):
     def drop_down_activate(self, *args):
 
         if self.is_file_date_valid():
-            print("Sort dataframe by Start Date")
+            logging.info("Sort dataframe by Start Date")
             # Filter data by date range based on drop down values
             self.filter_data_by_date(datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').date(),
                                      datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').date())
@@ -285,9 +285,10 @@ class App(Frame):
             self.filter_data_by_name()
             # Clear dataframe that holds calculation
             self.launched_flag.clear()
-            print("sorted by name")
-            print(self.df_sorted)
+            logging.info(f"Data sorted by drop down selection - name : {self.df_sorted}")
+
             self.tree_insert()
+            logging.info("Data inserted into tree view")
         else:
             pass
 
@@ -306,12 +307,12 @@ class App(Frame):
         default_date = datetime.today()
 
         if start_date > end_date:
-            print("Start date can't be after end date")
+            logging.warning("Start date can't be after end date")
             self.cal_start_date.set_date(default_date)
         else:
             pass
 
-        print("Sort dataframe by Start Date")
+        logging.info("Sort dataframe by Start Date")
         # Clear dataframe that holds calculation
         self.launched_flag.clear()
         # Filter data by date raw data
@@ -328,12 +329,12 @@ class App(Frame):
         default_date = datetime.today()
 
         if end_date < start_date:
-            print("End date can't be before start date")
+            logging.warning("End date can't be before start date")
             self.cal_end_date.set_date(default_date)
         else:
             pass
 
-        print("Sort dataframe by End Date")
+        logging.info("Sort dataframe by End Date")
         # Clear dataframe that holds calculation
         self.launched_flag.clear()
         # Filter data by date raw data
@@ -343,9 +344,11 @@ class App(Frame):
         """
         This function filter dataframe df_temp by start and end date
         """
-        print("Start & End dates:")
+
         start_date = start_date.strftime('%Y-%m-%d %H:%M:%S')
         end_date = end_date.strftime('%Y-%m-%d %H:%M:%S')
+        logging.info(f"Start date is: {start_date}")
+        logging.info(f"End date is: {end_date}")
 
         try:
             self.df_sorted = self.df.loc[self.df['createdon'].between(start_date, end_date)]
@@ -381,9 +384,9 @@ class App(Frame):
         logging.info(f"Filtered data by equipment name: {self.df_sorted}")
 
     def convert_date(self, *args):
-        print("converting date")
+        logging.info("Converting date")
         self.selected_end_date_obj = datetime.strptime(self.string_var_end, '%m/%d/%Y').date()
-        print(self.selected_end_date_obj)
+        logging.info(f"Converted date format:{self.selected_end_date_obj}")
 
     def button_plot(self, *args):
         """
@@ -391,7 +394,7 @@ class App(Frame):
 
         """
         if self.is_file_date_valid():
-            print("Calculate downtime")
+            logging.info("Calculate downtime")
             logging.info(f".csv loaded - user clicked button plot")
             # If date selection not changed do not recalculate
             if not self.launched_flag:
@@ -429,10 +432,10 @@ class App(Frame):
         default_date = datetime.today()
 
         if self.df.empty:
-            print("Start date can't be equal to end date")
+            logging.warning("Start date can't be equal to end date")
             messagebox.showwarning("Date File not selected", "You must load .csv file!")
         elif start_date == end_date:
-            print("Start date can't be equal to end date")
+            logging.warning("Start date can't be equal to end date")
             messagebox.showwarning("Date Range not selected", "You must select start date!")
 
         else:
@@ -467,7 +470,7 @@ class App(Frame):
 
         # Show the open file dialog
         file_name = fd.askopenfilename(title='Open .*CSV file', initialdir='/', filetypes=filetypes)
-        print(file_name)
+        logging.info(f"Loaded csv file name is:{file_name}")
 
         # Check if file was selected
         try:
@@ -653,6 +656,7 @@ class App(Frame):
         # Record time difference
         for num, element in enumerate(self.equipment_list, start=0):
 
+            logging.info(f"The current element of dataframe -  {element}")
             # Sort dataframe by equipment name && Reset index of the dataframe
             self.df_sorted = self.df_date.loc[self.df_date['cr483_name'] == self.equipment_list[num]]
             self.df_sorted.index = pd.RangeIndex(len(self.df_sorted.index))
@@ -676,8 +680,6 @@ class App(Frame):
                 else:
                     first_row += 1
 
-
-
             # Set downtime counters
             full_downtime_cnt = 0
             partial_downtime_cnt = 0
@@ -686,6 +688,10 @@ class App(Frame):
 
             # For each row of dataframe sorted by equipment name
             for k in range(first_row, len(self.df_sorted)):
+
+                logging.info(f"The k index is {k}")
+                logging.info(f"The first row is is {first_row}")
+                logging.info(f"The length of the frame for this {element} is - {len(self.df_sorted)}")
 
                 row_status = self.df_sorted['cr483_cranestatus'].iloc[k]  # Get current status
                 row_timestamp = datetime.strptime(self.df_sorted['createdon'].iloc[k], date_frmt)  # Get current date
@@ -699,11 +705,13 @@ class App(Frame):
                     mem_status = row_status
 
                     # If not last row of the table
-                    if k != len(self.df_sorted):
+                    if k != (len(self.df_sorted) - 1):
+                        logging.info(f"Not last row and element is {element}")
                         self.tool_dict[num]["tool_group"].append(self.df_sorted['cr483_toolgroup'].iloc[k])
                     else:
                         # If the record is last in the row with "Not Available" status
                         # record tool group and calculate time difference from the time stamp to drop down end date
+                        logging.info(f"The record is last in the row with out of service status {element} index is {k}")
                         downtime_complete_hrs = self.calendar_end_date - row_timestamp
                         downtime_complete_hrs = convert_to_hrs(downtime_complete_hrs.total_seconds())
 
@@ -852,8 +860,8 @@ class App(Frame):
         #    2:{'equipment_name': ['PTA03'], 'tool_group': ['N/A', 'N/A', 'N/A', 'N/A'],'status': ['Not Available', 'Not Available', 'Partially Available', 'Not Available'],'downtime_duration': [8.9, 2.5, 0.0, 16.4]}
         #}
         test_data = self.tool_dict
-        print("below is data from frame")
-        print(test_data)
+        logging.info(f"Data from frame - {test_data}")
+
         # Empty list to store lists after join command
         result = [[], [], [], []]
 
@@ -871,8 +879,8 @@ class App(Frame):
         for items in combined_dict['tool_group'][0]:
             self.tool_frequency[items] = combined_dict['tool_group'][0].count(items)
 
-        print("blblblb")
-        print(self.tool_frequency)
+        logging.info("Duplicates Calculated")
+        logging.info(f"The tool event frequency results: {self.tool_frequency}")
         # Sort dictionary in descending order
         self.tool_frequency = dict(sorted(self.tool_frequency.items(), key=lambda item: item[1], reverse=True))
 
@@ -887,10 +895,14 @@ class App(Frame):
 
         # For each item in tool group key find downtime per tool group
         tool_downtime = {}
+        logging.info(f"For each item in tool group key find downtime per tool group: {tool_downtime}")
+        logging.info(f"Combined Dictionary by Tool Group: {combined_dict['tool_group'][0]}")
         for index, items in enumerate(combined_dict['tool_group'][0], start=0):
-
+            logging.info(f"Tool group index is {index}")
             if items in tool_downtime:   # Key Already Exists
                 tool_downtime[items].append(combined_dict['downtime_duration'][0][index])
+                logging.info(f"Combined dict is {combined_dict['downtime_duration'][0][index]}")
+                logging.info("Key Exist - add record to the dict")
             else:  # Key Doesn't Exist
                 logging.info("Key Doesn't Exist")
                 tool_downtime[items] = [combined_dict['downtime_duration'][0][index]]
@@ -973,7 +985,7 @@ class AboutTopWindow(tk.Toplevel):
         img_file_name = "small_icon.ico"
         curr_dirr = pathlib.Path(img_file_name).parent.resolve()
         img_path = curr_dirr.joinpath(img_file_name)
-        print(img_path)
+        logging.info(f"The image path for window icon is:{img_path}")
         self.iconbitmap(img_path)
 
     def set_window_frame(self):
@@ -1047,7 +1059,7 @@ class TopWindow(tk.Toplevel):
             if messagebox.askokcancel("Quit", "Do you want to close window?"):
                 self.destroy()
 
-        print("I was called")
+        logging.info("Top window for matplotlib created")
         self.protocol("WM_DELETE_WINDOW", on_closing)
 
 
@@ -1058,7 +1070,7 @@ if __name__ == '__main__':
     img_file_name = "small_icon.ico"
     curr_dirr = pathlib.Path(img_file_name).parent.resolve()
     img_path = curr_dirr.joinpath(img_file_name)
-    print(img_path)
+    logging.info(f"The image path for window icon is:{img_path}")
 
     # Root not resizable
     root.resizable(False, False)
