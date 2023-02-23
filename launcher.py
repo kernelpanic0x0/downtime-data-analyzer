@@ -1,8 +1,8 @@
 # ################################
 #
 # Downtime data plotting script
-# September 4, 2022
-# Version 0.2.2
+# February 22, 2023
+# Version 0.2.4
 #
 ##################################
 import tkinter
@@ -271,7 +271,7 @@ class App(Frame):
         self.tree.tag_configure('even_row', background='#C1C1CD')
 
     def get_selected_downtime(self, *args):
-        print(self.selected_downtime.get())
+        logging.info(self.selected_downtime.get())
         self.tree_insert()
 
     def drop_down_activate(self, *args):
@@ -292,9 +292,9 @@ class App(Frame):
         else:
             pass
 
-    def get_selected_equipmnt(self, *args):
-        print(self.selected_equipment.get())
-        self.my_selected_equipment = self.selected_equipment.get()
+    #def get_selected_equipmnt(self, *args):
+    #    logging.info(self.selected_equipment.get())
+    #    self.my_selected_equipment = self.selected_equipment.get()
 
     def get_start_date(self, *args):
         """
@@ -394,8 +394,8 @@ class App(Frame):
 
         """
         if self.is_file_date_valid():
-            logging.info("Calculate downtime")
-            logging.info(f".csv loaded - user clicked button plot")
+            logging.warning("Calculate downtime")
+            logging.warning(f".csv loaded - user clicked button plot")
             # If date selection not changed do not recalculate
             if not self.launched_flag:
 
@@ -403,7 +403,7 @@ class App(Frame):
                 self.launched_flag.append("Launched")
 
                 # Calculate downtime duration
-                self.calculate_downtime_durr()
+                self.calculate_downtime_duration()
 
                 # Insert calculated downtime tree table on main canvas
                 self.tree_insert()
@@ -464,20 +464,21 @@ class App(Frame):
          It converts data column from zulu to PST
          Data is sorted in ascending order
          """
+        # File types allowed in open menu
         filetypes = [('Excel files', '*.csv'), ('All files', '*')]  # File type
         data_columns = ['cr483_name', 'cr483_cranestatus', 'createdon', 'cr483_toolgroup']
+
+        # Reindexing columns in different order so creation date is last
         data_columns_reindex = ['cr483_name', 'cr483_cranestatus', 'cr483_toolgroup', 'createdon']
 
-        # Show the open file dialog
+        # Show the open file dialog and log the name of the file
         file_name = fd.askopenfilename(title='Open .*CSV file', initialdir='/', filetypes=filetypes)
-        logging.info(f"Loaded csv file name is:{file_name}")
+        logging.warning(f"Loaded csv file name is:{file_name}")
 
         # Check if file was selected
         try:
             self.df = pd.read_csv(file_name, usecols=data_columns, na_filter=False)  # Columns to read from .csv
             self.df = self.df.reindex(columns=data_columns_reindex)  # Reassign order of columns:
-
-
 
             # Check if valid column exists & sort by date
             try:
@@ -486,7 +487,8 @@ class App(Frame):
                 pacific_t = pytz.timezone('US/Pacific')
                 self.df['createdon'].dt.tz_convert(pacific_t)
                 self.df['createdon'] = self.df['createdon'].dt.strftime('%Y-%m-%d %H:%M:%S')
-                self.df.sort_values(by='createdon', ascending=True, inplace=True)  # Sort  Data by Date
+                # Sort  Data by Date
+                self.df.sort_values(by='createdon', ascending=True, inplace=True)
                 # Reset index of dataframe
                 self.df.index = pd.RangeIndex(len(self.df.index))
 
@@ -494,11 +496,14 @@ class App(Frame):
                 # Modifications to new dataframe will not modify original
 
                 self.df_sorted = self.df.copy(deep=True)
+
+                # Filter rows that contain equipment in drop down selection
                 self.filter_data_by_name()
-                print(self.df)
-                print(self.df_sorted)
-                logging.info(f"Filtered data by equipment name: {self.df_sorted}")
+                logging.warning(f"Filtered data by equipment name: {self.df_sorted}")
+
+                # Insert filtered data in treeview table
                 self.tree_insert()
+
             except KeyError:
                 logging.exception("Wrong column names")
                 self.error_message("Wrong column names")
@@ -512,7 +517,7 @@ class App(Frame):
 
     def error_message(self, str_msg):
         """
-            This function prints error message to Tree view Table
+            This function logging.infos error message to Tree view Table
         """
         data_columns = self.tree['columns']  # Column names in tree view table
 
@@ -580,8 +585,7 @@ class App(Frame):
 
         return [name_of_status, name_of_tool]
 
-
-    def calculate_downtime_durr(self, *args):
+    def calculate_downtime_duration(self, *args):
         """
         This function calculates downtime duration & number of downtime events
         """
@@ -597,40 +601,37 @@ class App(Frame):
         calendar_start_date_str = datetime.strptime(self.string_var_strt.get(), '%m/%d/%Y').strftime('%m/%d/%y')
         calendar_end_date_str = datetime.strptime(self.string_var_end.get(), '%m/%d/%Y').strftime('%m/%d/%y')
 
-        # Selected equipment in drop down menu
-        drop_down_selection = self.selected_equipment.get()
-
         # Select equipment list based on drop down selection
-        if drop_down_selection == 'PTA & TMA':
+        if self.selected_equipment.get() == 'PTA & TMA':
             self.equipment_list = ['PTA01', 'PTA02', 'PTA03', 'PTA04',
-                              'PTA05', 'PTA06', 'PTA07', 'PTA08', 'PTA09', 'PTA10',
-                              'TMA11', 'TMA12', 'TMA13', 'TMA14']
-        elif drop_down_selection == 'ABRF':
+                                   'PTA05', 'PTA06', 'PTA07', 'PTA08',
+                                   'PTA09', 'PTA10','TMA11', 'TMA12', 'TMA13', 'TMA14']
+        elif self.selected_equipment.get() == 'ABRF':
             self.equipment_list = ['ABRF01', 'ABRF02']
 
-        elif drop_down_selection == 'Gantry':
+        elif self.selected_equipment.get() == 'Gantry':
             self.equipment_list = ['Gantry']
 
-        elif drop_down_selection == 'CTC':
+        elif self.selected_equipment.get() == 'CTC':
             self.equipment_list = ['CTC']
 
-        elif drop_down_selection == '2x20':
+        elif self.selected_equipment.get() == '2x20':
             self.equipment_list = ['2x20']
 
-        elif drop_down_selection == 'MLLB':
+        elif self.selected_equipment.get() == 'MLLB':
             self.equipment_list = ['MLLB01', 'MLLB02', 'MLLB03', 'MLLB04', 'MLLB05', 'MLLB06']
 
-        elif drop_down_selection == 'Fiberlabs':
+        elif self.selected_equipment.get() == 'Fiberlabs':
             self.equipment_list = ['Fiberlab01', 'Fiberlab02', 'Fiberlab03', 'Fiberlab04']
 
-        elif drop_down_selection == 'Raising Girders':
+        elif self.selected_equipment.get() == 'Raising Girders':
             self.equipment_list = ['Girder1000', 'Girder2000', 'Girder3000', 'Girder4000']
 
-        elif drop_down_selection == 'Hoppers':
+        elif self.selected_equipment.get() == 'Hoppers':
             self.equipment_list = ['Hopper01', 'Hopper02', 'Hopper03', 'Hopper04', 'Hopper05',
                               'Hopper06', 'Hopper07', 'Hopper08', 'Hopper09', 'Hopper10']
         else:
-            self.equipment_list = [drop_down_selection]
+            self.equipment_list = [self.selected_equipment.get()]
 
         # Data frame to use for calculation is copy of data sorted by date
         self.df_date = self.df_sorted.copy()  # Data frame stores values filtered by Date Range
@@ -639,21 +640,23 @@ class App(Frame):
         self.df_buff = pd.DataFrame()  # Data frame for values going to tree view table
 
         # Nested dictionary for each piece of equipment
+        """
+            # Tool Dictionary with keys:{'PTA01': {'equipment_name': [], 'tool_group': [], 'status': [], 
+            # 'downtime_duration': []}, 'PTA02': {'equipment_name': [], 'tool_group': [], 'status': [], 
+            # 'downtime_duration': []}, 'PTA03': etc...
+        """
         self.tool_dict = {}
         for i in range(len(self.equipment_list)):
-            self.tool_dict[i] = {}
+            self.tool_dict[self.equipment_list[i]] = {"equipment_name": [], "tool_group": [], "status": [], "downtime_duration": []}
         logging.info(f"Empty Tool Dictionary: {self.tool_dict}")
 
-        # Add keys to tool dictionary
-        # self.temp_dict = {0: {}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}, etc}
-        for key in range(0, len(self.tool_dict)):
-            self.tool_dict[key] = {"equipment_name": [], "tool_group": [], "status": [], "downtime_duration": []}
-        logging.info(f"Tool Dictionary with keys: {self.tool_dict}")
+        """
+            # Iterate over each element of the dataframe sorted by equipment name
+            # Determine when status changed from Not Available to Available
+            # Determine when status changed from Partially Available to Available
+            # Record time difference
+        """
 
-        # Iterate over each element of the dataframe sorted by equipment name
-        # Determine when status changed from Not Available to Available
-        # Determine when status changed from Partially Available to Available
-        # Record time difference
         for num, element in enumerate(self.equipment_list, start=0):
 
             logging.info(f"The current element of dataframe -  {element}")
@@ -843,7 +846,7 @@ class App(Frame):
         self.date_picker.append(self.string_var_end.get())
 
         # If drop down selection is for all devices then plot bar chart
-        # print(self.df_buff.duplicated(subset='Tool Group', keep=False).sum())
+        # logging.info(self.df_buff.duplicated(subset='Tool Group', keep=False).sum())
 
 
     def calculate_tool_group(self):
@@ -1031,7 +1034,7 @@ class TopWindow(tk.Toplevel):
         img_file_name = "small_icon.ico"
         curr_dirr = pathlib.Path(img_file_name).parent.resolve()
         img_path = curr_dirr.joinpath(img_file_name)
-        print(img_path)
+        logging.info(img_path)
 
         self.resizable(False, False)
 
@@ -1091,12 +1094,13 @@ if __name__ == '__main__':
     root.geometry('%dx%d+%d+%d' % (root_width, root_height, x, y))
 
     # Configure debug logger
-    logging.basicConfig(level=logging.INFO,
+    logging.basicConfig(level=logging.info,
                         format="%(asctime)s [%(funcName)20s()] [%(levelname)-5.5s] %(message)s",
                         handlers=[
                             logging.FileHandler("debug.log"),
                             logging.StreamHandler(sys.stdout)
                         ])
+    logging.getLogger().setLevel(logging.INFO)
     #logging.basicConfig(filename='debug.log', encoding='utf-8', level=logging.DEBUG, filemode='w')
     #logging.info(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
 
